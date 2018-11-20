@@ -1,0 +1,8 @@
+**/bin/*
+**/obj/
+**/.idea/
+**/logs/*
+**/cache/*
+**/cache-dir/*
+*.routerdb
+*.osm.pbf
