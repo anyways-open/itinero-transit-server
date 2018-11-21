@@ -16,4 +16,4 @@ There is _no_ format specifier. Format negotiation should be done by using the c
 
 An example query becomes:
 
-        https://host/route?to=http://irail.be/stations/NMBS/008821006&from=http://irail.be/stations/NMBS/008891009&date=201118&time=1338&timeSel=depart
+        https://localhost:5001/route?from=http://irail.be/stations/NMBS/008821006&to=http://irail.be/stations/NMBS/008891009&date=201118&time=1338&timeSel=depart
