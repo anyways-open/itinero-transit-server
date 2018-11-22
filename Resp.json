@@ -1,0 +1,106 @@
+{
+  "version": "1.1",
+  "timestamp": "1542812822",
+  "connection": [
+    {
+      "id": "0",
+      "duration": "5880",
+      "departure": {
+        "delay": "0",
+        "station": "Poperinge",
+        "stationinfo": {
+          "locationX": "2.736343",
+          "locationY": "50.854449",
+          "id": "BE.NMBS.008896735",
+          "@id": "http:\\/\\/irail.be\\/stations\\/NMBS\\/008896735",
+          "standardname": "Poperinge",
+          "name": "Poperinge"
+        },
+        "time": "1542812880",
+        "vehicle": "BE.NMBS.IC738",
+        "departureConnection": "http:\\/\\/irail.be\\/connections\\/8896735\\/20181121\\/IC738",
+        "direction": {
+          "name": "Anvers-Central \\/ Antwerpen-Centraal"
+        },
+      },
+      "arrival": {
+        "delay": "0",
+        "station": "Brugge",
+        "stationinfo": {
+          "locationX": "3.216726",
+          "locationY": "51.197226",
+          "id": "BE.NMBS.008891009",
+          "@id": "http:\\/\\/irail.be\\/stations\\/NMBS\\/008891009",
+          "standardname": "Brugge",
+          "name": "Brugge"
+        },
+        "time": "1542818760",
+        "vehicle": "BE.NMBS.IC2338",
+        "platform": "8",
+        "platforminfo": {
+          "name": "8",
+          "normal": "1"
+        },
+        "direction": {
+          "name": "Ostende \\/ Oostende"
+        },
+      },
+      "vias": {
+        "number": "1",
+        "via": [
+          {
+            "id": "0",
+            "timeBetween": "300",
+            "station": "Kortrijk",
+            "stationinfo": {
+              "locationX": "3.264549",
+              "locationY": "50.824506",
+              "id": "BE.NMBS.008896008",
+              "@id": "http:\\/\\/irail.be\\/stations\\/NMBS\\/008896008",
+              "standardname": "Kortrijk",
+              "name": "Kortrijk"
+            },
+            "vehicle": "BE.NMBS.IC738",
+            "direction": {
+              "name": "Anvers-Central \\/ Antwerpen-Centraal"
+            },
+            "arrival": {
+              "time": "1542815400",
+              "platform": "4",
+              "platforminfo": {
+                "name": "4",
+                "normal": "1"
+              },
+              "isExtraStop": "0",
+              "delay": "0",
+              "canceled": "0",
+              "arrived": "0",
+              "walking": "0",
+              "direction": {
+                "name": "Anvers-Central \\/ Antwerpen-Centraal"
+              },
+              "vehicle": "BE.NMBS.IC738",
+              "departureConnection": "http:\\/\\/irail.be\\/connections\\/8896008\\/20181121\\/IC738"
+            },
+            "departure": {
+              "time": "1542815700",
+              "platform": "5",
+              "platforminfo": {
+                "name": "5",
+                "normal": "1"
+              },
+              "isExtraStop": "0",
+              "delay": "0",
+              "direction": {
+                "name": "Ostende \\/ Oostende"
+              },
+              "vehicle": "BE.NMBS.IC2338",
+              "departureConnection": "http:\\/\\/irail.be\\/connections\\/8896008\\/20181121\\/IC2338",
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

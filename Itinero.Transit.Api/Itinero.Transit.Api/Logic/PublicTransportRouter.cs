@@ -26,7 +26,7 @@ namespace Itinero.Transit.Api.Logic
             _profile = profile;
         }
 
-        public Uri EncodeLocation(string uriData)
+        public Uri AsLocationUri(string uriData)
         {
             var loc = new Uri(uriData);
             if (!_profile.LocationProvider.ContainsLocation(loc))
@@ -37,13 +37,20 @@ namespace Itinero.Transit.Api.Logic
             return loc;
         }
 
-        public Route EarliestArrivalRoute(Uri departureStation, Uri arrivalStation,
+        public StationInfo GetLocationInfo(Uri uri)
+        {
+            return new StationInfo(_profile.GetCoordinateFor(uri));
+        }
+        
+        
+        public JourneyInfo EarliestArrivalRoute(Uri departureStation, Uri arrivalStation,
             DateTime departureTime, DateTime latestArrival)
         {
             var eas = new EarliestConnectionScan<TransferStats>(
                 departureStation, arrivalStation, departureTime, latestArrival, _profile);
 
-            return eas.CalculateJourney().AsRoute(_profile);
+            var journey = eas.CalculateJourney();
+            return JourneyInfo.FromJourney(this, 0, journey);
         }
 
         private static void CreateRouterDb(string downloadSource, string targetLocation, bool forceRefresh = false)

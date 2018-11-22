@@ -1,0 +1,103 @@
+{
+  "version": "1.1",
+  "comment": "This is an example response, harvested from IRail.be. Superflouous data has been removed (e.g. occupancy, platform info, alerts ...)"
+  "timestamp": "1542801291",
+  "connection": [
+    {
+      "id": "0",
+      "duration": "5340"
+      "departure": {
+        "delay": "0",
+        "station": "Antwerp-Central",
+        "stationinfo": {
+          "locationX": "4.421101",
+          "locationY": "51.2172",
+          "id": "BE.NMBS.008821006",
+          "@id": "http:\\/\\/irail.be\\/stations\\/NMBS\\/008821006",
+          "name": "Antwerp-Central",
+          "standardname": "Antwerpen-Centraal"
+        },
+        "time": "1542801960",
+        "vehicle": "BE.NMBS.IC1834",
+        "departureConnection": "http:\\/\\/irail.be\\/connections\\/8821006\\/20181121\\/IC1834",
+        "direction": {
+          "name": "Ostende \\/ Oostende"
+        },
+      },
+      "arrival": {
+        "delay": "0",
+        "station": "Brugge",
+        "stationinfo": {
+          "locationX": "3.216726",
+          "locationY": "51.197226",
+          "id": "BE.NMBS.008891009",
+          "@id": "http:\\/\\/irail.be\\/stations\\/NMBS\\/008891009",
+          "standardname": "Brugge",
+          "name": "Brugge"
+        },
+        "time": "1542807300",
+        "vehicle": "BE.NMBS.IC1834",
+        "direction": {
+          "name": "Ostende \\/ Oostende"
+        },
+      },
+   "vias": {
+	"comment": "Transfers between trains go here. Note that this actual transfer comes from a random other route"
+        "number": "1",
+        "via": [
+          {
+            "id": "0",
+            "arrival": {
+              "time": "1542805500",
+              "isExtraStop": "0",
+              "delay": "0",
+              "canceled": "0",
+              "arrived": "0",
+              "walking": "0",
+              "direction": {
+                "name": "Brussels Airport-Zaventem"
+              },
+              "vehicle": "BE.NMBS.IC2312",
+              "departureConnection": "http:\\/\\/irail.be\\/connections\\/8896008\\/20181121\\/IC2312"
+            },
+            "departure": {
+              "time": "1542805800",
+              "isExtraStop": "0",
+              "delay": "0",
+              "canceled": "0",
+              "left": "0",
+              "walking": "0",
+              "direction": {
+                "name": "Poperinge"
+              },
+              "vehicle": "BE.NMBS.IC712",
+              "departureConnection": "http:\\/\\/irail.be\\/connections\\/8896008\\/20181121\\/IC712",
+              "occupancy": {
+                "@id": "http:\\/\\/api.irail.be\\/terms\\/unknown",
+                "name": "unknown"
+              }
+            },
+            "timeBetween": "300",
+            "station": "Kortrijk",
+            "stationinfo": {
+              "locationX": "3.264549",
+              "locationY": "50.824506",
+              "id": "BE.NMBS.008896008",
+              "@id": "http:\\/\\/irail.be\\/stations\\/NMBS\\/008896008",
+              "standardname": "Kortrijk",
+              "name": "Kortrijk"
+            },
+            "vehicle": "BE.NMBS.IC2312",
+            "direction": {
+              "name": "Brussels Airport-Zaventem"
+            }
+          }
+        ]
+      }
+
+    },
+    {
+      "id": "1",
+      "comment": "Another possible journey goes here"
+      ]
+}

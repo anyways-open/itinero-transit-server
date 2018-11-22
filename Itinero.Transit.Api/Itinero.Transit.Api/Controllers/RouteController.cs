@@ -27,6 +27,8 @@ namespace Itinero.Transit.Api.Controllers
             // The should mach the URL-parameters EXACTLY
 
 
+            var router = PublicTransportRouter.BelgiumSncb;
+
             // -------------------------------- Check input ---------------------
 
             timeSel = timeSel.ToLower().Trim();
@@ -39,7 +41,7 @@ namespace Itinero.Transit.Api.Controllers
 
             try
             {
-                departure = PublicTransportRouter.BelgiumSncb.EncodeLocation(from);
+                departure = router.AsLocationUri(from);
             }
             catch (Exception e)
             {
@@ -51,7 +53,7 @@ namespace Itinero.Transit.Api.Controllers
 
             try
             {
-                arrival = PublicTransportRouter.BelgiumSncb.EncodeLocation(to);
+                arrival = router.AsLocationUri(to);
             }
             catch (Exception e)
             {
@@ -84,7 +86,6 @@ namespace Itinero.Transit.Api.Controllers
                 return BadRequest("Invalid date or time. Format should be 'date=DDMMYY', 'time=HHMM'");
             }
 
-
             var easJourney = PublicTransportRouter.BelgiumSncb.EarliestArrivalRoute(
                 departure, arrival, moment, moment.AddHours(24));
             if (easJourney == null)
@@ -92,7 +93,7 @@ namespace Itinero.Transit.Api.Controllers
                 return BadRequest("Sorry, we could not find a route to your destination.");
             }
             
-            return easJourney.ToGeoJson();
+            return new JsonResult(new IrailResponse(easJourney));
         }
     }
 }
