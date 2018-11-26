@@ -86,14 +86,12 @@ namespace Itinero.Transit.Api.Controllers
                 return BadRequest("Invalid date or time. Format should be 'date=DDMMYY', 'time=HHMM'");
             }
 
-            var easJourney = PublicTransportRouter.BelgiumSncb.EarliestArrivalRoute(
+            var response = PublicTransportRouter.BelgiumSncb.EarliestArrivalRoute(
                 departure, arrival, moment, moment.AddHours(24));
-            if (easJourney == null)
-            {
-                return BadRequest("Sorry, we could not find a route to your destination.");
-            }
             
-            return new JsonResult(new IrailResponse(easJourney));
+            
+            
+            return new JsonResult(response);
         }
     }
 }

@@ -43,14 +43,25 @@ namespace Itinero.Transit.Api.Logic
         }
         
         
-        public JourneyInfo EarliestArrivalRoute(Uri departureStation, Uri arrivalStation,
+        public IrailResponse EarliestArrivalRoute(Uri departureStation, Uri arrivalStation,
             DateTime departureTime, DateTime latestArrival)
         {
             var eas = new EarliestConnectionScan<TransferStats>(
                 departureStation, arrivalStation, departureTime, latestArrival, _profile);
 
             var journey = eas.CalculateJourney();
-            return JourneyInfo.FromJourney(this, 0, journey);
+            return IrailResponse.CreateResponse(this, journey);
+        }
+
+        public IrailResponse ProfiledRoutes(Uri departureStation, Uri arrivalStation,
+            DateTime departureTime, DateTime latestArrival)
+        {
+            
+            var pcs = new ProfiledConnectionScan<TransferStats>(
+                departureStation, arrivalStation, departureTime, latestArrival, _profile);
+            var journeys = pcs.CalculateJourneys()
+                .GetValueOrDefault(departureStation.ToString(), new List<Journey<TransferStats>>());
+           return IrailResponse.CreateResponse(this, journeys);
         }
 
         private static void CreateRouterDb(string downloadSource, string targetLocation, bool forceRefresh = false)
@@ -106,7 +117,8 @@ namespace Itinero.Transit.Api.Logic
 
             var locationSource = new Uri("http://irail.be/stations");
             var loc = new LocationsFragment(locationSource);
-            loc.Download(new JsonLdProcessor(new Downloader(caching : false), locationSource));
+            // Caching removes around 2sec latency
+            loc.Download(new JsonLdProcessor(new Downloader(caching : true), locationSource));
 
             var p = new Profile<TransferStats>(
                 cons,
