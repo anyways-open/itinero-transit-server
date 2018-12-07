@@ -2,11 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using Itinero.IO.LC;
 using Itinero.IO.Osm;
 using Itinero.Osm.Vehicles;
+using Itinero.Transit.Data;
+using Itinero.Transit.Data.Walks;
 using JsonLD.Core;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using OsmSharp.IO.PBF;
 using Serilog;
+using IConnection = Itinero.Transit.Data.IConnection;
 
 namespace Itinero.Transit.Api.Logic
 {
@@ -16,20 +20,32 @@ namespace Itinero.Transit.Api.Logic
     public class PublicTransportRouter
     {
         public static readonly PublicTransportRouter BelgiumSncb
-            = new PublicTransportRouter(BelgiumSncbProfile());
+            = BelgiumSncbProfile();
 
 
-        private readonly Profile<TransferStats> _profile;
+        private readonly Data.Profile<TransferStats> _profile;
+        private readonly ILocationProvider _locationDecoder;
+        private readonly ConnectionsDb.ConnectionsDbReader _connReader;
+        private readonly Dictionary<string, ulong> _locationIds;
+        private readonly Dictionary<ulong, Uri> _reverseIds;
+        private readonly Dictionary<ulong, Uri> _idToConnUri;
 
-        public PublicTransportRouter(Profile<TransferStats> profile)
+        public PublicTransportRouter(Data.Profile<TransferStats> profile, ILocationProvider locationDecoder,
+            Dictionary<string, ulong> locationIds, Dictionary<ulong, Uri> reverseIds,
+            Dictionary<ulong, Uri> idToConnUri)
         {
             _profile = profile;
+            _locationDecoder = locationDecoder;
+            _locationIds = locationIds;
+            _reverseIds = reverseIds;
+            _idToConnUri = idToConnUri;
+            _connReader = profile.ConnectionsDb.GetReader();
         }
 
         public Uri AsLocationUri(string uriData)
         {
             var loc = new Uri(uriData);
-            if (!_profile.LocationProvider.ContainsLocation(loc))
+            if (!_locationDecoder.ContainsLocation(loc))
             {
                 throw new KeyNotFoundException($"The specified location {uriData} is unknown or malformed.");
             }
@@ -37,31 +53,36 @@ namespace Itinero.Transit.Api.Logic
             return loc;
         }
 
+        public StationInfo GetLocationInfo(ulong id)
+        {
+            return GetLocationInfo(_reverseIds[id]);
+        }
+
+
         public StationInfo GetLocationInfo(Uri uri)
         {
-            return new StationInfo(_profile.GetCoordinateFor(uri));
+            return new StationInfo(_locationDecoder.GetCoordinateFor(uri));
         }
-        
-        
-        public IrailResponse EarliestArrivalRoute(Uri departureStation, Uri arrivalStation,
+
+        public Location GetCoord(ulong id)
+        {
+            return _locationDecoder.GetCoordinateFor(_reverseIds[id]);
+        }
+
+
+        public IrailResponse<TransferStats> EarliestArrivalRoute(Uri departureStation, Uri arrivalStation,
             DateTime departureTime, DateTime latestArrival)
         {
+            var from = _locationIds[departureStation.ToString()];
+            var to = _locationIds[arrivalStation.ToString()];
+
             var eas = new EarliestConnectionScan<TransferStats>(
-                departureStation, arrivalStation, departureTime, latestArrival, _profile);
+                from, to,
+                (ulong) departureTime.ToUnixTime(), (ulong) departureTime.ToUnixTime(),
+                _profile);
 
             var journey = eas.CalculateJourney();
-            return IrailResponse.CreateResponse(this, journey);
-        }
-
-        public IrailResponse ProfiledRoutes(Uri departureStation, Uri arrivalStation,
-            DateTime departureTime, DateTime latestArrival)
-        {
-            
-            var pcs = new ProfiledConnectionScan<TransferStats>(
-                departureStation, arrivalStation, departureTime, latestArrival, _profile);
-            var journeys = pcs.CalculateJourneys()
-                .GetValueOrDefault(departureStation.ToString(), new List<Journey<TransferStats>>());
-           return IrailResponse.CreateResponse(this, journeys);
+            return IrailResponse<TransferStats>.CreateResponse(this, journey);
         }
 
         private static void CreateRouterDb(string downloadSource, string targetLocation, bool forceRefresh = false)
@@ -101,7 +122,7 @@ namespace Itinero.Transit.Api.Logic
             }
         }
 
-        private static Profile<TransferStats> BelgiumSncbProfile()
+        private static PublicTransportRouter BelgiumSncbProfile()
         {
             // The SNCB router expects a routerDB (based on OSM) at "./belgium.routerdb"
             // If that routerDB ain't there, we create it
@@ -110,26 +131,69 @@ namespace Itinero.Transit.Api.Logic
             //  "belgium.routerdb");
 
 
-            var sncbConnectionsSource = new Uri("http://graph.irail.be/sncb/connections");
-            var cons = new LinkedConnectionProvider(sncbConnectionsSource,
-                "http://graph.irail.be/sncb/connections{?departureTime}", new Downloader(caching : false));
 
 
             var locationSource = new Uri("http://irail.be/stations");
             var loc = new LocationsFragment(locationSource);
-            // Caching removes around 2sec latency
-            loc.Download(new JsonLdProcessor(new Downloader(caching : true), locationSource));
+            // This crashes with caching...
+            loc.Download(new JsonLdProcessor(new Downloader(caching: false), locationSource));
 
-            var p = new Profile<TransferStats>(
-                cons,
+            var sncbConnectionsSource = new Uri("http://graph.irail.be/sncb/connections");
+            var cons = new LinkedConnectionProvider(sncbConnectionsSource,
+                "http://graph.irail.be/sncb/connections{?departureTime}", new Downloader(caching: true));
+
+            var oldProfile = new IO.LC.Profile<IO.LC.TransferStats>(
+                cons, loc, null, IO.LC.TransferStats.Factory, null, null
+            );
+
+
+            var consDb = new ConnectionsDb();
+            var stopsDb = new StopsDb();
+
+            var connectionsDb = new ConnectionsDb();
+            var stopIds = new Dictionary<string, ulong>();
+            var reverseIds = new Dictionary<ulong, Uri>();
+            foreach (var location in loc.GetAllLocations())
+            {
+                var v = stopsDb.Add(loc.Uri.ToString(), location.Lon, location.Lat);
+                var id = (ulong) v.localTileId * uint.MaxValue + v.localId;
+
+                var uri = location.Uri;
+                stopIds[uri.ToString()] = id;
+                reverseIds[id] = uri;
+                Log.Information($"Location {id} is {uri}");
+            }
+
+
+            var dayToLoad = DateTime.Now.Date.AddHours(10);
+            var idToConnUri = connectionsDb.LoadConnections(oldProfile, stopsDb,
+                (dayToLoad, new TimeSpan(0, 2, 0, 0)), out _);
+
+
+            var newProfile = new Data.Profile<TransferStats>(
+                consDb,
+                stopsDb,
+                new NoWalksGenerator(),
+                new TransferStats()
+            );
+
+            return new PublicTransportRouter(
+                newProfile,
                 loc,
-                new InternalTransferGenerator(180), 
-                TransferStats.Factory,
-                TransferStats.ProfileCompare,
-                TransferStats.ParetoCompare);
-            p.IntermodalStopSearchRadius = 0;
-            p.EndpointSearchRadius = 0;
-            return p;
+                stopIds,
+                reverseIds,
+                idToConnUri);
+        }
+
+        public IConnection GetConnection(uint id)
+        {
+            _connReader.MoveTo(id);
+            return _connReader;
+        }
+
+        public Uri GetConnectionUri(uint id)
+        {
+            return _idToConnUri[id];
         }
     }
 }

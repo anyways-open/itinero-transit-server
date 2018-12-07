@@ -5,13 +5,16 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <Folder Include="cache" />
         <Folder Include="wwwroot\" />
     </ItemGroup>
 
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.App" />
-        <PackageReference Include="Microsoft.AspNetCore.Razor.Design" Version="2.2.0-preview3-35497" PrivateAssets="All" />
+        <PackageReference Include="Microsoft.AspNetCore.Razor.Design" Version="2.2.0" PrivateAssets="All" />
         <PackageReference Include="openplannerteam.itinero-transit" Version="0.0.7" />
+        <PackageReference Include="openplannerteam.Itinero.Transit" Version="0.0.13-alpha" />
+        <PackageReference Include="openplannerteam.Itinero.Transit.IO.LC" Version="0.0.10-alpha" />
     </ItemGroup>
 
 </Project>
