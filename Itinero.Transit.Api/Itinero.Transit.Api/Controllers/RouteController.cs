@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Globalization;
 using Itinero.Transit.Api.Logic;
+using Itinero.Transit.Logging;
 using Microsoft.AspNetCore.Mvc;
-using Serilog;
 
 namespace Itinero.Transit.Api.Controllers
 {
@@ -41,7 +41,7 @@ namespace Itinero.Transit.Api.Controllers
 
             try
             {
-                departure = router.AsLocationUri(from);
+                departure = new Uri(from);
             }
             catch (Exception e)
             {
@@ -53,7 +53,7 @@ namespace Itinero.Transit.Api.Controllers
 
             try
             {
-                arrival = router.AsLocationUri(to);
+                arrival = new Uri(to);
             }
             catch (Exception e)
             {
@@ -88,8 +88,6 @@ namespace Itinero.Transit.Api.Controllers
 
             var response = PublicTransportRouter.BelgiumSncb.EarliestArrivalRoute(
                 departure, arrival, moment, moment.AddHours(24));
-            
-            
             
             return new JsonResult(response);
         }

@@ -1,10 +1,8 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using Itinero.IO.LC;
-using Microsoft.EntityFrameworkCore;
+using Itinero.Transit.Data;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 
 namespace Itinero.Transit.Api
 {
@@ -16,19 +14,19 @@ namespace Itinero.Transit.Api
         /// <summary>
         /// The Longitude (X) and Latitude (Y) of the station
         /// </summary>
-        public readonly float LocationX, LocationY;
+        public readonly double LocationX, LocationY;
 
         [JsonProperty("@id")]
         public readonly Uri @Id;
         public readonly string Name, Standardname, id;
 
-        public StationInfo(Location l) : 
-            this(l.Lon, l.Lat, l.Uri, l.Name)
+        public StationInfo(IStop l) : 
+            this(l.Longitude, l.Latitude, new Uri(l.GlobalId), string.Empty)
         {
             
         }
         
-        public StationInfo(float locationX, float locationY, Uri ldId, string name)
+        public StationInfo(double locationX, double locationY, Uri ldId, string name)
         {
             LocationX = locationX;
             LocationY = locationY;

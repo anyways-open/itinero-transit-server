@@ -1,14 +1,14 @@
 // ReSharper disable MemberCanBePrivate.Global
 
-using Itinero.IO.LC;
 using Itinero.Transit.Api.Logic;
+using Itinero.Transit.Journeys;
 
 namespace Itinero.Transit.Api
 {
     /// <summary>
     /// Represents a transfer
     /// </summary>
-    public class ViaElement<T> where T : IJourneyStats<T>
+    internal class ViaElement<T> where T : IJourneyStats<T>
     {
         /// <summary>
         /// Indictates how many transfers are before this transfer, in the journey

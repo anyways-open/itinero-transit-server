@@ -1,5 +1,6 @@
 using System;
 using Itinero.Transit.Api.Logic;
+using Itinero.Transit.Journeys;
 using Reminiscence.Collections;
 // ReSharper disable MemberCanBePrivate.Global
 
@@ -9,7 +10,7 @@ namespace Itinero.Transit.Api
     /// <summary>
     /// Returns multiple journeys as JSON
     /// </summary>
-    public class IrailResponse<T> where T : IJourneyStats<T>
+    internal class IrailResponse<T> where T : IJourneyStats<T>
     {
 
         public readonly string Version = "1.1";
@@ -25,9 +26,7 @@ namespace Itinero.Transit.Api
             Connection = journeys;
         }
 
-
-        public static IrailResponse<T> CreateResponse<T>(PublicTransportRouter router, System.Collections.Generic.IEnumerable<Journey<T>> journeys)
-            where T : IJourneyStats<T>
+        public static IrailResponse<T> CreateResponse(PublicTransportRouter router, System.Collections.Generic.IEnumerable<Journey<T>> journeys)
         {
             var journeyInfo = new List<JourneyInfo<T>>();
             foreach (var journey in journeys)
@@ -37,12 +36,9 @@ namespace Itinero.Transit.Api
             return new IrailResponse<T>(journeyInfo);
         }
 
-        public static IrailResponse<T> CreateResponse<T>(PublicTransportRouter router, Journey<T> journey) 
-            where T : IJourneyStats<T>
+        public static IrailResponse<T> CreateResponse(PublicTransportRouter router, Journey<T> journey)
         {
             return CreateResponse(router, new List<Journey<T>> {journey});
         }
-
-
     }
 }

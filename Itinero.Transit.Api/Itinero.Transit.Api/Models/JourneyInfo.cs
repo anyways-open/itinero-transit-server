@@ -2,6 +2,7 @@
 
 using System.Linq;
 using Itinero.Transit.Api.Logic;
+using Itinero.Transit.Journeys;
 using Reminiscence.Collections;
 
 // ReSharper disable NotAccessedField.Global
@@ -11,7 +12,7 @@ namespace Itinero.Transit.Api
     /// <summary>
     /// An entire Journey. Confusingly named 'connection' in the API
     /// </summary>
-    public class JourneyInfo<T> where T : IJourneyStats<T>
+    internal class JourneyInfo<T> where T : IJourneyStats<T>
     {
         /// <summary>
         /// Profile identifier
@@ -43,8 +44,7 @@ namespace Itinero.Transit.Api
         /// Due to the generic type argument, this could not be a constructor.
         /// </summary>
         /// <returns></returns>
-        public static JourneyInfo<T> FromJourney<T>(PublicTransportRouter router, int id, Journey<T> journey)
-            where T : IJourneyStats<T>
+        public static JourneyInfo<T> FromJourney(PublicTransportRouter router, int id, Journey<T> journey)
         {
             var connections = journey.AllParts();
 

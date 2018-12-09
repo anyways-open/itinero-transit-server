@@ -55,8 +55,6 @@ namespace Itinero.Transit.Api
                 app.UseHsts();
             }
             
-           
-
             app.UseHttpsRedirection();
             app.UseMvc();
         }
