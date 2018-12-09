@@ -37,32 +37,10 @@ namespace Itinero.Transit.Api.Controllers
                 return BadRequest("TimeSel is not valid, should be either 'depart' or 'arrive'");
             }
 
-            Uri departure, arrival;
+            var departureStopId = router.GetStop(from);
+            var arrivalStopId = router.GetStop(to);
 
-            try
-            {
-                departure = new Uri(from);
-            }
-            catch (Exception e)
-            {
-                var txt = "Malformed 'from'-parameter: " + e.Message;
-                Log.Information(txt);
-                return BadRequest(txt);
-            }
-
-
-            try
-            {
-                arrival = new Uri(to);
-            }
-            catch (Exception e)
-            {
-                var txt = "Malformed 'to'-parameter: " + e.Message;
-                Log.Information(txt);
-                return BadRequest(txt);
-            }
-
-            if (departure == arrival)
+            if (departureStopId == arrivalStopId)
             {
                 return BadRequest("The departure station is the same as the arrival station. You're not gonna get far this way");
             }
@@ -87,7 +65,7 @@ namespace Itinero.Transit.Api.Controllers
             }
 
             var response = PublicTransportRouter.BelgiumSncb.EarliestArrivalRoute(
-                departure, arrival, moment, moment.AddHours(24));
+                departureStopId, arrivalStopId, moment, moment.AddHours(24));
             
             return new JsonResult(response);
         }

@@ -35,8 +35,8 @@ namespace Itinero.Transit.Api
             var sncb = PublicTransportRouter.BelgiumSncb;
           //   route?from=&to=&date=201118&time=1230
             var example = sncb.EarliestArrivalRoute(
-                new Uri("http://irail.be/stations/NMBS/008891009"),
-                new Uri("http://irail.be/stations/NMBS/008813003"),
+                sncb.GetStop("http://irail.be/stations/NMBS/008891009"),
+                sncb.GetStop("http://irail.be/stations/NMBS/008813003"),
                 DateTime.Now.Date.AddHours(10),
                 DateTime.Now.Date.AddHours(14)
                );

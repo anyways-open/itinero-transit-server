@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Itinero.Transit.Algorithms.CSA;
+using Itinero.Transit.Algorithms.Search;
 using Itinero.Transit.Data;
 using Itinero.Transit.Data.Walks;
 using Itinero.Transit.IO.LC;
@@ -29,6 +30,35 @@ namespace Itinero.Transit.Api.Logic
             _profile = profile;
             _stopsDb = stopsDb;
             _connectionsDb = connectionsDb;
+        }
+
+        /// <summary>
+        /// Gets a stop.
+        /// </summary>
+        /// <param name="stopDescription">The stop description.</param>
+        /// <returns>A stop id.</returns>
+        public (uint tileId, uint localId) GetStop(string stopDescription)
+        {
+            var reader = _stopsDb.GetReader();
+            
+            if (Uri.TryCreate(stopDescription, UriKind.Absolute, out var stopUri))
+            {
+                if (!reader.MoveTo(stopDescription))
+                {
+                    return (uint.MaxValue, uint.MaxValue);
+                }
+                return reader.Id;
+            }
+            else if (CoordinateParser.TryParse(stopDescription, out var coordinates))
+            {
+                var stop = _stopsDb.SearchClosest(coordinates.longitude, coordinates.latitude);
+                if (stop != null)
+                {
+                    return stop.Id;
+                }
+            }
+
+            return (uint.MaxValue, uint.MaxValue);
         }
 
 //        public Uri AsLocationUri(string uriData)
@@ -65,26 +95,12 @@ namespace Itinero.Transit.Api.Logic
 //        }
 
 
-        public IrailResponse<TransferStats> EarliestArrivalRoute(Uri departureStation, Uri arrivalStation,
+        public IrailResponse<TransferStats> EarliestArrivalRoute((uint tileId, uint localId) departureStation, (uint tileId, uint localId) arrivalStation,
             DateTime departureTime, DateTime latestArrival)
         {
-            var reader = _stopsDb.GetReader();
-            
-            // get departure and arrival station ids.
-            if (!reader.MoveTo(departureStation.ToString()))
-            {
-                return null;
-            }
-            var departureStationId = reader.Id;
-            if (!reader.MoveTo(arrivalStation.ToString()))
-            {
-                return null;
-            }
-            var arrivalStationId = reader.Id;
-            
             // run EAS.
             var eas = new EarliestConnectionScan<TransferStats>(
-                departureStationId, arrivalStationId,
+                departureStation, arrivalStation,
                 departureTime.ToUnixTime(), departureTime.AddHours(10).ToUnixTime(),
                 _profile);
 
