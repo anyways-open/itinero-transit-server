@@ -1,7 +1,7 @@
 {
   "swagger" : "2.0",
   "info" : {
-    "description" : "This is the Anyways Transit API. More info at https://anyways.eu\n",
+    "description" : "This is the Anyways Transit API. More info at https://anyways.eu.\n\nWith this API, you can query how to go from one location to another using various transportation modi. As for version 1.0, only traveling via the SNCB/NMBS network is supported.\n\nThis document describes how you, as a developer, can query our service to get journeys via the SNCB-network.\n",
     "version" : "1.0.0",
     "title" : "Transit API",
     "termsOfService" : "http://swagger.io/terms/",
@@ -18,9 +18,43 @@
   "tags" : [ {
     "name" : "stop",
     "description" : "All info about stops."
+  }, {
+    "name" : "journey",
+    "description" : "Get your journeys here."
   } ],
   "schemes" : [ "https", "http" ],
   "paths" : {
+    "/stop/{stopId}" : {
+      "get" : {
+        "tags" : [ "stop" ],
+        "summary" : "Finds a stop by ID.",
+        "description" : "Returns a single stop.",
+        "operationId" : "getStopById",
+        "produces" : [ "application/json", "application/xml" ],
+        "parameters" : [ {
+          "name" : "stopId",
+          "in" : "path",
+          "description" : "ID of the stop to return",
+          "required" : true,
+          "type" : "string",
+          "format" : "string"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "$ref" : "#/definitions/Stop"
+            }
+          },
+          "400" : {
+            "description" : "Invalid ID"
+          },
+          "404" : {
+            "description" : "Stop not found"
+          }
+        }
+      }
+    },
     "/stop/findByLocation" : {
       "get" : {
         "tags" : [ "stop" ],
@@ -54,33 +88,40 @@
         }
       }
     },
-    "/stop/{stopId}" : {
+    "/journey/" : {
       "get" : {
-        "tags" : [ "stop" ],
-        "summary" : "Finds a stop by ID.",
-        "description" : "Returns a single stop.",
-        "operationId" : "getStopById",
+        "tags" : [ "journey" ],
+        "summary" : "Finds one or more journeys between stops.",
+        "description" : "Returns one or more journeys.",
         "produces" : [ "application/json", "application/xml" ],
         "parameters" : [ {
-          "name" : "stopId",
-          "in" : "path",
-          "description" : "ID of the stop to return",
+          "name" : "departureStop",
+          "in" : "query",
+          "description" : "The departure stop ID.",
           "required" : true,
-          "type" : "string",
-          "format" : "string"
+          "type" : "string"
+        }, {
+          "name" : "arrivalStop",
+          "in" : "query",
+          "description" : "The arrival stop ID.",
+          "required" : true,
+          "type" : "string"
         } ],
         "responses" : {
           "200" : {
             "description" : "successful operation",
             "schema" : {
-              "$ref" : "#/definitions/Stop"
+              "type" : "array",
+              "items" : {
+                "$ref" : "#/definitions/Journey"
+              }
             }
           },
           "400" : {
-            "description" : "Invalid ID supplied"
+            "description" : "Invalid ID"
           },
           "404" : {
-            "description" : "Pet not found"
+            "description" : "Journey not found."
           }
         }
       }
@@ -106,9 +147,54 @@
           "type" : "number",
           "format" : "double"
         }
-      },
-      "xml" : {
-        "name" : "Order"
+      }
+    },
+    "Segment" : {
+      "type" : "object",
+      "properties" : {
+        "vehicle" : {
+          "type" : "string",
+          "description" : "The vehicle."
+        },
+        "departure" : {
+          "$ref" : "#/definitions/Segment_departure"
+        },
+        "arrival" : {
+          "$ref" : "#/definitions/Segment_arrival"
+        }
+      }
+    },
+    "Journey" : {
+      "type" : "object",
+      "properties" : {
+        "segments" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/Segment"
+          }
+        }
+      }
+    },
+    "Segment_departure" : {
+      "properties" : {
+        "time" : {
+          "type" : "string",
+          "description" : "The ISO 8601-times of departure."
+        },
+        "stop" : {
+          "$ref" : "#/definitions/Stop"
+        }
+      }
+    },
+    "Segment_arrival" : {
+      "properties" : {
+        "time" : {
+          "type" : "string",
+          "description" : "The ISO 8601-times of arrival."
+        },
+        "stop" : {
+          "$ref" : "#/definitions/Stop"
+        }
       }
     }
   },
