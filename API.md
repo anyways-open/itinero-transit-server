@@ -2,6 +2,8 @@
 API description
 ===============
 
+**this is a draft, we should convert this into an [OpenAPI](https://en.wikipedia.org/wiki/OpenAPI_Specification) spec**
+
 With this API, you can query how to go from one location to another using various transportation modi. As for version 1.0, only traveling via the SNCB/NMBS network is supported.
 
 This document describes how you, as a developer, can query our service to get journeys via the SNCB-network.
