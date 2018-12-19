@@ -2,8 +2,8 @@
 API description
 ===============
 
-With this API, you can query how to go from one location to another. 
-As for version 1.0, only traveling via the SNCB/NMBS network is supported.
+With this API, you can query how to go from one location to another using various transportation modi. As for version 1.0, only traveling via the SNCB/NMBS network is supported.
+
 This document describes how you, as a developer, can query our service to get journeys via the SNCB-network.
 
 Getting stations
@@ -47,8 +47,8 @@ The arguments are:
 
 - `from=` gives the departure location, thus the identifier of a SNCB-station in the 'http://irail.be/stations/NMBS/<some_number>'-format
 - `to=` gives the arrival stations, in the same format
-- `departure` gives the departure time, in ISO-8601-format. If no time zone indications is given, UTC is assumed
-- `arrival` gives the latest wanted arrival time in ISO-8601-format.
+- `departure` gives the earliest wanted departure time, in ISO-8601-format. If no time zone indications is given, UTC is assumed
+- `arrival` gives the latest wanted arrival time (also in ISO-8601-format).
 
 Note that giving only departure or arrival-time is sufficient: if only departure time is given,
 the server will respond with a number of options arriving after the given time.
@@ -77,8 +77,8 @@ The returned json could look like: (WORK IN PROGRESS - SUBJECT TO CHANGE)
                 , to-id: 'http://irail.be/nmbs/stations/0000000789'
                 , to-nl: 'Gent-Sint-Pieters'
 	            , vehicle: 'IC1234'
-	            , destination: 'Eupen'
-	            , platform-departure: '4' # might be missing due to lack of data, or when a platform number does not make sense (e.g. a segment where we take the bus) 
+	            , headsign: 'Eupen' # The headsign of the train, often its end destination. Might be localized as well
+	            , platform-departure: '4' # might be missing due to lack of data or when a platform number does not make sense (e.g. a segment where we take the bus) 
 	            , platform-arrival: '5'
 	            },
 	            
