@@ -1,8 +1,11 @@
 
 API description
-===============
+==============
 
-**this is a draft, we should convert this into an [OpenAPI](https://en.wikipedia.org/wiki/OpenAPI_Specification) spec**
+This API specification is using the [OpenAPI](https://en.wikipedia.org/wiki/OpenAPI_Specification) spec. To visualize this do the following:
+
+- Open [https://petstore.swagger.io/](https://petstore.swagger.io/).
+- Paste in [this url of the raw spec](https://raw.githubusercontent.com/anyways-open/itinero-transit-server/features/new-api/docs/swagger.json) in the search box at the top.
 
 With this API, you can query how to go from one location to another using various transportation modi. As for version 1.0, only traveling via the SNCB/NMBS network is supported.
 
