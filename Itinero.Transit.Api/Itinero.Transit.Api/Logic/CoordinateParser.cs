@@ -24,9 +24,9 @@ namespace Itinero.Transit.Api.Logic
             {
                 return false;
             }
-            if (!double.TryParse(split[0], NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture,
+            if (!double.TryParse(split[0], NumberStyles.Any, CultureInfo.InvariantCulture,
                     out var longitude) ||
-                !double.TryParse(split[1], NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture,
+                !double.TryParse(split[1], NumberStyles.Any, CultureInfo.InvariantCulture,
                     out var latitude))
             {
                 return false;

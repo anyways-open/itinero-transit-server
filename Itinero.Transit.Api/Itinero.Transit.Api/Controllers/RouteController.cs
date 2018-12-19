@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Globalization;
 using Itinero.Transit.Api.Logic;
-using Itinero.Transit.Logging;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Itinero.Transit.Api.Controllers

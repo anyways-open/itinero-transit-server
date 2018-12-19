@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Itinero.Transit.Data;
 using Newtonsoft.Json;
+// ReSharper disable NotAccessedField.Global
 
 namespace Itinero.Transit.Api
 {
@@ -18,6 +19,7 @@ namespace Itinero.Transit.Api
 
         [JsonProperty("@id")]
         public readonly Uri @Id;
+        // ReSharper disable once InconsistentNaming
         public readonly string Name, Standardname, id;
 
         public StationInfo(IStop l) : 

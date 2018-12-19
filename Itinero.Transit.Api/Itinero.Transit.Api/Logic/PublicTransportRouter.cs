@@ -1,15 +1,10 @@
 using System;
-using System.Collections.Generic;
 using Itinero.Transit.Algorithms.CSA;
 using Itinero.Transit.Algorithms.Search;
 using Itinero.Transit.Data;
 using Itinero.Transit.Data.Walks;
 using Itinero.Transit.IO.LC;
 using Itinero.Transit.Journeys;
-using Itinero.Transit.Logging;
-using JsonLD.Core;
-using Serilog;
-using IConnection = Itinero.Transit.Data.IConnection;
 
 namespace Itinero.Transit.Api.Logic
 {
@@ -22,14 +17,12 @@ namespace Itinero.Transit.Api.Logic
             = BelgiumSncbProfile();
 
         private readonly StopsDb _stopsDb;
-        private readonly ConnectionsDb _connectionsDb;
         private readonly Profile<TransferStats> _profile;
         
-        public PublicTransportRouter(Profile<TransferStats> profile, StopsDb stopsDb, ConnectionsDb connectionsDb)
+        public PublicTransportRouter(Profile<TransferStats> profile, StopsDb stopsDb)
         {
             _profile = profile;
             _stopsDb = stopsDb;
-            _connectionsDb = connectionsDb;
         }
 
         /// <summary>
@@ -41,36 +34,31 @@ namespace Itinero.Transit.Api.Logic
         {
             var reader = _stopsDb.GetReader();
             
-            if (Uri.TryCreate(stopDescription, UriKind.Absolute, out var stopUri))
+            if (Uri.TryCreate(stopDescription, UriKind.Absolute, out _))
             {
                 if (!reader.MoveTo(stopDescription))
                 {
                     return (uint.MaxValue, uint.MaxValue);
                 }
+                
                 return reader.Id;
             }
-            else if (CoordinateParser.TryParse(stopDescription, out var coordinates))
+
+            if (!CoordinateParser.TryParse(stopDescription, out var coordinates))
             {
-                var stop = _stopsDb.SearchClosest(coordinates.longitude, coordinates.latitude);
-                if (stop != null)
-                {
-                    return stop.Id;
-                }
+                return (uint.MaxValue, uint.MaxValue);
+            }
+            
+            
+            var stop = _stopsDb.SearchClosest(coordinates.longitude, coordinates.latitude);
+            if (stop != null)
+            {
+                return stop.Id;
             }
 
             return (uint.MaxValue, uint.MaxValue);
         }
 
-//        public Uri AsLocationUri(string uriData)
-//        {
-//            var loc = new Uri(uriData);
-//            if (!_locationDecoder.ContainsLocation(loc))
-//            {
-//                throw new KeyNotFoundException($"The specified location {uriData} is unknown or malformed.");
-//            }
-//
-//            return loc;
-//        }
 
         public StationInfo GetLocationInfo((uint tileId, uint localId) id)
         {
@@ -83,29 +71,14 @@ namespace Itinero.Transit.Api.Logic
             return new StationInfo(reader);
         }
 
-
-//        public StationInfo GetLocationInfo(Uri uri)
-//        {
-//            return new StationInfo(_locationDecoder.GetCoordinateFor(uri));
-//        }
-
-//        public Location GetCoord(ulong id)
-//        {
-//            return _locationDecoder.GetCoordinateFor(_reverseIds[id]);
-//        }
-
-
         public IrailResponse<TransferStats> EarliestArrivalRoute((uint tileId, uint localId) departureStation, (uint tileId, uint localId) arrivalStation,
             DateTime departureTime, DateTime latestArrival)
         {
-            // run EAS.
-            var eas = new EarliestConnectionScan<TransferStats>(
+            var journeys =_profile.CalculateJourneys(
                 departureStation, arrivalStation,
-                departureTime.ToUnixTime(), departureTime.AddHours(10).ToUnixTime(),
-                _profile);
+                departureTime.ToUnixTime(), departureTime.AddHours(10).ToUnixTime());
 
-            var journey = eas.CalculateJourney();
-            return IrailResponse<TransferStats>.CreateResponse(this, journey);
+            return IrailResponse<TransferStats>.CreateResponse(this, journeys);
         }
 
 //        private static void CreateRouterDb(string downloadSource, string targetLocation, bool forceRefresh = false)
@@ -150,34 +123,27 @@ namespace Itinero.Transit.Api.Logic
             // The SNCB router expects a routerDB (based on OSM) at "./belgium.routerdb"
             // If that routerDB ain't there, we create it
             // TBH, we don't really need it... But meh
-            //CreateRouterDb("http://files.itinero.tech/data/OSM/planet/europe/belgium-latest.osm.pbf",
+            // CreateRouterDb("http://files.itinero.tech/data/OSM/planet/europe/belgium-latest.osm.pbf",
             //  "belgium.routerdb");
 
-            var profile = Itinero.Transit.IO.LC.CSA.Belgium.Sncb(new IO.LC.CSA.Utils.LocalStorage("cache"));
+            var sncb = IO.LC.CSA.Belgium.Sncb(new IO.LC.CSA.Utils.LocalStorage("cache"));
 
             var stopsDb = new StopsDb();
+            var tripsDb = new TripsDb();
             var connectionsDb = new ConnectionsDb();
 
-            connectionsDb.LoadConnections(profile, stopsDb, (DateTime.Now.Date, TimeSpan.FromDays(1)));
+            var timeWindow = (DateTime.Now.Date, TimeSpan.FromDays(1));
+
+            connectionsDb.LoadConnections(sncb, stopsDb, tripsDb, timeWindow);
             
             var p = new Profile<TransferStats>(
                 connectionsDb, stopsDb,
-                new NoWalksGenerator(), new TransferStats());
+                new InternalTransferGenerator(),
+                new TransferStats(), TransferStats.ProfileTransferCompare);
             return new PublicTransportRouter(
                 p,
-                stopsDb,
-                connectionsDb);
+                stopsDb);
         }
 
-//        public IConnection GetConnection(uint id)
-//        {
-//            _connReader.MoveTo(id);
-//            return _connReader;
-//        }
-
-//        public Uri GetConnectionUri(uint id)
-//        {
-//            return _idToConnUri[id];
-//        }
     }
 }
