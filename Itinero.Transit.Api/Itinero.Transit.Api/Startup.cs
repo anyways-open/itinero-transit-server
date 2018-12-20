@@ -8,6 +8,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using Serilog.Formatting.Json;
+using NJsonSchema;
+using NSwag.AspNetCore;
+using System.Reflection;
+
 
 namespace Itinero.Transit.Api
 {
@@ -31,15 +35,19 @@ namespace Itinero.Transit.Api
             });
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+
+            Log.Information("Adding swagger");
+            services.AddSwaggerDocument();
+
             Log.Information("Setting up the DB for today (test)");
             var sncb = PublicTransportRouter.BelgiumSncb;
-          //   route?from=&to=&date=201118&time=1230
+            //   route?from=&to=&date=201118&time=1230
             var example = sncb.EarliestArrivalRoute(
                 sncb.GetStop("http://irail.be/stations/NMBS/008891009"),
                 sncb.GetStop("http://irail.be/stations/NMBS/008813003"),
                 DateTime.Now.Date.AddHours(10),
                 DateTime.Now.Date.AddHours(14)
-               );
+            );
             Log.Information(example.ToString());
         }
 
@@ -54,11 +62,18 @@ namespace Itinero.Transit.Api
             {
                 app.UseHsts();
             }
-            
+
+            // Register the Swagger generator and the Swagger UI middlewares
+            app.UseSwaggerUi3(settings =>
+            {
+                settings.GeneratorSettings.DefaultPropertyNameHandling =
+                    PropertyNameHandling.CamelCase;
+            });
+
             app.UseHttpsRedirection();
             app.UseMvc();
         }
-        
+
         private static void ConfigureLogging()
         {
             var date = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
