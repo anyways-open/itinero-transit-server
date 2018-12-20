@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
+using Itinero.Transit.Api.Controllers;
 using Itinero.Transit.Api.Logic;
+using Itinero.Transit.Data;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -9,8 +11,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using Serilog.Formatting.Json;
 using NJsonSchema;
-using NSwag.AspNetCore;
-using System.Reflection;
 
 
 namespace Itinero.Transit.Api
@@ -28,6 +28,10 @@ namespace Itinero.Transit.Api
         public void ConfigureServices(IServiceCollection services)
         {
             ConfigureLogging();
+
+            var db = DatabaseLoader.Belgium();
+            StopsController.StopsDb = db.Stops;
+            
             services.AddCors(options =>
             {
                 options.AddPolicy("AllowAnyOrigin",
@@ -39,16 +43,7 @@ namespace Itinero.Transit.Api
             Log.Information("Adding swagger");
             services.AddSwaggerDocument();
 
-            Log.Information("Setting up the DB for today (test)");
-            var sncb = PublicTransportRouter.BelgiumSncb;
-            //   route?from=&to=&date=201118&time=1230
-            var example = sncb.EarliestArrivalRoute(
-                sncb.GetStop("http://irail.be/stations/NMBS/008891009"),
-                sncb.GetStop("http://irail.be/stations/NMBS/008813003"),
-                DateTime.Now.Date.AddHours(10),
-                DateTime.Now.Date.AddHours(14)
-            );
-            Log.Information(example.ToString());
+           
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -63,11 +58,30 @@ namespace Itinero.Transit.Api
                 app.UseHsts();
             }
 
-            // Register the Swagger generator and the Swagger UI middlewares
+            app.UseSwagger();
             app.UseSwaggerUi3(settings =>
             {
                 settings.GeneratorSettings.DefaultPropertyNameHandling =
                     PropertyNameHandling.CamelCase;
+                
+                settings.PostProcess = document =>
+                {
+                    document.Info.Version = "v1";
+                    document.Info.Title = "Public Transport routing";
+                    document.Info.Description = "A simple ASP.NET Core web API";
+                    document.Info.TermsOfService = "None";
+                    document.Info.Contact = new NSwag.SwaggerContact
+                    {
+                        Name = "Pieter Vander Vennet",
+                        Email = "pieter@anyways.eu",
+                        Url = "anyways.eu"
+                    };
+                    document.Info.License = new NSwag.SwaggerLicense
+                    {
+                        Name = "MIT",
+                    };
+                };
+                
             });
 
             app.UseHttpsRedirection();

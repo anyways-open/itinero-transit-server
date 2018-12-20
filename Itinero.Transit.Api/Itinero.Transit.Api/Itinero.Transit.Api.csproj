@@ -5,6 +5,11 @@
         <LangVersion>latest</LangVersion>
     </PropertyGroup>
 
+    <PropertyGroup>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <NoWarn>$(NoWarn);1591</NoWarn>
+    </PropertyGroup>
+
     <ItemGroup>
         <PackageReference Include="Itinero.Transit" Version="0.6.0-alpha" />
         <PackageReference Include="Itinero.Transit.IO.LC" Version="0.6.0-alpha" />
