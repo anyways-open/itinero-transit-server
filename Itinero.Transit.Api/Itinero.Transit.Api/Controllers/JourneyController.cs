@@ -22,8 +22,8 @@ namespace Itinero.Transit.Api.Controllers
         /// <summary>
         /// Creates a journey over the public-transport network
         /// </summary>
-        /// <param name="from">The location where the journey starts, e.g. https://irail.be/stations/NMBS/008891009</param>
-        /// <param name="to">The location where the traveller would like to go, e.g. https://irail.be/stations/NMBS/008892007</param>
+        /// <param name="from">The location where the journey starts, e.g. http://irail.be/stations/NMBS/008891009</param>
+        /// <param name="to">The location where the traveller would like to go, e.g. http://irail.be/stations/NMBS/008892007</param>
         /// <param name="departure">The earliest moment when the traveller would like to depart, in ISO8601 format</param>
         /// <param name="arrival">The last moment where the traveller would like to arrive, in ISO8601 format</param>
         /// <param name="internalTransferTime">The number of seconds the traveller needs to transfer trains within the station. Increase for less mobile users</param>
