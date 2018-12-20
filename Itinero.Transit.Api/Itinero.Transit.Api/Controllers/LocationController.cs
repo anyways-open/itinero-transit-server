@@ -1,8 +1,6 @@
-using System.Net;
-using Itinero.Transit.Data;
+using Itinero.Transit.Api.Logic;
+using Itinero.Transit.Api.Models;
 using Microsoft.AspNetCore.Mvc;
-using NSwag.Annotations;
-using Stop = Itinero.Transit.Api.Models.Stop;
 
 namespace Itinero.Transit.Api.Controllers
 {
@@ -10,9 +8,9 @@ namespace Itinero.Transit.Api.Controllers
     [ApiController]
     [ProducesResponseType(200)]   
     [ProducesResponseType(404)]  
-    public class StopsController : ControllerBase
+    public class LocationController : ControllerBase
     {
-        public static StopsDb StopsDb;
+        public static JourneyTranslator Translator;
 
         
         /// <summary>
@@ -20,15 +18,14 @@ namespace Itinero.Transit.Api.Controllers
         /// </summary>
         /// <param name="id">The identifier of the location, e.g. 'https://irail.be/stations/NMBS/008891009'</param>
         [HttpGet]
-        public ActionResult<Stop> Get(string id)
+        public ActionResult<Location> Get(string id)
         {
-            var reader = StopsDb.GetReader();
-            if (!reader.MoveTo(id))
+            var found = Translator.LocationOf(id);
+            if (found == null)
             {
                 return NotFound("No location with this id found");
             }
-            
-            return new Stop(reader);
+            return  found;
         }
     }
 }

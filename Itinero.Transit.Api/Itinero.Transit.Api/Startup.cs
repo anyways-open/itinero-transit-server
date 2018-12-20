@@ -2,7 +2,6 @@
 using System.IO;
 using Itinero.Transit.Api.Controllers;
 using Itinero.Transit.Api.Logic;
-using Itinero.Transit.Data;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -10,7 +9,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using Serilog.Formatting.Json;
-using NJsonSchema;
 
 
 namespace Itinero.Transit.Api
@@ -30,7 +28,10 @@ namespace Itinero.Transit.Api
             ConfigureLogging();
 
             var db = DatabaseLoader.Belgium();
-            StopsController.StopsDb = db.Stops;
+            var tr = new JourneyTranslator(db);
+            LocationController.Translator = tr;
+            LocationsAroundController.StopsDb = db.Stops;
+            JourneyController.Translator = tr;
             
             services.AddCors(options =>
             {
@@ -59,30 +60,7 @@ namespace Itinero.Transit.Api
             }
 
             app.UseSwagger();
-            app.UseSwaggerUi3(settings =>
-            {
-                settings.GeneratorSettings.DefaultPropertyNameHandling =
-                    PropertyNameHandling.CamelCase;
-                
-                settings.PostProcess = document =>
-                {
-                    document.Info.Version = "v1";
-                    document.Info.Title = "Public Transport routing";
-                    document.Info.Description = "A simple ASP.NET Core web API";
-                    document.Info.TermsOfService = "None";
-                    document.Info.Contact = new NSwag.SwaggerContact
-                    {
-                        Name = "Pieter Vander Vennet",
-                        Email = "pieter@anyways.eu",
-                        Url = "anyways.eu"
-                    };
-                    document.Info.License = new NSwag.SwaggerLicense
-                    {
-                        Name = "MIT",
-                    };
-                };
-                
-            });
+            app.UseSwaggerUi3();
 
             app.UseHttpsRedirection();
             app.UseMvc();

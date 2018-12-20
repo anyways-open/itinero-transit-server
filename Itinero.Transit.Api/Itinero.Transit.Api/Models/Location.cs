@@ -6,13 +6,13 @@ using Serilog;
 
 namespace Itinero.Transit.Api.Models
 {
-    public class Stop
+    public class Location
     {
 
         public double Lat, Lon;
         public string Id, Name;
 
-        public Stop(IStop source)
+        public Location(IStop source)
             : this(source.GlobalId, null,
                 source.Latitude, source.Longitude)
         {
@@ -22,11 +22,11 @@ namespace Itinero.Transit.Api.Models
             }
             catch
             {
-                Log.Information($"No name found for {source.Id}");
+                Log.Information($"No name found for {source.GlobalId}");
             }
         }
         
-        public Stop(string id, string name, double lat, double lon)
+        public Location(string id, string name, double lat, double lon)
         {
             Id = id;
             Name = name;
