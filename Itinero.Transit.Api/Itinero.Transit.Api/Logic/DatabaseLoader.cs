@@ -3,6 +3,7 @@
 using System;
 using Itinero.Transit.Data;
 using Itinero.Transit.IO.LC;
+using Itinero.Transit.IO.LC.CSA;
 using Itinero.Transit.IO.LC.CSA.Utils;
 using Attribute = Itinero.Transit.Data.Attributes.Attribute;
 
@@ -16,12 +17,14 @@ namespace Itinero.Transit.Api.Logic
         public readonly StopsDb Stops;
         public readonly ConnectionsDb Connections;
         public readonly TripsDb Trips;
+        public readonly Profile Profile;
 
-        public DatabaseLoader(StopsDb stops, ConnectionsDb connections, TripsDb trips)
+        public DatabaseLoader(StopsDb stops, ConnectionsDb connections, TripsDb trips, Profile profile)
         {
             Stops = stops;
             Connections = connections;
             Trips = trips;
+            Profile = profile;
         }
 
 
@@ -42,7 +45,7 @@ namespace Itinero.Transit.Api.Logic
 
             connectionsDb.LoadConnections(sncb, stopsDb, tripsDb, timeWindow);
 
-            return new DatabaseLoader(stopsDb, connectionsDb, tripsDb);
+            return new DatabaseLoader(stopsDb, connectionsDb, tripsDb, sncb);
         }
     }
 }

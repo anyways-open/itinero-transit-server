@@ -32,6 +32,7 @@ namespace Itinero.Transit.Api
             LocationController.Translator = tr;
             LocationsAroundController.StopsDb = db.Stops;
             JourneyController.Translator = tr;
+            LocationsByNameController.Locations = db.Profile;
             
             services.AddCors(options =>
             {
@@ -64,6 +65,7 @@ namespace Itinero.Transit.Api
 
             app.UseHttpsRedirection();
             app.UseMvc();
+            app.UseFileServer();
         }
 
         private static void ConfigureLogging()
