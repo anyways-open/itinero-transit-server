@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Itinero.Transit.Api.Models;
 using Itinero.Transit.Data;
 using Itinero.Transit.Journeys;
+using Serilog;
 
 namespace Itinero.Transit.Api.Logic
 {
@@ -11,13 +12,15 @@ namespace Itinero.Transit.Api.Logic
     /// </summary>
     public class JourneyTranslator
     {
-        public readonly DatabaseLoader Db;
+        private readonly DatabaseLoader Db;
         private readonly StopsDb.StopsDbReader _stops;
+        private readonly TripsDb.TripsDbReader _trips;
 
         public JourneyTranslator(DatabaseLoader db)
         {
             Db = db;
             _stops = Db.Stops.GetReader();
+            _trips = Db.Trips.GetReader();
         }
 
 
@@ -39,7 +42,16 @@ namespace Itinero.Transit.Api.Logic
             var departure = new TimedLocation(
                 LocationOf(rest.Location),
                 rest.Time);
-            return (new Segment(departure, arrivalLocation), rest.PreviousLink);
+
+
+            _trips.MoveTo(j.TripId);
+            var trip     = _stops;
+
+          
+            
+            trip.Attributes.TryGetValue("headsign", out var headsign);
+            trip.Attributes.TryGetValue("route", out var route);
+            return (new Segment(departure, arrivalLocation, route, headsign), rest.PreviousLink);
         }
 
         public Journey Translate<T>(Journey<T> j) where T : IJourneyStats<T>

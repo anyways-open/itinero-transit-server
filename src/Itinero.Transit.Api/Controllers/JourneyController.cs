@@ -8,6 +8,7 @@ using Itinero.Transit.Data;
 using Itinero.Transit.Data.Walks;
 using Itinero.Transit.Journeys;
 using Microsoft.AspNetCore.Mvc;
+using Serilog;
 
 namespace Itinero.Transit.Api.Controllers
 {
@@ -19,11 +20,17 @@ namespace Itinero.Transit.Api.Controllers
     public class JourneyController : ControllerBase
     {
         public static JourneyTranslator Translator;
+        public static DatabaseLoader Db;
 
 
         /// <summary>
-        /// Creates a journey over the public-transport network
+        /// Creates a journey over the public-transport network.
         /// </summary>
+        /// <remarks>
+        /// You do not have to provide both departure and arrival times, one of them is enough.
+        /// When both are given, all possible journeys between those points in time are calculated.
+        /// If only one is given, a fastest possible test route is created. Then, the taken time is doubled and all possible journeys between `(journey.Departure, journey.Departure + 2*journey.TotalTime)` are given.
+        /// </remarks>
         /// <param name="from">The location where the journey starts, e.g. http://irail.be/stations/NMBS/008891009</param>
         /// <param name="to">The location where the traveller would like to go, e.g. http://irail.be/stations/NMBS/008892007</param>
         /// <param name="departure">The earliest moment when the traveller would like to depart, in ISO8601 format</param>
@@ -33,8 +40,8 @@ namespace Itinero.Transit.Api.Controllers
         public ActionResult<List<Journey>> Get(
             string from,
             string to,
-            DateTime departure,
-            DateTime arrival,
+            DateTime? departure = null,
+            DateTime? arrival = null,
             uint internalTransferTime = 180
         )
         {
@@ -50,14 +57,15 @@ namespace Itinero.Transit.Api.Controllers
                 Translator.InternalidOf(from);
                 Translator.InternalidOf(to);
             }
-            catch
+            catch(Exception e)
             {
+                Log.Error(e.ToString());
                 return BadRequest("A station could not be found. Check the identifiers");
             }
             
             var p = new Profile<TransferStats>(
-                Translator.Db.Connections,
-                Translator.Db.Stops,
+                Db.Connections,
+                Db.Stops,
                 new InternalTransferGenerator(internalTransferTime),
                 null,
                 TransferStats.Factory,

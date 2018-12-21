@@ -1,10 +1,12 @@
 // ReSharper disable MemberCanBePrivate.Global
 
 using System;
+using System.Collections.Generic;
 using Itinero.Transit.Data;
 using Itinero.Transit.IO.LC;
 using Itinero.Transit.IO.LC.CSA;
 using Itinero.Transit.IO.LC.CSA.Utils;
+using Serilog;
 using Attribute = Itinero.Transit.Data.Attributes.Attribute;
 
 namespace Itinero.Transit.Api.Logic
@@ -18,13 +20,15 @@ namespace Itinero.Transit.Api.Logic
         public readonly ConnectionsDb Connections;
         public readonly TripsDb Trips;
         public readonly Profile Profile;
+        public readonly Dictionary<string, uint> ConnectionCounts;
 
-        public DatabaseLoader(StopsDb stops, ConnectionsDb connections, TripsDb trips, Profile profile)
+        public DatabaseLoader(StopsDb stops, ConnectionsDb connections, TripsDb trips, Profile profile, Dictionary<string, uint> connectionCounts)
         {
             Stops = stops;
             Connections = connections;
             Trips = trips;
             Profile = profile;
+            ConnectionCounts = connectionCounts;
         }
 
 
@@ -36,16 +40,40 @@ namespace Itinero.Transit.Api.Logic
             var connectionsDb = new ConnectionsDb();
             var tripsDb = new TripsDb();
 
-            var timeWindow = (DateTime.Now.Date, TimeSpan.FromDays(1));
+            var timeWindow = (DateTime.Now.Date, TimeSpan.FromDays(10));
 
-            foreach (var l in sncb.GetAllLocations())
-            {
-                stopsDb.Add(l.Id().ToString(), l.Lon, l.Lat,new Attribute("name", l.Name));
-            }
-
+            var treader = tripsDb.GetReader();
+      
+            
             connectionsDb.LoadConnections(sncb, stopsDb, tripsDb, timeWindow);
+            
 
-            return new DatabaseLoader(stopsDb, connectionsDb, tripsDb, sncb);
+            var counts = new Dictionary<string, uint>();
+            
+            var cons = connectionsDb.GetDepartureEnumerator();
+            var stopsreader = stopsDb.GetReader();
+            while (cons.MoveNext())
+            {
+                stopsreader.MoveTo(cons.DepartureStop);
+                Increase(counts, stopsreader.GlobalId);
+                stopsreader.MoveTo(cons.ArrivalStop);
+                Increase(counts, stopsreader.GlobalId);
+            }
+            
+            
+            return new DatabaseLoader(stopsDb, connectionsDb, tripsDb, sncb, counts);
+        }
+
+        private static void Increase<TK>(Dictionary<TK, uint> d, TK k)
+        {
+            if (!d.ContainsKey(k))
+            {
+                d[k] = 1;
+            }
+            else
+            {
+                d[k]++;
+            }
         }
     }
 }

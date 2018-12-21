@@ -13,18 +13,28 @@ namespace Itinero.Transit.Api.Models
     {
         // ReSharper disable once InconsistentNaming
         public readonly string Id, Name;
-        
+
         /// <summary>
         /// Indicates how bad the match is.
         /// 0 is a perfect match. The bigger the number, the less likely the match.
         /// </summary>
         public readonly int Difference;
 
-        public LocationResult(string id, string name, int difference)
+        /// <summary>
+        /// Gives an indication how important a station is. The higher the number, the more trains pass there.
+        /// Can be used to compare two value to each other.
+        /// Might be deprecated in the future
+        /// Calculation method might change in the future.
+        /// Make sure your code can handle sudden changes or drops of this field
+        /// </summary>
+        public readonly uint Importance;
+
+        public LocationResult(string id, string name, int difference, uint importance)
         {
             Id = id;
             Name = name;
             Difference = difference;
+            Importance = importance;
         }
     }
 }

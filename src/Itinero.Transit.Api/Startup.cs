@@ -32,7 +32,9 @@ namespace Itinero.Transit.Api
             LocationController.Translator = tr;
             LocationsAroundController.StopsDb = db.Stops;
             JourneyController.Translator = tr;
+            JourneyController.Db = db;
             LocationsByNameController.Locations = db.Profile;
+            LocationsByNameController.Importances = db.ConnectionCounts;
             
             services.AddCors(options =>
             {

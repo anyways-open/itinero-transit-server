@@ -2,6 +2,12 @@
 
 <head>
 <title>Public Transport Router</title>
+    <script src="lib/jquery-1.12.4.js"></script>
+    <script src="lib/jquery-ui.js"></script>
+    <link rel="stylesheet" href="lib/jquery-ui.css">
+    
+    <script type="text/javascript" src="lib/jquery.timepicker.js"></script>
+    <link rel="stylesheet" type="text/css" href="lib/jquery.timepicker.css" />
 <head>
 
 
@@ -15,8 +21,148 @@ This is the default, demo page of the public transport routing server of Itinero
 You can lookup journeys here. If you are interested in the API, head over to <a href='/swagger'>the swagger page</a> to see the documentation and to play with the API.
 </p>
 <p>
-If you know CSS and can do a better designing job, please send a PR at <a href='https://github.com/anyways-open/itinero-transit-server/'>our github</a>. We need it!
+If you know CSS and can do a better designing job, please send a PR at <a href='https://github.com/anyways-open/itinero-transit-server/'>our github</a>. We obviously need it!
 </p>
+
+<h2>Lookup SNCB/NMBS journeys</h2>
+
+<table>
+<tr><td>From</td><td><input type="text" id="from" name="from"></td></tr>
+<tr><td>Assuming station</td><td> <div id="foundFrom"><i>No departure station found yet<i></div> </td></tr>
+
+<tr><td>To</td><td><input type="text" id="to" name="to"></td></tr>
+<tr><td>Assuming station</td><td> <div id="foundTo"><i>No arrival station found yet<i></div> </td></tr>
+<tr><td>Seconds needed to transfer trains</td><td><input type="text" id="transfertime" name="transfertime" value="180"> </td></tr>
+
+<tr><td><input type="text" id="depDate"></td><td>  <input id="depTime" type="text" class="time" /> </td></tr>
+
+<tr><td> <button onclick="lookupJourney()">Search journeys</button> </td></tr>
+
+</table>
+
+
+<table id="journeys">
+
+<tr><th>Departure time</th><th>Arrival time</th><th>Number of transfers</th><th>Overview</th></tr>
+
+
+</table>
+
+
+
+</head>
+<body>
+ 
+<script>
+
+  
+/************** Helper functions for functional programmers ****/
+
+function delay(delayed, arg1, arg2, arg3){
+    return function(){
+        delayed(arg1, arg2, arg3);
+    };
+}
+
+function addCell(row, text){
+	var cell = row.insertCell(row.length);
+	cell.innerHTML = text;
+	return cell;
+}
+
+function addCells(row, textList){
+    for(var i in textList){
+        addCell(row, textList[i]);
+    }
+}
+
+/**** Input setup *****/
+$( function() {
+    $( "#depDate" ).datepicker({dateFormat: "yy-mm-dd"});
+    $( "#depDate" ).datepicker("setDate", new Date());
+  } );
+  
+$('#depTime').timepicker({'timeFormat': 'H:i', 'step':5});
+$('#depTime').timepicker('setTime', new Date());
+
+
+  
+
+var cache = {}
+
+function searchStation(inputSource, id){
+
+    let query = inputSource.value;
+    if(query.length < 3){
+        return;
+    }
+    
+    $.getJSON("/LocationsByName?name="+query,function(data){
+        let e = document.getElementById(id);
+        e.innerHTML = '<a href=' + data[0].id + '>' + data[0].name + '</a>'
+        cache[id] = data[0].id;
+    });
+}
+
+
+let src = document.getElementById("from");
+src.addEventListener('input', delay(searchStation, src, "foundFrom"));
+src = document.getElementById("to");
+src.addEventListener('input', delay(searchStation, src, "foundTo"));
+
+/**** Journey querying setup *****/
+
+
+function lookupJourney(){
+    
+    let from = cache.foundFrom;
+    let to = cache.foundTo;
+    let transferTime = document.getElementById("transfertime").value;
+    if(from === undefined || to === undefined){
+        alert("Please specify departure and arrival stations first");
+        return;
+    }
+    
+    var depTime = document.getElementById('depDate').value + " "+document.getElementById('depTime').value+'+01:00';
+    
+    let query = "/journey?from="+encodeURIComponent(from)+
+                    "&to="+encodeURIComponent(to)+
+                    "&departure="+encodeURIComponent(depTime)+
+                    "&internalTransferTime="+transferTime;
+    $.getJSON(query, function(data){
+        
+        let t = document.getElementById("journeys");
+        let rows = t.rows;
+        for(var i = rows.length-1; i >= 1; i--){
+            t.deleteRow(i);
+        }
+        
+        for(var i in data){
+            var j = data[i];
+            console.log(j);
+            var row = t.insertRow(1);
+        	addCells(row, [j.departure.time, j.arrival.time, j.transfers]);
+        	
+        	var overview = "<ol>";
+        	overview += "<li>Start your journey in <strong>"+j.departure.location.name+"</strong></li>";
+        	for(var sn in j.segments){
+        	    var s = j.segments[sn]
+        	    overview += "<li>Get on the train to <strong>"+s.headsign+"</strong> in "+s.departure.location.name+" at "+s.departure.time+"</li>";
+        	    overview += "<li>Get off in <strong>"+s.arrival.location.name+"</strong>";
+        	}
+        	overview += "</ol>"
+        	addCell(row, overview)
+        }
+    }).fail(function(){alert("No routes were found. Keep in mind that only today works")});
+
+}
+
+
+</script>
+
+
+
+
 
 
 

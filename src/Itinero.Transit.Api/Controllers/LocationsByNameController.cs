@@ -1,7 +1,6 @@
-
-
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 using Itinero.Transit.Api.Models;
 using Itinero.Transit.IO.LC.CSA;
@@ -18,6 +17,7 @@ namespace Itinero.Transit.Api.Controllers
     public class LocationsByNameController : ControllerBase
     {
         public static Profile Locations;
+        public static Dictionary<string, uint> Importances;
 
         /// <summary>
         /// Searches for stops having the given name or something similar. 
@@ -64,7 +64,7 @@ namespace Itinero.Transit.Api.Controllers
                     continue;
                 }
 
-                if (name.Length >= 4 && lName.StartsWith(name))
+                if (name.Length >= maxDistance && lName.StartsWith(name))
                 {
                     results[2].Add(l);
                     continue;
@@ -83,11 +83,24 @@ namespace Itinero.Transit.Api.Controllers
             {
                 foreach (var r in results[i])
                 {
-                    json.Add(new LocationResult(r.Uri.ToString(), r.Name, i));
+                    var id = r.Uri.ToString();
+                    uint importance = 0;
+                    if (Importances != null && Importances.ContainsKey(id))
+                    {
+                        importance = Importances[id];
+                    }
+
+                    json.Add(new LocationResult(r.Uri.ToString(), r.Name, i, importance));
                 }
             }
 
-            return json;
+            if (json.Count == 0)
+            {
+                return NotFound($"No stations found for search string {name}");
+            }
+
+            // Forgive me, Ben, for I have sinned by using Linq
+            return json.OrderBy(o => o.Difference).ThenByDescending(o => o.Importance).ToList();
         }
 
         private static string Simplify(string s)
@@ -128,16 +141,16 @@ namespace Itinero.Transit.Api.Controllers
                 return a.Length;
             }
 
-            int lengthA = a.Length;
-            int lengthB = b.Length;
+            var lengthA = a.Length;
+            var lengthB = b.Length;
             var distances = new int[lengthA + 1, lengthB + 1];
-            for (int i = 0; i <= lengthA; distances[i, 0] = i++) ;
-            for (int j = 0; j <= lengthB; distances[0, j] = j++) ;
+            for (var i = 0; i <= lengthA; distances[i, 0] = i++) ;
+            for (var j = 0; j <= lengthB; distances[0, j] = j++) ;
 
-            for (int i = 1; i <= lengthA; i++)
-            for (int j = 1; j <= lengthB; j++)
+            for (var i = 1; i <= lengthA; i++)
+            for (var j = 1; j <= lengthB; j++)
             {
-                int cost = b[j - 1] == a[i - 1] ? 0 : 1;
+                var cost = b[j - 1] == a[i - 1] ? 0 : 1;
                 distances[i, j] = Math.Min
                 (
                     Math.Min(distances[i - 1, j] + 1, distances[i, j - 1] + 1),

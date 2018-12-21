@@ -11,11 +11,22 @@ namespace Itinero.Transit.Api.Models
     {
 
         public TimedLocation Departure, Arrival;
+        
+        /// <summary>
+        /// The identifier of the vehicle
+        /// </summary>
+        public string Vehicle;
+        /// <summary>
+        /// The name of the train, e.g. its destination
+        /// </summary>
+        public string HeadSign;
 
-        public Segment(TimedLocation departure, TimedLocation arrival)
+        public Segment(TimedLocation departure, TimedLocation arrival, string vehicle, string headSign)
         {
             Departure = departure;
             Arrival = arrival;
+            Vehicle = vehicle;
+            HeadSign = headSign;
         }
     }
 }
