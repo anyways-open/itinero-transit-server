@@ -2,7 +2,21 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{5AD1023E-2A92-4CDC-951D-170B77AD9DB2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Itinero.Transit.Api", "src\Itinero.Transit.Api\Itinero.Transit.Api\Itinero.Transit.Api.csproj", "{71749D4C-D58F-436C-81A7-3629F9DDDD97}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Itinero.Transit.Api", "src\Itinero.Transit.Api\Itinero.Transit.Api.csproj", "{1ED1FA27-8AED-4998-B121-39589A20E49D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{26746D40-E4FE-4A9C-8F9F-841C404AB430}"
+ProjectSection(SolutionItems) = preProject
+	docs\API.md = docs\API.md
+	docs\swagger.json = docs\swagger.json
+EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "root", "root", "{A8B2E844-D888-4996-B435-CAEB371DC629}"
+ProjectSection(SolutionItems) = preProject
+	README.md = README.md
+	LICENSE = LICENSE
+	Itinero.Transit.Api.sln = Itinero.Transit.Api.sln
+	.gitignore = .gitignore
+EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -10,12 +24,12 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{71749D4C-D58F-436C-81A7-3629F9DDDD97}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{71749D4C-D58F-436C-81A7-3629F9DDDD97}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{71749D4C-D58F-436C-81A7-3629F9DDDD97}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{71749D4C-D58F-436C-81A7-3629F9DDDD97}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1ED1FA27-8AED-4998-B121-39589A20E49D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1ED1FA27-8AED-4998-B121-39589A20E49D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1ED1FA27-8AED-4998-B121-39589A20E49D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1ED1FA27-8AED-4998-B121-39589A20E49D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{71749D4C-D58F-436C-81A7-3629F9DDDD97} = {5AD1023E-2A92-4CDC-951D-170B77AD9DB2}
+		{1ED1FA27-8AED-4998-B121-39589A20E49D} = {5AD1023E-2A92-4CDC-951D-170B77AD9DB2}
 	EndGlobalSection
 EndGlobal
