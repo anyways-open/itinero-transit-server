@@ -62,7 +62,7 @@ namespace Itinero.Transit.Api.Logic
             return new Journey(segments);
         }
 
-        public Models.Journeys Translate<T>(IEnumerable<Journey<T>> journeys)
+        public List<Journey> Translate<T>(IEnumerable<Journey<T>> journeys)
             where T : IJourneyStats<T>
         {
             var list = new List<Journey>();
@@ -71,7 +71,7 @@ namespace Itinero.Transit.Api.Logic
                 list.Add(Translate(j));
             }
 
-            return new Models.Journeys(list);
+            return list;
         }
 
 

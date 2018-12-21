@@ -16,7 +16,7 @@ namespace Itinero.Transit.Api.Controllers
         /// <summary>
         /// Gets information about a location, based on the location id
         /// </summary>
-        /// <param name="id">The identifier of the location, e.g. 'https://irail.be/stations/NMBS/008891009'</param>
+        /// <param name="id">The identifier of the location, e.g. 'http://irail.be/stations/NMBS/008891009'</param>
         [HttpGet]
         public ActionResult<Location> Get(string id)
         {

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using Itinero.Transit.Api.Models;
 using Itinero.Transit.Data;
@@ -24,15 +25,25 @@ namespace Itinero.Transit.Api.Controllers
         /// <param name="lon">The WGS84-longitude point of where to search</param>
         /// <param name="distance">The maximal distance north, east, south or west that the resulting locations could be.</param>
         [HttpGet]
-        public ActionResult<Locations> Get(float lat, float lon, float distance=500)
+        public ActionResult<List<Location>> Get(float lat, float lon, float distance=500)
         {
             var found = StopsDb.LocationsInRange(lat, lon, distance);
+            var reader = StopsDb.GetReader();
             if (found == null || !found.Any())
             {
                 return NotFound($"Could not find any stop close by ({lat} lat,{lon} lon) within {distance}m");
             }
+
+            var locations = new List<Location>();
+            foreach (var location in found)
+            {
+                // The 'found' list does _not_ contain the attributes such as 'Name'
+                // So we query each station individually again
+                reader.MoveTo(location.Id);
+                locations.Add(new Location(reader));
+            }
             
-            return new Locations(StopsDb.GetReader(), found);
+            return locations;
         }
     }
 }

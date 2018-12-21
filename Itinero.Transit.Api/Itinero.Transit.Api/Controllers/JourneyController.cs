@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Itinero.Transit.Algorithms.CSA;
 using Itinero.Transit.Api.Logic;
+using Itinero.Transit.Api.Models;
 using Itinero.Transit.Data;
 using Itinero.Transit.Data.Walks;
 using Itinero.Transit.Journeys;
@@ -28,7 +30,7 @@ namespace Itinero.Transit.Api.Controllers
         /// <param name="arrival">The last moment where the traveller would like to arrive, in ISO8601 format</param>
         /// <param name="internalTransferTime">The number of seconds the traveller needs to transfer trains within the station. Increase for less mobile users</param>
         [HttpGet]
-        public ActionResult<Models.Journeys> Get(
+        public ActionResult<List<Journey>> Get(
             string from,
             string to,
             DateTime departure,
