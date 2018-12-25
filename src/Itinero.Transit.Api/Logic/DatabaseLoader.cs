@@ -40,7 +40,7 @@ namespace Itinero.Transit.Api.Logic
             var connectionsDb = new ConnectionsDb();
             var tripsDb = new TripsDb();
 
-            var timeWindow = (DateTime.Now.Date, TimeSpan.FromDays(10));
+            var timeWindow = (DateTime.Now.Date, TimeSpan.FromDays(3));
 
             var treader = tripsDb.GetReader();
       
