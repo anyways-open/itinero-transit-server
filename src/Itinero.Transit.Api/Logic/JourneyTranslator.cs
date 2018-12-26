@@ -45,12 +45,10 @@ namespace Itinero.Transit.Api.Logic
 
 
             _trips.MoveTo(j.TripId);
-            var trip     = _stops;
-
           
             
-            trip.Attributes.TryGetValue("headsign", out var headsign);
-            trip.Attributes.TryGetValue("route", out var route);
+            _trips.Attributes.TryGetValue("headsign", out var headsign);
+            _trips.Attributes.TryGetValue("route", out var route);
             return (new Segment(departure, arrivalLocation, route, headsign), rest.PreviousLink);
         }
 
