@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
         <TargetFramework>netcoreapp2.1</TargetFramework>
@@ -11,8 +11,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Itinero.Transit" Version="0.6.15-alpha" />
-        <PackageReference Include="Itinero.Transit.IO.LC" Version="0.6.0-alpha" />
+        <PackageReference Include="Itinero.Transit" Version="0.6.17-alpha" />
+        <PackageReference Include="Itinero.Transit.IO.LC" Version="0.6.17-alpha" />
         <PackageReference Include="Microsoft.AspNetCore.App" />
         <PackageReference Include="NSwag.AspNetCore" Version="12.0.9" />
         <PackageReference Include="NSwag.Core" Version="12.0.9" />
