@@ -147,7 +147,7 @@ function lookupJourney(){
         	overview += "<li>Start your journey in <strong>"+j.departure.location.name+"</strong></li>";
         	for(var sn in j.segments){
         	    var s = j.segments[sn]
-        	    overview += "<li>Get on the train to <strong>"+s.headsign+"</strong> in "+s.departure.location.name+" at "+s.departure.time+"</li>";
+        	    overview += "<li>Get on the train to <strong>"+s.headsign+"</strong> in "+s.departure.location.name+" at "+s.departure.time+"</li> at <a href='Meme.jpg'>platform</a>";
         	    overview += "<li>Get off in <strong>"+s.arrival.location.name+"</strong>";
         	}
         	overview += "</ol>"
