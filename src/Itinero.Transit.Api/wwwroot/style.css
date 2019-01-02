@@ -1,0 +1,56 @@
+body {
+    background-image: url(img/background-small.jpeg);
+    background-size: cover;
+    font-family: ubuntu, sans-serif;
+}
+
+.content {
+    margin: 3%;
+    padding: 3%;
+    margin-top:0%;
+    padding-top:0.5%;
+    background-color: #ffffffcc;
+}
+
+.floatRight{
+    float: right;
+    margin: 20px;
+}
+
+.logo {
+    height: 35px;
+    margin: 8px;
+}
+
+.header-bar {
+    background-color: #2cd4dc;
+    margin: 1%;
+    margin-left: 3%;
+    padding-left: 3%;
+    margin-bottom: 0%;
+    padding-bottom: 0%;
+    padding: 1%;
+    padding-right: 0%;
+    margin-right: 3%;
+}
+
+.header-bar .menu{
+    float: right;
+    margin: 1%;
+    padding: 6px
+}
+
+.header-bar .menu a{
+    color: white;
+    text-decoration: none;
+    font-family:ubuntu, sans-serif;
+    font-weight: bold;
+    margin-right: 1em
+}
+
+.header-bar .menu .currentLink {
+   border-radius: 25px;
+   padding: 0.5em;
+   background:white;
+   color: #2cd4dc;
+}

@@ -19,14 +19,14 @@ namespace Itinero.Transit.Api.Models
         /// <summary>
         /// The name of the train, e.g. its destination
         /// </summary>
-        public string HeadSign;
+        public string Headsign;
 
-        public Segment(TimedLocation departure, TimedLocation arrival, string vehicle, string headSign)
+        public Segment(TimedLocation departure, TimedLocation arrival, string vehicle, string headsign)
         {
             Departure = departure;
             Arrival = arrival;
             Vehicle = vehicle;
-            HeadSign = headSign;
+            Headsign = headsign;
         }
     }
 }

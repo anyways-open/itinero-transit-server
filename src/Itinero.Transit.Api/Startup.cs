@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using Itinero.Transit.Api.Controllers;
 using Itinero.Transit.Api.Logic;
@@ -8,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
+using Serilog.Core;
 using Serilog.Formatting.Json;
 
 
@@ -35,7 +37,7 @@ namespace Itinero.Transit.Api
             JourneyController.Db = db;
             LocationsByNameController.Locations = db.Profile;
             LocationsByNameController.Importances = db.ConnectionCounts;
-            
+
             services.AddCors(options =>
             {
                 options.AddPolicy("AllowAnyOrigin",
@@ -46,8 +48,6 @@ namespace Itinero.Transit.Api
 
             Log.Information("Adding swagger");
             services.AddSwaggerDocument();
-
-           
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -82,6 +82,31 @@ namespace Itinero.Transit.Api
                 .WriteTo.Console()
                 .CreateLogger();
             Log.Information($"Logging has started. Logfile can be found at {logFile}");
+
+            Itinero.Transit.Logging.Logger.LogAction = (o, level, localmessage, parameters) =>
+            {
+                if (String.Equals(level, TraceEventType.Error.ToString(), StringComparison.CurrentCultureIgnoreCase))
+                {
+                    Log.Error($"{localmessage}");
+                }
+                else if (String.Equals(level, TraceEventType.Warning.ToString(), StringComparison.CurrentCultureIgnoreCase))
+                {
+                    Log.Warning($"{localmessage}");
+                }
+                else if (String.Equals(level, TraceEventType.Information.ToString(), StringComparison.CurrentCultureIgnoreCase))
+                {
+                    Log.Information($"{localmessage}");
+                }
+                else if (String.Equals(level, TraceEventType.Verbose.ToString(), StringComparison.CurrentCultureIgnoreCase))
+                {
+                    Log.Verbose($"{localmessage}");
+                }
+                else
+                {
+                    Log.Information($"{level} (unknown log level): {localmessage}");
+                }
+            };
+            Itinero.Transit.Logging.Logger.LogAction("a", "b", "c", null);
         }
     }
 }

@@ -1,0 +1,29 @@
+<html>
+<head>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="header-bar">
+    <img src="img/OpenPlannerTeamLogo-White.svg" class="logo"/>
+    <span class="menu" id="menu">
+        <a href="index.html"> Plan a route</a>
+       <!-- <a href="example.org"> Search a station</a>-->
+        <a href="api.html"> API-Documentation</a>
+        <a href="about.html"> About</a>
+    </span>
+</div>
+
+<script>
+let loc = window.location.href
+$('#menu > a').each(function () {
+    var aEl = $(this)[0]
+    var aLoc = aEl.href;
+    if(loc === aLoc){
+        aEl.className = "currentLink";
+        console.log("Assigned current link to")
+    }
+    });
+</script>
+
+</body>
+</html>
