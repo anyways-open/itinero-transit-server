@@ -83,7 +83,7 @@ namespace Itinero.Transit.Api
                 .CreateLogger();
             Log.Information($"Logging has started. Logfile can be found at {logFile}");
 
-            Itinero.Transit.Logging.Logger.LogAction = (o, level, localmessage, parameters) =>
+            Logging.Logger.LogAction = (o, level, localmessage, parameters) =>
             {
                 if (String.Equals(level, TraceEventType.Error.ToString(), StringComparison.CurrentCultureIgnoreCase))
                 {

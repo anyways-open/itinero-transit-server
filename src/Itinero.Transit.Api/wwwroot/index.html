@@ -4,11 +4,13 @@
 <title>Public Transport Router</title>
     <script src="lib/jquery-1.12.4.js"></script>
     <script src="lib/jquery-ui.js"></script>
+    <script src="AutoComplete.js"></script>
+    <script src="RoutePlanningScript.js"></script>
+
     <link rel="stylesheet" href="lib/jquery-ui.css">
     
     <script type="text/javascript" src="lib/jquery.timepicker.js"></script>
     <link rel="stylesheet" type="text/css" href="lib/jquery.timepicker.css" />
-
 
     <script>
     $(function(){
@@ -25,30 +27,35 @@
 <header id="header"></header>
 <div class="content">
 
-<h1>Lookup SNCB/NMBS journeys</h1>
-
+<form autocomplete="off" onsubmit="loadJourneys()">
 <table>
-<tr><td>From</td><td><input type="text" id="from" name="from"></td></tr>
-<tr><td>Assuming station</td><td> <div id="foundFrom"><i>No departure station found yet<i></div> </td></tr>
+<tr><td>
+<table>
+<tr><td>
+<td>From</td><td><span class="autocomplete"><input type="text" id="from" name="from"></span></td>
+<td>To</td><td><span class="autocomplete"><input type="text" id="to" name="to"></span></td>
 
-<tr><td>To</td><td><input type="text" id="to" name="to"></td></tr>
-<tr><td>Assuming station</td><td> <div id="foundTo"><i>No arrival station found yet<i></div> </td></tr>
-<tr><td>Seconds needed to transfer trains</td><td><input type="text" id="transfertime" name="transfertime" value="180"> </td></tr>
+</tr>
+<tr>
+<td>
+<td>Date</td><td><input type="text" id="depDate" name="depDate"></td>
+<td>Time</td><td><input type="text" id="depTime" name="depTime"></td>
+</tr>
+</table>
+</form>
 
-<tr><td><input type="text" id="depDate"></td><td>  <input id="depTime" type="text" class="time" /> </td></tr>
-
-<tr><td> <button onclick="lookupJourney()">Search journeys</button> </td></tr>
-
+<td>
+<button onclick="loadJourneys()" type="button">Search journeys</button>
+</td></tr>
 </table>
 
+<div id="journeys">
 
-<table id="journeys">
-
-<tr><th>Departure time</th><th>Arrival time</th><th>Number of transfers</th><th>Overview</th></tr>
-
-
-</table>
-
+<details>
+<summary>Journey<a>test</a></summary>
+<p>More details<p>
+</details>
+</div>
 
 
 </head>
@@ -65,6 +72,55 @@ $( function() {
 $('#depTime').timepicker({'timeFormat': 'H:i', 'step':5});
 $('#depTime').timepicker('setTime', new Date());
 
+
+function suggestStations(val, callback){
+    searchStation(val, function(data){
+        var arr = [];
+        var tags = [];
+        for(i in data){
+            arr.push(data[i].name);
+            tags.push(data[i].id);
+        }
+        callback(arr, tags);
+    });
+}
+
+autocomplete(document.getElementById("from"), suggestStations);
+autocomplete(document.getElementById("to"), suggestStations);
+
+document.getElementById("from").focus();
+
+
+
+function renderJourneys(journeys){
+    console.log(journeys);
+    
+}
+    
+
+function loadJourneys(){
+    let fromId = document.getElementById("from").hiddenValue;
+    let toId = document.getElementById("to").hiddenValue;
+    if(fromId === undefined || toId === undefined){
+        alert("Please, specify a departure and arrival station");
+    }
+    
+    console.log(document.getElementById('depDate').value)
+    console.log(document.getElementById('depTime').value)
+    
+    var depTime = document.getElementById('depDate').value + " "+document.getElementById('depTime').value+'+01:00';
+    var date = new Date(depTime).toISOString();
+    
+    console.log(date);
+    function onFail(){
+        alert("Looking up the journey failed. Perhaps you tried searching a lot in the past of the future?")
+    }
+    
+
+    
+    lookupJourney(fromId, toId, date, 180, renderJourneys, onFail)
+    
+}
 
 </script>
 

@@ -58,15 +58,17 @@ namespace Itinero.Transit.Api.Controllers
                     continue;
                 }
 
-                if (name.Equals(Initials(l.Name)) || name.Equals(Initials2(l.Name)))
-                {
-                    results[1].Add(l);
-                    continue;
-                }
 
                 if (name.Length >= maxDistance && lName.StartsWith(name))
                 {
                     results[2].Add(l);
+                    continue;
+                }
+                
+                if (name.Equals(Initials(l.Name)) 
+                    || name.Equals(Initials2(l.Name)))
+                {
+                    results[1].Add(l);
                     continue;
                 }
 
