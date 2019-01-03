@@ -162,10 +162,38 @@ function onFail(){
 
 
 function loadJourneys(){
-    let fromId = document.getElementById("from").hiddenValue;
-    let toId = document.getElementById("to").hiddenValue;
+    let fromField = document.getElementById("from");
+    let fromId = fromField.hiddenValue;
+    
+    let toField = document.getElementById("to");
+    let toId = toField.hiddenValue;
+    
+    if(fromId === undefined && fromField.value.length > 0){
+        // the user only typed, but did not use the autocomplete or tab
+        // We search the station and make a guess
+        searchStation(fromField.value, function(data){
+            fromField.value = data[0].name;
+            fromField.hiddenValue = data[0].id;
+            loadJourneys();
+        });
+        
+        return;
+    }
+    
+    if(toId === undefined && toField.value.length > 0){
+        // the user only typed, but did not use the autocomplete or tab
+        // We search the station and make a guess
+        searchStation(toField.value, function(data){
+            toField.value = data[0].name;
+            toField.hiddenValue = data[0].id;
+            loadJourneys();
+        });
+        
+        return;
+    }
+    
     if(fromId === undefined || toId === undefined){
-        alert("Please, specify a departure and arrival station");
+        alert("Please, specify a departure and arrival station. No valid station was found.");
         return;
     }
     
