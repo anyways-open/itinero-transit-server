@@ -52,8 +52,8 @@ body {
 }
 
 .header-bar .menu .currentLink {
-   border-radius: 25px;
-   padding: 0.6em;
+   border-radius: 40px;
+   padding: 0.7em;
    background:white;
    color: #00a4ac;
 }
