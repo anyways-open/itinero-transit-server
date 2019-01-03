@@ -41,10 +41,10 @@
 <form autocomplete="off" onsubmit="loadJourneys()">
 <table>
 <tr><td>
-<table>
-<tr><td>
 <td>From</td><td><span class="autocomplete"><input type="text" id="from" name="from"></span></td>
 <td>To</td><td><span class="autocomplete"><input type="text" id="to" name="to"></span></td>
+<td><button onclick="loadJourneys()" type="button">Search journeys</button></td>
+<td><button onclick="reverseJourneys()" type="button">Reverse</button></td>
 
 </tr>
 <tr>
@@ -54,10 +54,6 @@
 </tr>
 </table>
 
-<td>
-<button onclick="loadJourneys()" type="button">Search journeys</button>
-</td></tr>
-</table>
 </form>
 
 
@@ -101,15 +97,15 @@ function suggestStations(val, callback){
         var arr = [];
         var tags = [];
         for(let i in data){
-            arr.push(data[i].name);
-            tags.push(data[i].id);
+            arr.push(data[i].location.name);
+            tags.push(data[i].location);
         }
         callback(arr, tags);
     });
 }
 
-autocomplete(document.getElementById("from"), suggestStations);
-autocomplete(document.getElementById("to"), suggestStations);
+autocomplete(document.getElementById("from"), suggestStations, rerenderStartEnd);
+autocomplete(document.getElementById("to"), suggestStations, rerenderStartEnd);
 
 document.getElementById("from").focus();
 
@@ -164,33 +160,96 @@ function renderJourney(journey){
     let journeyText = "<div class='journey'>"+headerText+segments+"</div>";
     
     let el = htmlToElement(journeyText);
+    el.journeyLayer = createJourneyLayer(journey);
     el.addEventListener('click', function(){
         var contents = el.childNodes[1];
         if(contents.className == "hidden"){
-            contents.className = "";        
+            contents.className = ""; 
+            map.addLayer(el.journeyLayer);
         }else{
             contents.className += "hidden";
+            map.removeLayer(el.journeyLayer);
         }
     });
     journeys.appendChild(el);
+    return el;
 }
 
 function renderJourneys(journeys){
     var journeyEl = document.getElementById("journeys");
     while (journeyEl.firstChild) {
+        map.removeLayer(journeyEl.firstChild.journeyLayer);
         journeyEl.removeChild(journeyEl.firstChild);
     }
 
-
+    let firstEl = undefined;
     for(var i in journeys){
-        renderJourney(journeys[i]);
+        let el = renderJourney(journeys[i]);
+        if(firstEl === undefined){
+            firstEl = el;
+        }
     }
+    firstEl.click();
 }
     
 function onFail(){
     alert("Looking up the journey failed. Perhaps you tried searching a lot in the past of the future?")
 }
 
+var startCircle, endCircle;
+function rerenderStartEnd(){
+    let fromField = document.getElementById("from");
+    let fromId = fromField.hiddenValue;
+    if(fromId){
+        if(startCircle){
+            map.removeLayer(startCircle);
+        }
+        startCircle = L.circle([fromId.lat, fromId.lon], {
+        color: 'green',
+        fillColor: '#0f3',
+        fillOpacity: 0.5,
+        radius: 5000
+        });
+        startCircle.addTo(map);
+    }
+    
+    let toField = document.getElementById("to");
+    let toId = toField.hiddenValue;
+    
+    if(toId){
+        if(endCircle){
+            map.removeLayer(endCircle);
+        }
+        endCircle = L.circle([toId.lat, toId.lon], {
+            color: 'red',
+            fillColor: '#f03',
+            fillOpacity: 0.5,
+            radius: 5000
+        });
+        endCircle.addTo(map);
+    }
+    
+}
+
+function reverseJourneys(){
+    let fromField = document.getElementById("from");
+    let fromId = fromField.hiddenValue;
+    
+    let toField = document.getElementById("to");
+    let toId = toField.hiddenValue;
+    
+    var tempValue = fromField.value;
+    var tempHV = fromField.hiddenValue;
+    
+    fromField.value = toField.value;
+    fromField.hiddenValue = toField.hiddenValue;
+    
+    toField.value = tempValue;
+    toField.hiddenValue = tempHV;
+    
+    rerenderStartEnd();
+ 
+}
 
 function loadJourneys(){
     let fromField = document.getElementById("from");
@@ -204,7 +263,8 @@ function loadJourneys(){
         // We search the station and make a guess
         searchStation(fromField.value, function(data){
             fromField.value = data[0].name;
-            fromField.hiddenValue = data[0].id;
+            fromField.hiddenValue = data[0].location;
+            rerenderStartEnd();
             loadJourneys();
         });
         
@@ -216,7 +276,8 @@ function loadJourneys(){
         // We search the station and make a guess
         searchStation(toField.value, function(data){
             toField.value = data[0].name;
-            toField.hiddenValue = data[0].id;
+            toField.hiddenValue = data[0].location;
+            rerenderStartEnd();
             loadJourneys();
         });
         
@@ -234,7 +295,7 @@ function loadJourneys(){
     console.log(date);
 
     
-    lookupJourney(fromId, toId, date, 180, renderJourneys, onFail)
+    lookupJourney(fromId.id, toId.id, date, 180, renderJourneys, onFail)
     
 }
 

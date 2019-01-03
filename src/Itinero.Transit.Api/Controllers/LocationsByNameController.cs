@@ -92,7 +92,8 @@ namespace Itinero.Transit.Api.Controllers
                         importance = Importances[id];
                     }
 
-                    json.Add(new LocationResult(r.Uri.ToString(), r.Name, i, importance));
+                    var loc = new Models.Location(r.Id().ToString(), r.Name, r.Lat, r.Lon);
+                    json.Add(new LocationResult(loc, i, importance));
                 }
             }
 

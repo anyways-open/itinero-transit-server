@@ -12,7 +12,7 @@ namespace Itinero.Transit.Api.Models
     public class LocationResult
     {
         // ReSharper disable once InconsistentNaming
-        public readonly string Id, Name;
+        public readonly Location Location;
 
         /// <summary>
         /// Indicates how bad the match is.
@@ -29,10 +29,9 @@ namespace Itinero.Transit.Api.Models
         /// </summary>
         public readonly uint Importance;
 
-        public LocationResult(string id, string name, int difference, uint importance)
+        public LocationResult( Location location, int difference, uint importance)
         {
-            Id = id;
-            Name = name;
+            Location = location;
             Difference = difference;
             Importance = importance;
         }

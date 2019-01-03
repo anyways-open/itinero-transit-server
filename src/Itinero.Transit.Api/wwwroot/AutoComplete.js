@@ -1,6 +1,6 @@
  
  
-function autocomplete(inp, createArrFunction) {
+function autocomplete(inp, createArrFunction, tagAssigned) {
 
   function buildList(inp, arr, tags, a, b, i, val){
     for (i = 0; i < arr.length; i++) {
@@ -20,6 +20,9 @@ function autocomplete(inp, createArrFunction) {
           /*close the list of autocompleted values,
           (or any other open lists of autocompleted values:*/
           closeAllLists();
+          if(tagAssigned){
+            tagAssigned();
+          }
       });
       a.appendChild(b);
   }
