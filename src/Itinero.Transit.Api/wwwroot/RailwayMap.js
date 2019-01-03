@@ -71,7 +71,7 @@ function initializeMap(){
     );
 
 	map = L.map('map', {
-		center: [50.9, 4.2],
+		center: [50.9, 4.4],
 		zoom:8,
 		layers: [nmbsLayer],	
 /*        center:[50.8441,4.3616],
