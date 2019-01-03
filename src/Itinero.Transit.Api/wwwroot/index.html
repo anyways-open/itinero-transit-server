@@ -1,4 +1,5 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 
 <head>
 <title>Public Transport Router</title>
@@ -9,7 +10,7 @@
 
     <link rel="stylesheet" href="lib/jquery-ui.css">
     
-    <script type="text/javascript" src="lib/jquery.timepicker.js"></script>
+    <script src="lib/jquery.timepicker.js"></script>
     <link rel="stylesheet" type="text/css" href="lib/jquery.timepicker.css" />
 
     <script>
@@ -20,10 +21,11 @@
     </script>
 
     
-<head>
-
+</head>
 
 <body>
+
+
 <header id="header"></header>
 <div class="content">
 
@@ -42,26 +44,18 @@
 <td>Time</td><td><input type="text" id="depTime" name="depTime"></td>
 </tr>
 </table>
-</form>
 
 <td>
 <button onclick="loadJourneys()" type="button">Search journeys</button>
 </td></tr>
 </table>
+</form>
 
-<div id="journeys">
+<div id="journeys"></div>
 
-<details>
-<summary>Journey<a>test</a></summary>
-<p>More details<p>
-</details>
-</div>
-
-
-</head>
-<body>
  
 <script>
+"use strict";
 
 /**** Input setup *****/
 $( function() {
@@ -77,7 +71,7 @@ function suggestStations(val, callback){
     searchStation(val, function(data){
         var arr = [];
         var tags = [];
-        for(i in data){
+        for(let i in data){
             arr.push(data[i].name);
             tags.push(data[i].id);
         }
@@ -90,37 +84,101 @@ autocomplete(document.getElementById("to"), suggestStations);
 
 document.getElementById("from").focus();
 
+function htmlToElement(html) {
+    let template = document.createElement('template');
+    html = html.trim(); // Never return a text node of whitespace as the result
+    template.innerHTML = html;
+    return template.content.firstChild;
+}
 
+function dateHHMM(date){
+    return new Date(date).toTimeString().split(' ')[0].substring(0,5);
+}
+
+function renderJourney(journey){
+    console.log(journey);
+    
+    
+    let depTime = dateHHMM(journey.departure.time);
+    let arrTime = dateHHMM(journey.arrival.time);
+    let totalMinutes = Math.floor(journey.travelTime / 60);
+    let minutes =  (totalMinutes % 60);
+    if(minutes < 10){
+        minutes = "0"+minutes;
+    }
+    let totalTime = (Math.floor(totalMinutes / 60)) + ":" + minutes;
+    let trainTo = journey.segments[0].headsign;
+    
+    
+    
+    
+    
+    
+    
+    let transfers = journey.transfers == 0 ? "" :
+        "(" + journey.transfers + " transfers)";
+    
+    let headerText = "<div class=journey-header><strong>"+depTime+" > "+arrTime+"</strong>  <span class='weak'>("+ totalTime +" total time)</span> <br /> <span class='weak'>Train to</span> <strong>"+trainTo+"</strong> "+ transfers +"</div>"
+    
+    var segments = "";
+    for(var i in journey.segments){
+        var segment = journey.segments[i];
+        
+        
+        segments += "<p><span class='weak'>Take the train with destination </span><strong>"+segment.headsign+"</strong><span class='weak'>, get off in </span><strong>"+segment.arrival.location.name+"</strong> at "+ dateHHMM(segment.arrival.time) +" </p>";
+    
+    }
+    segments    = "<div class='hidden'><div class='journey-content'>"+segments+"</div></div>"
+    
+    let journeyText = "<div class='journey'>"+headerText+segments+"</div>";
+    
+    let el = htmlToElement(journeyText);
+    el.addEventListener('click', function(){
+        var contents = el.childNodes[1];
+        if(contents.className == "hidden"){
+            contents.className = "";        
+        }else{
+            contents.className += "hidden";
+        }
+    });
+    journeys.appendChild(el);
+}
 
 function renderJourneys(journeys){
-    console.log(journeys);
-    
+    var journeyEl = document.getElementById("journeys");
+    while (journeyEl.firstChild) {
+        journeyEl.removeChild(journeyEl.firstChild);
+    }
+
+
+    for(var i in journeys){
+        renderJourney(journeys[i]);
+    }
 }
     
+function onFail(){
+    alert("Looking up the journey failed. Perhaps you tried searching a lot in the past of the future?")
+}
+
 
 function loadJourneys(){
     let fromId = document.getElementById("from").hiddenValue;
     let toId = document.getElementById("to").hiddenValue;
     if(fromId === undefined || toId === undefined){
         alert("Please, specify a departure and arrival station");
+        return;
     }
     
-    console.log(document.getElementById('depDate').value)
-    console.log(document.getElementById('depTime').value)
-    
-    var depTime = document.getElementById('depDate').value + " "+document.getElementById('depTime').value+'+01:00';
-    var date = new Date(depTime).toISOString();
+    let depTime = document.getElementById('depDate').value + " "+document.getElementById('depTime').value+'+01:00';
+    let date = new Date(depTime).toISOString();
     
     console.log(date);
-    function onFail(){
-        alert("Looking up the journey failed. Perhaps you tried searching a lot in the past of the future?")
-    }
-    
 
     
     lookupJourney(fromId, toId, date, 180, renderJourneys, onFail)
     
 }
+
 
 </script>
 

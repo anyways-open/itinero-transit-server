@@ -59,10 +59,32 @@ body {
 }
 
 
+.journey{
+    border-left: 1px solid black;
+    margin-bottom: 0.6em;
+    background-color: #ffffff66;
+    cursor: pointer;
+}
+
+.journey-header {
+    color: black;
+    padding: 0.2em;
+    padding-left: 0.4em;
+}
 
 
+.journey-content p {
+    padding-left: 0.6em;
+    margin: 0.1em;
+}
 
+.hidden {
+    display: none;
+}
 
+.weak {
+    color: grey;
+}
 
 
 
