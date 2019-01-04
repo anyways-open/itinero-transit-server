@@ -69,11 +69,11 @@ namespace Itinero.Transit.Api.Logic
                 
                 status.TargetLastDeparture = end;
                 connectionsDb.LoadConnections(sncb, stopsDb, tripsDb, (start, end-start),
-                    (connection =>
+                    connection =>
                     {
                         Increase(counts, connection.DepartureLocation().ToString());
                         Increase(counts, connection.ArrivalLocation().ToString());
-                    }) ,
+                    } ,
                     (loadedConnections, lastDepTime, factor) =>
                     {
                         status.FirstDepartureTime = start;
