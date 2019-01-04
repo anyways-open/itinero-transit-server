@@ -2,6 +2,9 @@
 API description
 ==============
 
+_Please refer to the Swagger file of a running instance for the latest API documentation_. This document is only maintained for historic reasons.
+
+
 This API specification is using the [OpenAPI](https://en.wikipedia.org/wiki/OpenAPI_Specification) spec. To visualize this do the following:
 
 - Open [https://petstore.swagger.io/](https://petstore.swagger.io/).

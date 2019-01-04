@@ -9,22 +9,21 @@ body {
 }
 
 .content {
-    margin: 3%;
-    padding: 2%;
-    padding-top: 1%;
+    margin: 1.5%;
+    padding: 1%;
     margin-top:0%;
     margin-bottom: 0%;
-    height: 86%;
+    height: 90%;
     background-color: #ffffffcc;
 }
 
 
 
 .inframe{
-    margin: 3%;
+    margin: 1.5%;
     margin-top: 0.5%;
-    width: 94%;
-    height: 92%;
+    width: 97%;
+    height: 91.5%;
     padding: 0%;
 }
 
@@ -77,18 +76,18 @@ body {
     align-items: center;
     background-color: #2cd4dc;
     margin: 1%;
-    margin-left: 3%;
+    margin-left: 1.5%;
     padding-left: 3%;
+    padding-right: 0%;
+    margin-right: 1.5%;
     margin-bottom: 0%;
     padding-bottom: 0%;
     padding: 1%;
-    padding-right: 0%;
-    margin-right: 3%;
     height: 4%;
 }
 
 .header-bar .menu{
-    margin-right: 2em
+    margin-right: 1em
 }
 
 .header-bar .menu a{
@@ -96,7 +95,7 @@ body {
     text-decoration: none;
     font-family:ubuntu, sans-serif;
     font-weight: bold;
-    margin: 0.5em;
+    margin: 0.7em;
 }
 
 .header-bar .menu .currentLink {

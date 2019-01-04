@@ -11,11 +11,11 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Itinero.Transit" Version="0.6.22-alpha" />
-        <PackageReference Include="Itinero.Transit.IO.LC" Version="0.6.22-alpha" />
+        <PackageReference Include="Itinero.Transit" Version="1.0.2" />
+        <PackageReference Include="Itinero.Transit.IO.LC" Version="1.0.2" />
         <PackageReference Include="Microsoft.AspNetCore.App" />
-        <PackageReference Include="NSwag.AspNetCore" Version="12.0.9" />
-        <PackageReference Include="NSwag.Core" Version="12.0.9" />
+        <PackageReference Include="NSwag.AspNetCore" Version="12.0.10" />
+        <PackageReference Include="NSwag.Core" Version="12.0.10" />
         <PackageReference Include="Serilog.Sinks.Console" Version="3.1.2-dev-00779" />
         <PackageReference Include="Serilog.Sinks.File" Version="4.0.1-dev-00801" />
     </ItemGroup>

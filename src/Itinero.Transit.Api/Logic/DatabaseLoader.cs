@@ -6,8 +6,6 @@ using Itinero.Transit.Data;
 using Itinero.Transit.IO.LC;
 using Itinero.Transit.IO.LC.CSA;
 using Itinero.Transit.IO.LC.CSA.Utils;
-using Serilog;
-using Attribute = Itinero.Transit.Data.Attributes.Attribute;
 
 namespace Itinero.Transit.Api.Logic
 {
@@ -21,14 +19,24 @@ namespace Itinero.Transit.Api.Logic
         public readonly TripsDb Trips;
         public readonly Profile Profile;
         public readonly Dictionary<string, uint> ConnectionCounts;
+        private readonly Action _loadLocations;
+        private readonly Action<DateTime, DateTime> _loadTimeWindow;
 
-        public DatabaseLoader(StopsDb stops, ConnectionsDb connections, TripsDb trips, Profile profile, Dictionary<string, uint> connectionCounts)
+        public readonly Status Status;
+
+        public DatabaseLoader(StopsDb stops, ConnectionsDb connections, TripsDb trips, Profile profile,
+            Dictionary<string, uint> connectionCounts,
+            Action loadLocations,
+            Action<DateTime, DateTime> loadTimeWindow, Status status)
         {
             Stops = stops;
             Connections = connections;
             Trips = trips;
             Profile = profile;
             ConnectionCounts = connectionCounts;
+            _loadLocations = loadLocations;
+            _loadTimeWindow = loadTimeWindow;
+            Status = status;
         }
 
 
@@ -40,31 +48,56 @@ namespace Itinero.Transit.Api.Logic
             var connectionsDb = new ConnectionsDb();
             var tripsDb = new TripsDb();
 
-            var timeWindow = (DateTime.Now.Date, TimeSpan.FromDays(3));
-
-            var treader = tripsDb.GetReader();
-      
-            
-            connectionsDb.LoadConnections(sncb, stopsDb, tripsDb, timeWindow);
-            
 
             var counts = new Dictionary<string, uint>();
-            
-            var cons = connectionsDb.GetDepartureEnumerator();
-            var stopsreader = stopsDb.GetReader();
-            while (cons.MoveNext())
+
+            var status = new Status(DateTime.MaxValue, DateTime.MinValue, DateTime.MinValue);
+
+            var loadLocations = new Action(() =>
             {
-                stopsreader.MoveTo(cons.DepartureStop);
-                Increase(counts, stopsreader.GlobalId);
-                stopsreader.MoveTo(cons.ArrivalStop);
-                Increase(counts, stopsreader.GlobalId);
-            }
-            
-            
-            return new DatabaseLoader(stopsDb, connectionsDb, tripsDb, sncb, counts);
+                stopsDb.LoadLocations(sncb, (loaded, total) =>
+                {
+                    status.LoadedLocationsCount = loaded;
+                    status.TargetLocationsCount = total;
+                });
+            });
+
+
+            var loadWindow = new Action<DateTime, DateTime>
+            ((start, end) =>
+            {
+                
+                status.TargetLastDeparture = end;
+                connectionsDb.LoadConnections(sncb, stopsDb, tripsDb, (start, end-start),
+                    (connection =>
+                    {
+                        Increase(counts, connection.DepartureLocation().ToString());
+                        Increase(counts, connection.ArrivalLocation().ToString());
+                    }) ,
+                    (loadedConnections, lastDepTime, factor) =>
+                    {
+                        status.FirstDepartureTime = start;
+                        status.LoadedConnectionsCount = loadedConnections;
+                        status.LastDepartureTime = lastDepTime;
+                    });
+            });
+
+
+            return new DatabaseLoader(stopsDb, connectionsDb, tripsDb, sncb, counts, loadLocations, loadWindow, status);
         }
 
-        private static void Increase<TK>(Dictionary<TK, uint> d, TK k)
+        public void LoadLocations()
+        {
+            _loadLocations.Invoke();
+        }
+
+        public void LoadTimeWindow(DateTime start, DateTime end)
+        {
+            _loadTimeWindow(start, end);
+        }
+
+
+        private static void Increase<TK>(IDictionary<TK, uint> d, TK k)
         {
             if (!d.ContainsKey(k))
             {
@@ -74,6 +107,19 @@ namespace Itinero.Transit.Api.Logic
             {
                 d[k]++;
             }
+        }
+    }
+
+    public class Status
+    {
+        public DateTime FirstDepartureTime, LastDepartureTime, TargetLastDeparture;
+        public int LoadedLocationsCount, TargetLocationsCount, LoadedConnectionsCount;
+
+        public Status(DateTime firstDepartureTime, DateTime lastDepartureTime, DateTime targetLastDeparture)
+        {
+            FirstDepartureTime = firstDepartureTime;
+            LastDepartureTime = lastDepartureTime;
+            TargetLastDeparture = targetLastDeparture;
         }
     }
 }

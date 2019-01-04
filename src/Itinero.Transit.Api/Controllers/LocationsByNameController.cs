@@ -25,11 +25,11 @@ namespace Itinero.Transit.Api.Controllers
         /// <remarks>
         /// A match is calculated as following:
         /// First, all characters are lowercased and non [a-z]-characters are removed.
-        /// 0) Then, we search for an exact match (which will get a 'difference' score of 0).
+        /// 0) Then, we search for an exact match (which will get a 'difference' score of **0**).
         /// 1) Secondly, a number of acronyms are automatically calculated for each station, namely:
         ///    The initials (e.g. Gent-Sint-Pieter will be shortened to GSP;)
         ///    The first two letters, followed by initials (Brussel-Centraal becomes BrC).
-        ///     These are returned with a difference number of 1.
+        ///     These are returned with a difference number of **1**.
         /// 2) If the station name starts with the requested query, it is returned with a value of **2**
         /// 3) At last, stations are matched with a string distance function. If the string distance is smaller then 5, it is returned.
         ///    The difference will be the string comparison difference + 1
@@ -37,7 +37,7 @@ namespace Itinero.Transit.Api.Controllers
         [HttpGet]
         public ActionResult<List<LocationResult>> Get(string name)
         {
-            var maxDistance = 2;
+            const int maxDistance = 15;
 
             var results = new List<List<Location>>();
 
@@ -58,21 +58,23 @@ namespace Itinero.Transit.Api.Controllers
                     continue;
                 }
 
-
-                if (name.Length >= maxDistance && lName.StartsWith(name))
-                {
-                    results[2].Add(l);
-                    continue;
-                }
-                
-                if (name.Equals(Initials(l.Name)) 
-                    || name.Equals(Initials2(l.Name)))
+                if (name.Length > 2 &&
+                    name.Equals(Initials(l.Name))
+                    || name.Equals(Initials2(l.Name))
+                    || SaintInitials(lName, name))
                 {
                     results[1].Add(l);
                     continue;
                 }
 
-                var d = CalcLevenshteinDistance(name, lName);
+
+                if (lName.StartsWith(name))
+                {
+                    results[2].Add(l);
+                    continue;
+                }
+
+                var d = CalcLevenshteinDistance(name, lName.Substring(0, Math.Min(lName.Length, name.Length)));
                 if (d <= maxDistance)
                 {
                     results[d + 2].Add(l);
@@ -125,10 +127,20 @@ namespace Itinero.Transit.Api.Controllers
             return Simplify(s.Substring(0, 2) + Initials(s).Substring(1));
         }
 
+        private static bool SaintInitials(string fullName, string query)
+        {
+            if (!fullName.StartsWith("sint"))
+            {
+                return false;
+            }
+
+            return query.StartsWith("st") && fullName.Substring(4).StartsWith(query.Substring(2));
+        }
+
 
         private static int CalcLevenshteinDistance(string a, string b)
         {
-            // Comes from stackovervlow
+            // Comes from stack overflow
             if (IsNullOrEmpty(a) && IsNullOrEmpty(b))
             {
                 return 0;
