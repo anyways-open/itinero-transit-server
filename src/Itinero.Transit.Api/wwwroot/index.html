@@ -40,17 +40,19 @@
 <div class="journey-contents">
 <form autocomplete="off" onsubmit="loadJourneys()">
 <table>
-<tr><td>
+<tr>
 <td>From</td><td><span class="autocomplete"><input type="text" id="from" name="from"></span></td>
 <td>To</td><td><span class="autocomplete"><input type="text" id="to" name="to"></span></td>
-<td><button onclick="loadJourneys()" type="button">Search journeys</button></td>
-<td><button onclick="reverseJourneys()" type="button">Reverse</button></td>
-
 </tr>
 <tr>
-<td>
 <td>Date</td><td><input type="text" id="depDate" name="depDate"></td>
 <td>Time</td><td><input type="text" id="depTime" name="depTime"></td>
+</tr>
+<tr>
+<td></td>
+<td><button onclick="loadJourneys()" type="button">Search journeys</button></td>
+<td></td>
+<td><button onclick="reverseJourneys()" type="button">Reverse</button></td>
 </tr>
 </table>
 
