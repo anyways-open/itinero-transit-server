@@ -55,7 +55,7 @@ namespace Itinero.Transit.Api
             Task.Factory.StartNew(() =>
             {
                 db.LoadLocations();
-                db.LoadTimeWindow(DateTime.Now.Date.AddDays(-7), DateTime.Now.Date.AddDays(31));
+                db.LoadTimeWindow(DateTime.Now.Date.AddDays(-1), DateTime.Now.Date.AddDays(7));
             }, TaskCreationOptions.LongRunning);
         }
 
