@@ -13,7 +13,7 @@ function searchStation(query, callback){
     if(query.length < 1){
         return;
     }
-    $.getJSON("/LocationsByName?name="+query,callback);
+    $.getJSON("./LocationsByName?name="+query,callback);
 }
 
 
@@ -21,7 +21,7 @@ function searchStation(query, callback){
 
 function lookupJourney(fromId,  toId, departureTimeUTC, transferTime, callback, failCallback){
       
-    let query = "/journey?from="+encodeURIComponent(fromId)+
+    let query = "./journey?from="+encodeURIComponent(fromId)+
                     "&to="+encodeURIComponent(toId)+
                     "&departure="+encodeURIComponent(departureTimeUTC)+
                     "&internalTransferTime="+transferTime;
