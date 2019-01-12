@@ -71,7 +71,29 @@ namespace Itinero.Transit.Api
                 app.UseHsts();
             }
 
-            app.UseSwagger();
+            app.UseSwagger(settings =>
+            {
+                settings.PostProcess = (document, req) =>
+                {
+                    document.Info.Version = "v1";
+                    document.Info.Title = "Anyways Transit API";
+                    document.Info.Description =
+                        "The Anyways Transit API.";
+                    document.Info.TermsOfService = "None";
+                    document.Info.Contact = new NSwag.SwaggerContact
+                    {
+                        Name = "Anyways",
+                        Email = "info@anyways.eu",
+                        Url = "https://www.anyways.eu"
+                    };
+
+                    document.BasePath = req.PathBase;
+                    Log.Information($"Set swagger document base path to: {document.BasePath}.");
+
+                    document.Host = req.Host.Value;
+                    Log.Information($"Set swagger document host to: {document.Host}.");
+                };
+            });
             app.UseSwaggerUi3();
 
             app.UseHttpsRedirection();
