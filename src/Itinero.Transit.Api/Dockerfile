@@ -18,7 +18,7 @@ COPY ./bin/Release/netcoreapp2.1/linux-x64/publish /var/app
 COPY appsettings.Docker.json /var/app/appsettings.json
 
 # couple data folder data volume.
-VOLUME ["/var/app/data"]
+VOLUME ["/var/app/cache"]
 VOLUME ["/var/app/logs"]
 
 # SET base url
