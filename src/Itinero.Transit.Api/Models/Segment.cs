@@ -14,7 +14,7 @@ namespace Itinero.Transit.Api.Models
             Departure = departure;
             Arrival = arrival;
             Vehicle = vehicle;
-            HeadSign = headSign;
+            Headsign = headSign;
         }
 
         /// <summary>
@@ -35,6 +35,6 @@ namespace Itinero.Transit.Api.Models
         /// <summary>
         /// The name of the train, e.g. its destination
         /// </summary>
-        public string HeadSign { get; }
+        public string Headsign { get; }
     }
 }
