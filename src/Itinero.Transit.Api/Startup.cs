@@ -1,11 +1,13 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Itinero.Transit.Api.Controllers;
 using Itinero.Transit.Api.Logic;
 using Itinero.Transit.Logging;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -70,6 +72,40 @@ namespace Itinero.Transit.Api
             {
                 app.UseHsts();
             }
+            
+            var options = new ForwardedHeadersOptions
+            {
+                ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedHost | ForwardedHeaders.XForwardedProto
+            };
+//            options.KnownNetworks.Clear();
+//            options.KnownProxies.Clear();
+//            
+            app.UseForwardedHeaders(options);
+            app.Use((context, next) => 
+            {
+                if (context.Request.Headers.TryGetValue("X-Forwarded-PathBase", out var pathBases))
+                {
+                    Log.Information($"Detected path base header, changing {context.Request.PathBase} to {pathBases.First()}");
+                    context.Request.PathBase = pathBases.First();
+                    if (context.Request.PathBase.Value.EndsWith("/"))
+                    {
+                        Log.Information($"Removing trailing slash from: {context.Request.PathBase.Value}.");
+                        context.Request.PathBase =
+                            context.Request.PathBase.Value.Substring(0, context.Request.PathBase.Value.Length - 1);
+                        Log.Information($"Removing trailing slash, now: {context.Request.PathBase.Value}.");
+                    }
+                    if (context.Request.Path.Value.StartsWith(context.Request.PathBase.Value))
+                    {
+                        var before = context.Request.Path.Value;
+                        var after = context.Request.Path.Value.Substring(
+                            context.Request.PathBase.Value.Length,
+                            context.Request.Path.Value.Length - context.Request.PathBase.Value.Length);
+                        Log.Information($"Path changed to: {after}, was {before}.");
+                        context.Request.Path = after;
+                    }
+                }
+                return next();
+            });
 
             app.UseSwagger(settings =>
             {
@@ -94,7 +130,23 @@ namespace Itinero.Transit.Api
                     Log.Information($"Set swagger document host to: {document.Host}.");
                 };
             });
-            app.UseSwaggerUi3();
+            app.UseSwaggerUi3(config => config.TransformToExternalPath = (internalUiRoute, request) =>
+            {
+                // The header X-External-Path is set in the nginx.conf file
+                var externalPath = request.PathBase.Value;
+                if (externalPath != null && externalPath.EndsWith("/"))
+                {
+                    externalPath = externalPath.Substring(0, externalPath.Length - 1);
+                }
+
+                if (!internalUiRoute.StartsWith(externalPath))
+                {
+                    Log.Information($"Configured external path to: {externalPath + internalUiRoute}.");
+                    return externalPath + internalUiRoute;
+                }
+
+                return internalUiRoute;
+            });
 
             app.UseHttpsRedirection();
             app.UseMvc();
