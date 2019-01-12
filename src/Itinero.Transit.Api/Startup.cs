@@ -114,30 +114,30 @@ namespace Itinero.Transit.Api
                 .CreateLogger();
             Log.Information($"Logging has started. Logfile can be found at {logFile}");
 
-            Logger.LogAction = (o, level, localmessage, parameters) =>
+            Logger.LogAction = (o, level, message, parameters) =>
             {
-                if (String.Equals(level, TraceEventType.Error.ToString(), StringComparison.CurrentCultureIgnoreCase))
+                if (string.Equals(level, TraceEventType.Error.ToString(), StringComparison.CurrentCultureIgnoreCase))
                 {
-                    Log.Error($"{localmessage}");
+                    Log.Error($"{message}");
                 }
-                else if (String.Equals(level, TraceEventType.Warning.ToString(),
+                else if (string.Equals(level, TraceEventType.Warning.ToString(),
                     StringComparison.CurrentCultureIgnoreCase))
                 {
-                    Log.Warning($"{localmessage}");
+                    Log.Warning($"{message}");
                 }
-                else if (String.Equals(level, TraceEventType.Information.ToString(),
+                else if (string.Equals(level, TraceEventType.Information.ToString(),
                     StringComparison.CurrentCultureIgnoreCase))
                 {
-                    Log.Information($"{localmessage}");
+                    Log.Information($"{message}");
                 }
-                else if (String.Equals(level, TraceEventType.Verbose.ToString(),
+                else if (string.Equals(level, TraceEventType.Verbose.ToString(),
                     StringComparison.CurrentCultureIgnoreCase))
                 {
-                    Log.Verbose($"{localmessage}");
+                    Log.Verbose($"{message}");
                 }
                 else
                 {
-                    Log.Information($"{level} (unknown log level): {localmessage}");
+                    Log.Information($"{level} (unknown log level): {message}");
                 }
             };
             Logger.LogAction("a", "b", "c", null);
