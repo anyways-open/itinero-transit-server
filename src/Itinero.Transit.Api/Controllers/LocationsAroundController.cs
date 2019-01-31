@@ -1,7 +1,10 @@
 using System.Collections.Generic;
 using System.Linq;
+using Itinero.Transit.Algorithms.Search;
+using Itinero.Transit.Api.Logic;
 using Itinero.Transit.Api.Models;
 using Itinero.Transit.Data;
+using Itinero.Transit.Data.Walks;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Itinero.Transit.Api.Controllers
@@ -12,8 +15,6 @@ namespace Itinero.Transit.Api.Controllers
     [ProducesResponseType(404)]  
     public class LocationsAroundController : ControllerBase
     {
-        public static StopsDb StopsDb;
-        
         /// <summary>
         /// Searches for stops which are at most 500 meters north, east, south or west from the specified point.
         /// </summary>
@@ -27,15 +28,18 @@ namespace Itinero.Transit.Api.Controllers
         [HttpGet]
         public ActionResult<List<Location>> Get(float lat, float lon, float distance=500)
         {
-            var found = StopsDb.LocationsInRange(lat, lon, distance);
-            var reader = StopsDb.GetReader();
+
+            var stopsdb = State.TransitDb.Latest.StopsDb;
+            
+            var found = stopsdb.LocationsInRange(lat, lon, distance);
+            var reader = stopsdb.GetReader();
             if (found == null || !found.Any())
             {
                 return NotFound($"Could not find any stop close by ({lat} lat,{lon} lon) within {distance}m");
             }
 
             var locations = new List<Location>();
-            foreach (var location in found)
+            foreach (Location location in found)
             {
                 // The 'found' list does _not_ contain the attributes such as 'Name'
                 // So we query each station individually again

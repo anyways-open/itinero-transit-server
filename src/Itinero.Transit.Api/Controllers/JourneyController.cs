@@ -19,10 +19,6 @@ namespace Itinero.Transit.Api.Controllers
     [ProducesResponseType(400)]
     public class JourneyController : ControllerBase
     {
-        public static JourneyTranslator Translator;
-        public static DatabaseLoader Db;
-
-
         /// <summary>
         /// Creates a journey over the public-transport network.
         /// </summary>
@@ -45,7 +41,6 @@ namespace Itinero.Transit.Api.Controllers
             uint internalTransferTime = 180
         )
         {
-
             if (Equals(from, to))
             {
                 return BadRequest("The given from- and to- locations are the same");
@@ -53,19 +48,17 @@ namespace Itinero.Transit.Api.Controllers
 
             try
             {
-
-                Translator.InternalidOf(from);
-                Translator.InternalidOf(to);
+                State.JourneyTranslator.InternalidOf(from);
+                State.JourneyTranslator.InternalidOf(to);
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Log.Error(e.ToString());
                 return BadRequest("A station could not be found. Check the identifiers");
             }
-            
+
             var p = new Profile<TransferStats>(
-                Db.Connections,
-                Db.Stops,
+                State.TransitDb,
                 new InternalTransferGenerator(internalTransferTime),
                 null,
                 TransferStats.Factory,
@@ -79,7 +72,7 @@ namespace Itinero.Transit.Api.Controllers
                 return NotFound("No possible journeys were found for your request");
             }
 
-            return Translator.Translate(journeys);
+            return State.JourneyTranslator.Translate(journeys);
         }
     }
 }

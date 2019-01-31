@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Itinero.Transit.Api.Models;
 using Itinero.Transit.Data;
 using Itinero.Transit.Journeys;
-using Serilog;
 
 namespace Itinero.Transit.Api.Logic
 {
@@ -12,17 +11,14 @@ namespace Itinero.Transit.Api.Logic
     /// </summary>
     public class JourneyTranslator
     {
-        private readonly DatabaseLoader Db;
-        private readonly StopsDb.StopsDbReader _stops;
         private readonly TripsDb.TripsDbReader _trips;
+        private readonly StopsDb.StopsDbReader _stops;
 
-        public JourneyTranslator(DatabaseLoader db)
+        public JourneyTranslator(TransitDb db)
         {
-            Db = db;
-            _stops = Db.Stops.GetReader();
-            _trips = Db.Trips.GetReader();
+            _trips = db.Latest.TripsDb.GetReader();
+            _stops = db.Latest.StopsDb.GetReader();
         }
-
 
         private (Segment segment, Journey<T> rest) ExtractSegment<T>(Journey<T> j)
             where T : IJourneyStats<T>
@@ -44,12 +40,17 @@ namespace Itinero.Transit.Api.Logic
                 rest.Time);
 
 
-            _trips.MoveTo(j.TripId);
-          
-            
-            _trips.Attributes.TryGetValue("headsign", out var headsign);
-            _trips.Attributes.TryGetValue("route", out var route);
-            return (new Segment(departure, arrivalLocation, route, headsign), rest.PreviousLink);
+            var headSign = "";
+            var route = "";
+
+            // ReSharper disable once InvertIf
+            if (_trips.MoveTo(j.TripId))
+            {
+                _trips.Attributes.TryGetValue("headsign", out headSign);
+                _trips.Attributes.TryGetValue("route", out route);
+            }
+
+            return (new Segment(departure, arrivalLocation, route, headSign), rest.PreviousLink);
         }
 
         public Journey Translate<T>(Journey<T> j) where T : IJourneyStats<T>
@@ -65,7 +66,7 @@ namespace Itinero.Transit.Api.Logic
                 (segment, j) = ExtractSegment(j);
                 segments.Add(segment);
             }
-            
+
             segments.Reverse();
 
             // We have reached the genesis, and should thus have all the segments

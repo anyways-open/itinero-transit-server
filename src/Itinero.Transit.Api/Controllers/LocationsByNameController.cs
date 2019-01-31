@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Itinero.Transit.Api.Logic;
 using Itinero.Transit.Api.Models;
-using Itinero.Transit.IO.LC.CSA;
 using Microsoft.AspNetCore.Mvc;
 using static System.String;
 using Location = Itinero.Transit.IO.LC.CSA.LocationProviders.Location;
@@ -16,9 +16,7 @@ namespace Itinero.Transit.Api.Controllers
     [ProducesResponseType(404)]
     public class LocationsByNameController : ControllerBase
     {
-        public static Profile Locations;
-        public static Dictionary<string, uint> Importances;
-
+       
         /// <summary>
         /// Searches for stops having the given name or something similar. 
         /// </summary>
@@ -48,39 +46,41 @@ namespace Itinero.Transit.Api.Controllers
 
             name = Simplify(name);
 
-            foreach (var l in Locations.GetAllLocations())
+            foreach (var lp in State.LcProfile.LocationProvider)
             {
-                var lName = Simplify(l.Name);
-
-                if (Equals(lName, name))
+                foreach (var l in lp.Locations)
                 {
-                    results[0].Add(l);
-                    continue;
-                }
+                    var lName = Simplify(l.Name);
 
-                if (name.Length > 2 &&
-                    name.Equals(Initials(l.Name))
-                    || name.Equals(Initials2(l.Name))
-                    || SaintInitials(lName, name))
-                {
-                    results[1].Add(l);
-                    continue;
-                }
+                    if (Equals(lName, name))
+                    {
+                        results[0].Add(l);
+                        continue;
+                    }
+
+                    if (name.Length > 2 &&
+                        name.Equals(Initials(l.Name))
+                        || name.Equals(Initials2(l.Name))
+                        || SaintInitials(lName, name))
+                    {
+                        results[1].Add(l);
+                        continue;
+                    }
 
 
-                if (lName.StartsWith(name))
-                {
-                    results[2].Add(l);
-                    continue;
-                }
+                    if (lName.StartsWith(name))
+                    {
+                        results[2].Add(l);
+                        continue;
+                    }
 
-                var d = CalcLevenshteinDistance(name, lName.Substring(0, Math.Min(lName.Length, name.Length)));
-                if (d <= maxDistance)
-                {
-                    results[d + 2].Add(l);
+                    var d = CalcLevenshteinDistance(name, lName.Substring(0, Math.Min(lName.Length, name.Length)));
+                    if (d <= maxDistance)
+                    {
+                        results[d + 2].Add(l);
+                    }
                 }
             }
-
 
             var json = new List<LocationResult>();
             for (var i = 0; i <= maxDistance + 2; i++)
@@ -89,9 +89,9 @@ namespace Itinero.Transit.Api.Controllers
                 {
                     var id = r.Uri.ToString();
                     uint importance = 0;
-                    if (Importances != null && Importances.ContainsKey(id))
+                    if (State.Importances != null && State.Importances.ContainsKey(id))
                     {
-                        importance = Importances[id];
+                        importance = State.Importances[id];
                     }
 
                     var loc = new Models.Location(r.Id().ToString(), r.Name, r.Lat, r.Lon);

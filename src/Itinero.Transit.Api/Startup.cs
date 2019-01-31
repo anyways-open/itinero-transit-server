@@ -30,15 +30,16 @@ namespace Itinero.Transit.Api
         {
             ConfigureLogging();
 
-            var db = DatabaseLoader.Belgium();
-            var tr = new JourneyTranslator(db);
-            LocationController.Translator = tr;
-            LocationsAroundController.StopsDb = db.Stops;
-            JourneyController.Translator = tr;
-            JourneyController.Db = db;
-            LocationsByNameController.Locations = db.Profile;
-            LocationsByNameController.Importances = db.ConnectionCounts;
-            StatusController.Reporter = new StatusReportGenerator(db);
+            State.BootTime = DateTime.Now;
+
+            (State.TransitDb, State.LcProfile) = TransitDbFactory.CreateTransitDbBelgium();
+
+            State.JourneyTranslator = new JourneyTranslator(State.TransitDb);
+
+            // Sample importance based on today
+            State.Importances = ImportanceCount.CalculateImportance(
+                State.LcProfile, DateTime.Today, DateTime.Today.AddDays(1));
+
 
             services.AddCors(options =>
             {
@@ -50,13 +51,13 @@ namespace Itinero.Transit.Api
 
             Log.Information("Adding swagger");
             services.AddSwaggerDocument();
-
+/*
 
             Task.Factory.StartNew(() =>
             {
                 db.LoadLocations();
                 db.LoadTimeWindow(DateTime.Now.Date.AddDays(-7), DateTime.Now.Date.AddDays(31));
-            }, TaskCreationOptions.LongRunning);
+            }, TaskCreationOptions.LongRunning); */
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
