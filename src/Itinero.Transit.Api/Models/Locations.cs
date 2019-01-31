@@ -6,12 +6,12 @@ using Itinero.Transit.Data;
 
 namespace Itinero.Transit.Api.Models
 {
+    /// <summary>
+    /// A collection of locations.
+    /// </summary>
     public class Locations
     {
-        // ReSharper disable once InconsistentNaming
-        public readonly List<Location> stops;
-
-        public Locations(StopsDb.StopsDbReader reader, IEnumerable<IStop> stops)
+        internal Locations(StopsDb.StopsDbReader reader, IEnumerable<IStop> stops)
         {
             this.stops = new List<Location>();
             foreach (var stop in stops)
@@ -22,5 +22,11 @@ namespace Itinero.Transit.Api.Models
                 this.stops.Add(new Location(reader)); 
             }
         }
+        
+        /// <summary>
+        /// The stops.
+        /// </summary>
+        // ReSharper disable once InconsistentNaming
+        public List<Location> stops { get; }
     }
 }

@@ -5,7 +5,6 @@ function dateHHMM(date){
 }
 
 function createJourneyLayer(journey){
-    console.log("Trying to render",journey);
     let journeyLayer = L.featureGroup();
   
   

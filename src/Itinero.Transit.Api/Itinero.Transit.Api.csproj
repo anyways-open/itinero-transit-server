@@ -20,4 +20,20 @@
         <PackageReference Include="Serilog.Sinks.File" Version="4.0.1-dev-00801" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Compile Remove="cache\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <EmbeddedResource Remove="cache\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="cache\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Remove="cache\**" />
+    </ItemGroup>
+
 </Project>

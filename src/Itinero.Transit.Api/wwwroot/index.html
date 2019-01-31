@@ -2,7 +2,8 @@
 <html lang="en">
 
 <head>
-<title>Public Transport Router</title>
+    <title>Public Transport Router</title>
+    <meta charset="UTF-8"> 
     <script src="lib/jquery-1.12.4.js"></script>
     <script src="lib/jquery-ui.js"></script>
     <script src="AutoComplete.js"></script>
@@ -125,9 +126,6 @@ function dateHHMM(date){
 }
 
 function renderJourney(journey){
-    console.log(journey);
-    
-    
     let depTime = dateHHMM(journey.departure.time);
     let arrTime = dateHHMM(journey.arrival.time);
     let totalMinutes = Math.floor(journey.travelTime / 60);
@@ -202,6 +200,8 @@ var startCircle, endCircle;
 function rerenderStartEnd(){
     let fromField = document.getElementById("from");
     let fromId = fromField.hiddenValue;
+    console.log("Rendering start at ",fromId, fromId);
+	    
     if(fromId){
         if(startCircle){
             map.removeLayer(startCircle);
@@ -259,6 +259,7 @@ function loadJourneys(){
     
     let toField = document.getElementById("to");
     let toId = toField.hiddenValue;
+
     
     if(fromId === undefined && fromField.value.length > 0){
         // the user only typed, but did not use the autocomplete or tab
@@ -293,9 +294,6 @@ function loadJourneys(){
     
     let depTime = document.getElementById('depDate').value + " "+document.getElementById('depTime').value+'+01:00';
     let date = new Date(depTime).toISOString();
-    
-    console.log(date);
-
     
     lookupJourney(fromId.id, toId.id, date, 180, renderJourneys, onFail)
     

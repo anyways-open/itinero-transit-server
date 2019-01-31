@@ -1,21 +1,32 @@
 using System;
 using System.Collections.Generic;
-// ReSharper disable MemberCanBePrivate.Global
-
-// ReSharper disable InconsistentNaming
-// ReSharper disable NotAccessedField.Global
 
 namespace Itinero.Transit.Api.Models
 {
+    /// <summary>
+    /// A collection of journeys.
+    /// </summary>
     public class Journeys
     {
-        public readonly DateTime ResultGeneratedTime;
-        public readonly List<Journey> journeys;
-
-        public Journeys(List<Journey> journeys)
+        /// <summary>
+        /// Creates a new journeys collection.
+        /// </summary>
+        /// <param name="journeys">The journeys.</param>
+        internal Journeys(List<Journey> journeys)
         {
             ResultGeneratedTime = DateTime.Now;
             this.journeys = journeys;
         }
+
+        /// <summary>
+        /// The result generate time.
+        /// </summary>
+        public DateTime ResultGeneratedTime { get; }
+
+        /// <summary>
+        /// The journeys.
+        /// </summary>
+        // ReSharper disable once InconsistentNaming
+        public List<Journey> journeys { get; }
     }
 }

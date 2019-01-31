@@ -5,7 +5,7 @@
 ############################################################
 
 # Set the base image to Ubuntu
-FROM microsoft/dotnet:2.1-aspnetcore-runtime
+FROM microsoft/dotnet:2.1-sdk
 
 # File Author / Maintainer
 MAINTAINER Anyways BVBA
@@ -18,7 +18,7 @@ COPY ./bin/Release/netcoreapp2.1/linux-x64/publish /var/app
 COPY appsettings.Docker.json /var/app/appsettings.json
 
 # couple data folder data volume.
-VOLUME ["/var/app/data"]
+VOLUME ["/var/app/cache"]
 VOLUME ["/var/app/logs"]
 
 # SET base url
@@ -29,4 +29,4 @@ EXPOSE 5000
 
 # Set the default command to execute when creating a new container
 WORKDIR /var/app/
-CMD ["dotnet", "Itinero.Transit.API.dll"]
+CMD ["dotnet", "Itinero.Transit.Api.dll"]

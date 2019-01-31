@@ -1,25 +1,32 @@
 using System;
 
-// ReSharper disable NotAccessedField.Global
-// ReSharper disable MemberCanBePrivate.Global
-
 namespace Itinero.Transit.Api.Models
 {
+    /// <summary>
+    /// A location and time.
+    /// </summary>
     public class TimedLocation
     {
-        public readonly Location Location;
-        public readonly DateTime Time;
-
-
-        public TimedLocation(Location location, ulong time)
+        internal TimedLocation(Location location, ulong time)
             : this(location, time.FromUnixTime())
         {
+            
         }
 
-        public TimedLocation(Location location, DateTime time)
+        internal TimedLocation(Location location, DateTime time)
         {
             Location = location;
             Time = time;
         }
+        
+        /// <summary>
+        /// The location.
+        /// </summary>
+        public Location Location { get; }
+        
+        /// <summary>
+        /// The time.
+        /// </summary>
+        public DateTime Time { get; }
     }
 }

@@ -1,8 +1,5 @@
-// ReSharper disable UnusedMember.Local
-
 using System;
 using System.Collections.Generic;
-
 // ReSharper disable MemberCanBePrivate.Global
 
 namespace Itinero.Transit.Api.Models
@@ -20,12 +17,12 @@ namespace Itinero.Transit.Api.Models
         /// <summary>
         /// When the server got online
         /// </summary>
-        public readonly DateTime OnlineSince;
+        public DateTime OnlineSince { get; }
 
         /// <summary>
         /// The time (in seconds) that the server has been running
         /// </summary>
-        public readonly long Uptime;
+        public long Uptime { get; }
 
         /// <summary>
         /// Indicates what time fragments are loaded into the database.

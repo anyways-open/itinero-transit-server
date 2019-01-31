@@ -9,24 +9,32 @@ namespace Itinero.Transit.Api.Models
     /// </summary>
     public class Segment
     {
-
-        public TimedLocation Departure, Arrival;
-        
-        /// <summary>
-        /// The identifier of the vehicle
-        /// </summary>
-        public string Vehicle;
-        /// <summary>
-        /// The name of the train, e.g. its destination
-        /// </summary>
-        public string Headsign;
-
-        public Segment(TimedLocation departure, TimedLocation arrival, string vehicle, string headsign)
+        internal Segment(TimedLocation departure, TimedLocation arrival, string vehicle, string headSign)
         {
             Departure = departure;
             Arrival = arrival;
             Vehicle = vehicle;
-            Headsign = headsign;
+            Headsign = headSign;
         }
+
+        /// <summary>
+        /// The departure location.
+        /// </summary>
+        public TimedLocation Departure { get; }
+        
+        /// <summary>
+        /// The arrival location.
+        /// </summary>
+        public TimedLocation Arrival { get; }
+        
+        /// <summary>
+        /// The identifier of the vehicle
+        /// </summary>
+        public string Vehicle { get; }
+        
+        /// <summary>
+        /// The name of the train, e.g. its destination
+        /// </summary>
+        public string Headsign { get; }
     }
 }
