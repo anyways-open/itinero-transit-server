@@ -2,6 +2,7 @@ using System;
 using Itinero.Transit.Data;
 using Itinero.Transit.IO.LC;
 using Itinero.Transit.IO.LC.CSA;
+using Itinero.Transit.IO.LC.CSA.Utils;
 using Serilog;
 
 namespace Itinero.Transit.Api.Logic
@@ -26,19 +27,21 @@ namespace Itinero.Transit.Api.Logic
 
         public static (TransitDb, Profile) CreateTransitDbBelgium()
         {
-            var sncb = Belgium.Sncb();
-
+            var sncb = Belgium.Sncb(new Downloader(true));
+            var sncbNoCache = Belgium.Sncb(new Downloader(false));
 
             void UpdateTimeFrame(TransitDb.TransitDbWriter w, DateTime start, DateTime end)
             {
-                sncb.AddAllConnectionsTo(w, start, end, Log.Warning, new LoggingOptions(OnConnectionLoaded));
+                Log.Information($"Loading time window {start}->{end}");
+                sncb.AddAllConnectionsTo(w, start, end, Log.Warning, new LoggingOptions(OnConnectionLoaded, 1));
             }
 
             var db = new TransitDb(UpdateTimeFrame);
 
             var writer = db.GetWriter();
-            sncb.AddAllLocationsTo(writer, Log.Error, new LoggingOptions(OnLocationLoaded, 250));
+            sncbNoCache.AddAllLocationsTo(writer, Log.Error, new LoggingOptions(OnLocationLoaded, 250));
             writer.Close();
+            
             
             return (db, sncb);
         }

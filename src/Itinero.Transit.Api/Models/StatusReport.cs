@@ -30,12 +30,20 @@ namespace Itinero.Transit.Api.Models
         /// </summary>
         public readonly List<(DateTime start, DateTime end)> LoadedTimeWindows;
 
+        
+        /// <summary>
+        /// A small string so that the programmer knows a little what version is running.
+        /// Should be taken with a grain of salt
+        /// </summary>
+        public readonly string Version;
 
-        public StatusReport(DateTime onlineSince, long uptime, List<(DateTime start, DateTime end)> loadedTimeWindows)
+
+        public StatusReport(DateTime onlineSince, long uptime, List<(DateTime start, DateTime end)> loadedTimeWindows, string version)
         {
             OnlineSince = onlineSince;
             Uptime = uptime;
             LoadedTimeWindows = loadedTimeWindows;
+            Version = version;
         }
     }
 }

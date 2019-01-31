@@ -28,5 +28,7 @@ namespace Itinero.Transit.Api.Logic
         /// When did the server start?
         /// </summary>
         public static DateTime BootTime;
+
+        public const string Version = "At least it works sometimes";
     }
 }

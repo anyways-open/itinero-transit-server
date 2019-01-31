@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Itinero.Transit.Api.Logic;
 using Itinero.Transit.Logging;
 using Microsoft.AspNetCore.Builder;
@@ -37,10 +38,6 @@ namespace Itinero.Transit.Api
 
             State.JourneyTranslator = new JourneyTranslator(State.TransitDb);
 
-            // Sample importance based on today
-            State.Importances = ImportanceCount.CalculateImportance(
-                State.LcProfile, DateTime.Today, DateTime.Today.AddDays(1));
-
 
             services.AddCors(options =>
             {
@@ -53,6 +50,27 @@ namespace Itinero.Transit.Api
             Log.Information("Adding swagger");
             services.AddSwaggerDocument();
 
+
+            void SampleImportances()
+            {
+                // Sample importance based on today
+                State.Importances = ImportanceCount.CalculateImportance(
+                    State.LcProfile, DateTime.Today, DateTime.Today.AddDays(1));
+            }
+
+
+            void LoadTimeFrame()
+            {
+                for (var i = 0; i < 2; i++)
+                {
+                    State.TransitDb.UpdateTimeFrame(DateTime.Today.AddDays(i), DateTime.Today.AddDays(i + 1));
+                }
+
+                State.TransitDb.UpdateTimeFrame(DateTime.Today.AddDays(-1), DateTime.Today.AddDays(0));
+            }
+
+          //  Task.Factory.StartNew(SampleImportances);
+            Task.Factory.StartNew(LoadTimeFrame);
             // TODO ADD AUTO RELOADING 
             // TODO Headsigns are gone! Where are they?
         }
