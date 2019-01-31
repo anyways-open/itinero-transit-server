@@ -29,6 +29,6 @@ namespace Itinero.Transit.Api.Logic
         /// </summary>
         public static DateTime BootTime;
 
-        public const string Version = "At least it works sometimes";
+        public const string Version = "Better now, but it doesn't fetch more data automatically";
     }
 }

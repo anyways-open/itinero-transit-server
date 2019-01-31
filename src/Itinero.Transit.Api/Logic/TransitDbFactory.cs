@@ -27,7 +27,7 @@ namespace Itinero.Transit.Api.Logic
 
         public static (TransitDb, Profile) CreateTransitDbBelgium()
         {
-            var sncb = Belgium.Sncb(new Downloader(true));
+            var sncb = Belgium.Sncb(new Downloader(false));
             var sncbNoCache = Belgium.Sncb(new Downloader(false));
 
             void UpdateTimeFrame(TransitDb.TransitDbWriter w, DateTime start, DateTime end)

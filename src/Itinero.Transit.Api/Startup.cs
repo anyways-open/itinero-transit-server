@@ -61,15 +61,10 @@ namespace Itinero.Transit.Api
 
             void LoadTimeFrame()
             {
-                for (var i = 0; i < 2; i++)
-                {
-                    State.TransitDb.UpdateTimeFrame(DateTime.Today.AddDays(i), DateTime.Today.AddDays(i + 1));
-                }
-
-                State.TransitDb.UpdateTimeFrame(DateTime.Today.AddDays(-1), DateTime.Today.AddDays(0));
+                State.TransitDb.UpdateTimeFrame(DateTime.Today.AddDays(-1), DateTime.Today.AddDays(3));
             }
 
-          //  Task.Factory.StartNew(SampleImportances);
+            //  Task.Factory.StartNew(SampleImportances);
             Task.Factory.StartNew(LoadTimeFrame);
             // TODO ADD AUTO RELOADING 
             // TODO Headsigns are gone! Where are they?
