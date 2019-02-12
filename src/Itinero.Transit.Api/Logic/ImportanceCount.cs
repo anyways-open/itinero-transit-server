@@ -12,7 +12,7 @@ namespace Itinero.Transit.Api.Logic
         /// Calculates how important a certain station is based on how many trains stop there
         /// </summary>
         /// <returns></returns>
-        public static Dictionary<string, uint> CalculateImportance(Profile profile, DateTime start, DateTime end)
+        public static Dictionary<string, uint> CalculateImportance(LinkedConnectionDataset profile, DateTime start, DateTime end)
         {
             var importances = new Dictionary<string, uint>();
 

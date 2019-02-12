@@ -16,7 +16,7 @@ namespace Itinero.Transit.Api.Logic
 
         public static JourneyTranslator JourneyTranslator;
 
-        public static Profile LcProfile;
+        public static LinkedConnectionDataset LcProfile;
 
         /// <summary>
         /// How important is each station?

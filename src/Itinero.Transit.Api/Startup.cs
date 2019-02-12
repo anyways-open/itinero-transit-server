@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -34,7 +35,28 @@ namespace Itinero.Transit.Api
 
             State.BootTime = DateTime.Now;
 
-            (State.TransitDb, State.LcProfile) = TransitDbFactory.CreateTransitDbBelgium();
+
+            Log.Information("Config file: " + Configuration.GetSection("Datasources"));
+            var sources = Configuration.GetSection("Datasources");
+            if (!sources.GetChildren().Any())
+            {
+                throw new ArgumentException(
+                    "No datasource is specified in the configuration. Please add at least one operator");
+            }
+
+            if (sources.GetChildren().Count() > 1)
+            {
+                throw new ArgumentException("For this beta version, only one operator is supported");
+            }
+
+            var source = sources.GetChildren().First();
+
+            Log.Information(
+                $"Loading PT operator {source.GetSection("Locations").Value} {source.GetSection("Connections").Value}");
+
+            (State.TransitDb, State.LcProfile) = TransitDbFactory.CreateTransitDb(
+                    source.GetSection("Connections").Value,
+                    source.GetSection("Locations").Value);
 
             State.JourneyTranslator = new JourneyTranslator(State.TransitDb);
 
@@ -125,8 +147,7 @@ namespace Itinero.Transit.Api
                 {
                     document.Info.Version = "v1";
                     document.Info.Title = "Anyways Transit API";
-                    document.Info.Description =
-                        "The Anyways Transit API.";
+                    document.Info.Description = Documentation.ApiDocs;
                     document.Info.TermsOfService = "None";
                     document.Info.Contact = new SwaggerContact
                     {
