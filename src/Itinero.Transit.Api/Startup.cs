@@ -51,6 +51,8 @@ namespace Itinero.Transit.Api
 
             var source = sources.GetChildren().First();
 
+            
+            
             Log.Information(
                 $"Loading PT operator {source.GetSection("Locations").Value} {source.GetSection("Connections").Value}");
 
@@ -86,7 +88,7 @@ namespace Itinero.Transit.Api
                 State.TransitDb.UpdateTimeFrame(DateTime.Today.AddDays(-1), DateTime.Today.AddDays(3));
             }
 
-            //  Task.Factory.StartNew(SampleImportances);
+            Task.Factory.StartNew(SampleImportances);
             Task.Factory.StartNew(LoadTimeFrame);
             // TODO ADD AUTO RELOADING 
             // TODO Headsigns are gone! Where are they?
@@ -183,7 +185,6 @@ namespace Itinero.Transit.Api
 
             app.UseHttpsRedirection();
             app.UseMvc();
-            app.UseFileServer();
         }
 
         private static void ConfigureLogging()
