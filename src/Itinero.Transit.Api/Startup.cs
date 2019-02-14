@@ -1,5 +1,5 @@
 ﻿using System;
-using System.ComponentModel;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -15,7 +15,6 @@ using NSwag;
 using Serilog;
 using Serilog.Formatting.Json;
 using Log = Serilog.Log;
-using TraceEventType = System.Diagnostics.TraceEventType;
 
 namespace Itinero.Transit.Api
 {
@@ -36,7 +35,6 @@ namespace Itinero.Transit.Api
             State.BootTime = DateTime.Now;
 
 
-            Log.Information("Config file: " + Configuration.GetSection("Datasources"));
             var sources = Configuration.GetSection("Datasources");
             if (!sources.GetChildren().Any())
             {
@@ -49,16 +47,16 @@ namespace Itinero.Transit.Api
                 throw new ArgumentException("For this beta version, only one operator is supported");
             }
 
+            // Get first element of the list in datasources
             var source = sources.GetChildren().First();
 
-            
-            
+
             Log.Information(
                 $"Loading PT operator {source.GetSection("Locations").Value} {source.GetSection("Connections").Value}");
 
             (State.TransitDb, State.LcProfile) = TransitDbFactory.CreateTransitDb(
-                    source.GetSection("Connections").Value,
-                    source.GetSection("Locations").Value);
+                source.GetSection("Connections").Value,
+                source.GetSection("Locations").Value);
 
             State.JourneyTranslator = new JourneyTranslator(State.TransitDb);
 
@@ -82,15 +80,49 @@ namespace Itinero.Transit.Api
                     State.LcProfile, DateTime.Today, DateTime.Today.AddDays(1));
             }
 
-
-            void LoadTimeFrame()
+            List<(DateTime start, DateTime end)> CreateWindows(DateTime now)
             {
-                State.TransitDb.UpdateTimeFrame(DateTime.Today.AddDays(-1), DateTime.Today.AddDays(3));
+                var policy = Configuration.GetSection("AutoLoad");
+                var timeBefore = policy.GetValue<ulong>("TimeBefore");
+                var timeAfter = policy.GetValue<ulong>("TimeAfter");
+                var intervalSplit = policy.GetValue<ulong>("IntervalSplit");
+                
+                if (intervalSplit == 0)
+                {
+                    Log.Warning("No interval split given, or is zero");
+                    intervalSplit = timeAfter + timeBefore;
+                }
+
+                var windows = new List<(DateTime start, DateTime end)>();
+
+                var t = now.ToUnixTime();
+
+                var start = t - timeBefore;
+                var end = t + timeAfter;
+
+                var wStart = start;
+                ulong wEnd;
+                do
+                {
+                    wEnd = Math.Min(wStart + intervalSplit, end);
+                    windows.Add((wStart.FromUnixTime(), wEnd.FromUnixTime()));
+
+                    wStart = wEnd;
+                } while (wEnd < end);
+
+                return windows;
             }
 
+            void StartAutoReloads()
+            {
+                // Loads and reloads the connectionsDB
+                var reloadEvery = Configuration.GetSection("AutoLoad").GetValue<ulong>("ReloadEvery");
+                new ConnectionAutoLoader(State.TransitDb, TimeSpan.FromSeconds(reloadEvery), CreateWindows);
+            }
+
+
+            Task.Factory.StartNew(StartAutoReloads);
             Task.Factory.StartNew(SampleImportances);
-            Task.Factory.StartNew(LoadTimeFrame);
-            // TODO ADD AUTO RELOADING 
             // TODO Headsigns are gone! Where are they?
         }
 

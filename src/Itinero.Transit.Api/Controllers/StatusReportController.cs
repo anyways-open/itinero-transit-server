@@ -20,7 +20,8 @@ namespace Itinero.Transit.Api.Controllers
                 State.BootTime,
                 (long) (DateTime.Now - State.BootTime).TotalSeconds,
                 State.TransitDb.LoadedTimeWindows,
-                State.Version
+                State.Version,
+                State.CurrentlyLoadingWindow
             );
             return report;
         }

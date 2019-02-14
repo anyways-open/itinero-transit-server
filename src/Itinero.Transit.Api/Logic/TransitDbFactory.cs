@@ -22,6 +22,9 @@ namespace Itinero.Transit.Api.Logic
             var (currentCount, batchTarget, batchCount, nrOfBatches) = status;
             Log.Information(
                 $"Importing connections: Running batch {batchCount}/{nrOfBatches}: Importing timetable {currentCount} (out of an estimated {batchTarget})");
+            var perc = 1.0 * ((1 + batchCount) / nrOfBatches) * (1.0*currentCount / batchTarget);
+            State.CurrentlyLoadingWindow = (State.CurrentlyLoadingWindow.Value.start,
+                State.CurrentlyLoadingWindow.Value.end, perc);
         }
 
 
@@ -36,7 +39,9 @@ namespace Itinero.Transit.Api.Logic
             void UpdateTimeFrame(TransitDb.TransitDbWriter w, DateTime start, DateTime end)
             {
                 Log.Information($"Loading time window {start}->{end}");
+                State.CurrentlyLoadingWindow = (start, end, 0);
                 dataset.AddAllConnectionsTo(w, start, end, Log.Warning, new LoggingOptions(OnConnectionLoaded, 1));
+                State.CurrentlyLoadingWindow = null;
             }
 
             var db = new TransitDb(UpdateTimeFrame);
