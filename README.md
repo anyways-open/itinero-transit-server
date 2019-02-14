@@ -5,4 +5,10 @@
 The Itinero-Transit-Server is a wrapper around the core library [itinero-transit](https://github.com/openplannerteam/itinero-transit). The core library offers routing over a public transport network, this small wrapper makes that available via HTTPS.
 
 A demo is deployed [here](https://api.anyways.eu/transit/index.html).
-The full documentation can be found [there as well](http://api.anyways.eu/transit/api.html)
+The full documentation (as swagger file) can be found [there as well](http://api.anyways.eu/transit/api.html).
+
+If the server is offline, a backup swagger file is available [in the repo too](docs/swagger.json). To load this interactively:
+
+- Open [https://petstore.swagger.io/](https://petstore.swagger.io/).
+- Paste [this url of the raw spec](https://raw.githubusercontent.com/anyways-open/itinero-transit-server/master/docs/swagger.json) in the search box at the top.
+

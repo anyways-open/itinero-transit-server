@@ -1,205 +1,454 @@
 {
-  "swagger" : "2.0",
-  "info" : {
-    "description" : "This is the Anyways Transit API. More info at https://anyways.eu.\n\nWith this API, you can query how to go from one location to another using various transportation modi. As for version 1.0, only traveling via the SNCB/NMBS network is supported.\n\nThis document describes how you, as a developer, can query our service to get journeys via the SNCB-network.\n",
-    "version" : "1.0.0",
-    "title" : "Transit API",
-    "termsOfService" : "http://swagger.io/terms/",
-    "contact" : {
-      "email" : "info@anyways.eu"
+  "x-generator": "NSwag v12.0.10.0 (NJsonSchema v9.13.11.0 (Newtonsoft.Json v11.0.0.0))",
+  "swagger": "2.0",
+  "info": {
+    "title": "Anyways Transit API",
+    "description": "Welcome to documentation of the Anyways BVBA Transit API.<br />\nThe API offers routing over various public transport networks, such as train, bus, metro or tram networks.The heavy lifting of the routing is done by the <a href='https://github.com/openplannerteam/itinero-transit'>Itinero-transit</a> library, which is built to use <a href='https://linkedconnections.org/'>Linked Connections</a>.<br />\n<br /><h1> Usage of the API</h1><p>To query for a route using public transport, the API can be freely queried via HTTP. To do this, one must first obtain the identifiers of the departure and arrival stations. In the linked data philosophy, an identifier is an URL referring to a station. To obtain a station, one can either use the <code>LocationsAround</code> or <code>LocationsByName</code> endpoints. Please see the swagger documentation for more details.<p><p>Once that the locations are known, a journey over the PT-network can be obtained via the <code>Journey</code>-endpoint. Again, see the swagger file for a detailed explanation.<h1>Status of the live server</h1><p>The demo endpoint only loads a few operators over a certain timespan. To see which operators are loaded during what time, consult the <code>status</code> endpoint.</p><h1>Deploying the server</h1><p>To deploy your own Transit-server, use <code>appsettings.json</code> to specify the connection URLs of the operator which you want to load. An example can be found <a href='https://github.com/anyways-open/itinero-transit-server/blob/master/src/Itinero.Transit.Api/appsettings.json'>here</a></p>",
+    "termsOfService": "None",
+    "contact": {
+      "name": "Anyways",
+      "url": "https://www.anyways.eu",
+      "email": "info@anyways.eu"
     },
-    "license" : {
-      "name" : "Apache 2.0",
-      "url" : "http://www.apache.org/licenses/LICENSE-2.0.html"
-    }
+    "version": "v1"
   },
-  "host" : "virtserver.swaggerhub.com",
-  "basePath" : "/a6159/anyways-transit-routing/1.0.0",
-  "tags" : [ {
-    "name" : "stop",
-    "description" : "All info about stops."
-  }, {
-    "name" : "journey",
-    "description" : "Get your journeys here."
-  } ],
-  "schemes" : [ "https", "http" ],
-  "paths" : {
-    "/stop/{stopId}" : {
-      "get" : {
-        "tags" : [ "stop" ],
-        "summary" : "Finds a stop by ID.",
-        "description" : "Returns a single stop.",
-        "operationId" : "getStopById",
-        "produces" : [ "application/json", "application/xml" ],
-        "parameters" : [ {
-          "name" : "stopId",
-          "in" : "path",
-          "description" : "ID of the stop to return",
-          "required" : true,
-          "type" : "string",
-          "format" : "string"
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "successful operation",
-            "schema" : {
-              "$ref" : "#/definitions/Stop"
-            }
+  "host": "localhost:5001",
+  "schemes": [
+    "https"
+  ],
+  "paths": {
+    "/Journey": {
+      "get": {
+        "tags": [
+          "Journey"
+        ],
+        "summary": "Creates a journey over the public-transport network.",
+        "description": "You do not have to provide both departure and arrival times, one of them is enough.\nWhen both are given, all possible journeys between those points in time are calculated.\nIf only one is given, a fastest possible test route is created. Then, the taken time is doubled and all possible journeys between `(journey.Departure, journey.Departure + 2*journey.TotalTime)` are given.",
+        "operationId": "Journey_Get",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "type": "string",
+            "name": "from",
+            "in": "query",
+            "description": "The location where the journey starts, e.g. http://irail.be/stations/NMBS/008891009",
+            "x-nullable": true
           },
-          "400" : {
-            "description" : "Invalid ID"
+          {
+            "type": "string",
+            "name": "to",
+            "in": "query",
+            "description": "The location where the traveller would like to go, e.g. http://irail.be/stations/NMBS/008892007",
+            "x-nullable": true
           },
-          "404" : {
-            "description" : "Stop not found"
+          {
+            "type": "string",
+            "name": "departure",
+            "in": "query",
+            "description": "The earliest moment when the traveller would like to depart, in ISO8601 format",
+            "format": "date-time",
+            "x-nullable": true
+          },
+          {
+            "type": "string",
+            "name": "arrival",
+            "in": "query",
+            "description": "The last moment where the traveller would like to arrive, in ISO8601 format",
+            "format": "date-time",
+            "x-nullable": true
+          },
+          {
+            "type": "integer",
+            "name": "internalTransferTime",
+            "in": "query",
+            "description": "The number of seconds the traveller needs to transfer trains within the station. Increase for less mobile users",
+            "default": 180,
+            "x-nullable": false
           }
-        }
-      }
-    },
-    "/stop/findByLocation" : {
-      "get" : {
-        "tags" : [ "stop" ],
-        "summary" : "Finds Stops by their location.",
-        "description" : "Finds the stops closest to the given location in WGS84.",
-        "operationId" : "findByLocation",
-        "produces" : [ "application/json", "application/xml" ],
-        "parameters" : [ {
-          "name" : "lat",
-          "in" : "query",
-          "description" : "The latitude in WGS84",
-          "required" : true,
-          "type" : "number"
-        }, {
-          "name" : "lon",
-          "in" : "query",
-          "description" : "The longitude in WGS84",
-          "required" : true,
-          "type" : "number"
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "successful operation",
-            "schema" : {
-              "$ref" : "#/definitions/Stop"
-            }
-          },
-          "400" : {
-            "description" : "Invalid status value"
-          }
-        }
-      }
-    },
-    "/journey/" : {
-      "get" : {
-        "tags" : [ "journey" ],
-        "summary" : "Finds one or more journeys between stops.",
-        "description" : "Returns one or more journeys.",
-        "produces" : [ "application/json", "application/xml" ],
-        "parameters" : [ {
-          "name" : "departureStop",
-          "in" : "query",
-          "description" : "The departure stop ID.",
-          "required" : true,
-          "type" : "string"
-        }, {
-          "name" : "arrivalStop",
-          "in" : "query",
-          "description" : "The arrival stop ID.",
-          "required" : true,
-          "type" : "string"
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "successful operation",
-            "schema" : {
-              "type" : "array",
-              "items" : {
-                "$ref" : "#/definitions/Journey"
+        ],
+        "responses": {
+          "200": {
+            "x-nullable": true,
+            "description": "",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Journey"
               }
             }
           },
-          "400" : {
-            "description" : "Invalid ID"
+          "404": {
+            "description": ""
           },
-          "404" : {
-            "description" : "Journey not found."
+          "400": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/Location": {
+      "get": {
+        "tags": [
+          "Location"
+        ],
+        "summary": "Gets information about a location, based on the location id",
+        "operationId": "Location_Get",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "type": "string",
+            "name": "id",
+            "in": "query",
+            "description": "The identifier of the location, e.g. 'http://irail.be/stations/NMBS/008891009'",
+            "x-nullable": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "x-nullable": true,
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Location"
+            }
+          },
+          "404": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/LocationsAround": {
+      "get": {
+        "tags": [
+          "LocationsAround"
+        ],
+        "summary": "Searches for stops which are at most 500 meters north, east, south or west from the specified point.",
+        "description": "Note that we construct a bounding square around `(lat, lon)`, namely `(lat - distance, lon - distance, lat + distance, lon + distance)`.\nThis implies that the maximal (Euclidian) distance between the specified location and a resulting location can be up to `sqrt(2) * distance`.",
+        "operationId": "LocationsAround_Get",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "type": "number",
+            "name": "lat",
+            "in": "query",
+            "description": "The WGS84-latitude point of where to search",
+            "format": "double",
+            "x-nullable": false
+          },
+          {
+            "type": "number",
+            "name": "lon",
+            "in": "query",
+            "description": "The WGS84-longitude point of where to search",
+            "format": "double",
+            "x-nullable": false
+          },
+          {
+            "type": "number",
+            "name": "distance",
+            "in": "query",
+            "description": "The maximal distance north, east, south or west that the resulting locations could be.",
+            "format": "double",
+            "default": 500.0,
+            "x-nullable": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "x-nullable": true,
+            "description": "",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Location"
+              }
+            }
+          },
+          "404": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/LocationsByName": {
+      "get": {
+        "tags": [
+          "LocationsByName"
+        ],
+        "summary": "Searches for stops having the given name or something similar. ",
+        "description": "A match is calculated as following:\nFirst, all characters are lowercased and non [a-z]-characters are removed.\n0) Then, we search for an exact match (which will get a 'difference' score of **0**).\n1) Secondly, a number of acronyms are automatically calculated for each station, namely:\n   The initials (e.g. Gent-Sint-Pieter will be shortened to GSP;)\n   The first two letters, followed by initials (Brussel-Centraal becomes BrC).\n    These are returned with a difference number of **1**.\n2) If the station name starts with the requested query, it is returned with a value of **2**\n3) At last, stations are matched with a string distance function. If the string distance is smaller then 5, it is returned.\n   The difference will be the string comparison difference + 1",
+        "operationId": "LocationsByName_Get",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "type": "string",
+            "name": "name",
+            "in": "query",
+            "x-nullable": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "x-nullable": true,
+            "description": "",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/LocationResult"
+              }
+            }
+          },
+          "404": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/Status": {
+      "get": {
+        "tags": [
+          "Status"
+        ],
+        "summary": "Gives some insight in the database",
+        "operationId": "Status_Get",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "responses": {
+          "200": {
+            "x-nullable": true,
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/StatusReport"
+            }
           }
         }
       }
     }
   },
-  "definitions" : {
-    "Stop" : {
-      "type" : "object",
-      "properties" : {
-        "id" : {
-          "type" : "string",
-          "format" : "string"
-        },
-        "name" : {
-          "type" : "string",
-          "description" : "The name."
-        },
-        "lat" : {
-          "type" : "number",
-          "format" : "double"
-        },
-        "lon" : {
-          "type" : "number",
-          "format" : "double"
-        }
-      }
-    },
-    "Segment" : {
-      "type" : "object",
-      "properties" : {
-        "vehicle" : {
-          "type" : "string",
-          "description" : "The vehicle."
-        },
-        "departure" : {
-          "$ref" : "#/definitions/Segment_departure"
-        },
-        "arrival" : {
-          "$ref" : "#/definitions/Segment_arrival"
-        }
-      }
-    },
-    "Journey" : {
-      "type" : "object",
-      "properties" : {
-        "segments" : {
-          "type" : "array",
-          "items" : {
-            "$ref" : "#/definitions/Segment"
+  "definitions": {
+    "Journey": {
+      "type": "object",
+      "description": "A journey.",
+      "additionalProperties": false,
+      "required": [
+        "travelTime",
+        "transfers"
+      ],
+      "properties": {
+        "segments": {
+          "type": "array",
+          "description": "All the individual segments:\n            one segment for each train/bus/... the traveller takes\n            ",
+          "items": {
+            "$ref": "#/definitions/Segment"
           }
+        },
+        "departure": {
+          "description": "The departure time and location of this journey. Same as `segments.first().departure`",
+          "allOf": [
+            {
+              "$ref": "#/definitions/TimedLocation"
+            }
+          ]
+        },
+        "arrival": {
+          "description": "The arrival time and location of this journey. Same as `segments.last().arrival`",
+          "allOf": [
+            {
+              "$ref": "#/definitions/TimedLocation"
+            }
+          ]
+        },
+        "travelTime": {
+          "type": "integer",
+          "description": "The total travel time in seconds. Equals `arrival.time - departure.time",
+          "format": "int32"
+        },
+        "transfers": {
+          "type": "integer",
+          "description": "The total number of intermediate transfers. Equals `segments.Length - 1`",
+          "format": "int32"
         }
       }
     },
-    "Segment_departure" : {
-      "properties" : {
-        "time" : {
-          "type" : "string",
-          "description" : "The ISO 8601-times of departure."
+    "Segment": {
+      "type": "object",
+      "description": "A segment represents a part of the journey, e.g. one link where you take the train    ",
+      "additionalProperties": false,
+      "properties": {
+        "departure": {
+          "description": "The departure location.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/TimedLocation"
+            }
+          ]
         },
-        "stop" : {
-          "$ref" : "#/definitions/Stop"
+        "arrival": {
+          "description": "The arrival location.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/TimedLocation"
+            }
+          ]
+        },
+        "vehicle": {
+          "type": "string",
+          "description": "The identifier of the vehicle"
+        },
+        "headsign": {
+          "type": "string",
+          "description": "The name of the train, e.g. its destination"
         }
       }
     },
-    "Segment_arrival" : {
-      "properties" : {
-        "time" : {
-          "type" : "string",
-          "description" : "The ISO 8601-times of arrival."
+    "TimedLocation": {
+      "type": "object",
+      "description": "A location and time.",
+      "additionalProperties": false,
+      "required": [
+        "time"
+      ],
+      "properties": {
+        "location": {
+          "description": "The location.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/Location"
+            }
+          ]
         },
-        "stop" : {
-          "$ref" : "#/definitions/Stop"
+        "time": {
+          "type": "string",
+          "description": "The time.",
+          "format": "date-time"
+        }
+      }
+    },
+    "Location": {
+      "type": "object",
+      "description": "A location.",
+      "additionalProperties": false,
+      "required": [
+        "lat",
+        "lon"
+      ],
+      "properties": {
+        "lat": {
+          "type": "number",
+          "description": "The latitude.",
+          "format": "double"
+        },
+        "lon": {
+          "type": "number",
+          "description": "The longitude.",
+          "format": "double"
+        },
+        "id": {
+          "type": "string",
+          "description": "The id."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name."
+        }
+      }
+    },
+    "LocationResult": {
+      "type": "object",
+      "description": "Result when querying a location",
+      "additionalProperties": false,
+      "required": [
+        "difference",
+        "importance"
+      ],
+      "properties": {
+        "location": {
+          "description": "The location.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/Location"
+            }
+          ]
+        },
+        "difference": {
+          "type": "integer",
+          "description": "The difference.",
+          "format": "int32"
+        },
+        "importance": {
+          "type": "integer",
+          "description": "Gives an indication how important a station is. The higher the number, the more trains pass there."
+        }
+      }
+    },
+    "StatusReport": {
+      "type": "object",
+      "description": "The status report gives some insight in the server.",
+      "additionalProperties": false,
+      "required": [
+        "onlineSince",
+        "uptime"
+      ],
+      "properties": {
+        "loadedTimeWindows": {
+          "type": "array",
+          "description": "Indicates what time fragments are loaded into the database.\nThis is a list of (start, end) values",
+          "items": {
+            "$ref": "#/definitions/ValueTupleOfDateTimeAndDateTime"
+          }
+        },
+        "version": {
+          "type": "string",
+          "description": "A small string so that the programmer knows a little what version is running.\nShould be taken with a grain of salt"
+        },
+        "onlineSince": {
+          "type": "string",
+          "description": "When the server got online",
+          "format": "date-time"
+        },
+        "uptime": {
+          "type": "integer",
+          "description": "The time (in seconds) that the server has been running",
+          "format": "int64"
+        }
+      }
+    },
+    "ValueTupleOfDateTimeAndDateTime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "item1",
+        "item2"
+      ],
+      "properties": {
+        "item1": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "item2": {
+          "type": "string",
+          "format": "date-time"
         }
       }
     }
-  },
-  "externalDocs" : {
-    "description" : "Find out more about Anyways",
-    "url" : "http://anyways.eu"
   }
 }
