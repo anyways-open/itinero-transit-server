@@ -29,7 +29,7 @@ namespace Itinero.Transit.Api.Logic
         /// </summary>
         public static DateTime BootTime;
 
-        public const string Version = "Disable CORS";
+        public const string Version = "Enable HTTP";
 
 
         public static (DateTime start, DateTime end, double percetage)? CurrentlyLoadingWindow;

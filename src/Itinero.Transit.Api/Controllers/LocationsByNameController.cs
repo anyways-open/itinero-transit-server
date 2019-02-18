@@ -99,6 +99,9 @@ namespace Itinero.Transit.Api.Controllers
                 }
             }
 
+            json = json.GetRange(0, 25);
+            
+
             if (json.Count == 0)
             {
                 return NotFound($"No stations found for search string {name}");
