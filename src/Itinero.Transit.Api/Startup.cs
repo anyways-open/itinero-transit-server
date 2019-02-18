@@ -63,7 +63,7 @@ namespace Itinero.Transit.Api
 
             services.AddCors(options =>
             {
-                options.AddPolicy("AllowAnyOrigin",
+                options.AddPolicy("AllowAllOrigin",
                     builder => builder.AllowAnyOrigin().AllowAnyHeader().WithMethods("GET"));
             });
 
