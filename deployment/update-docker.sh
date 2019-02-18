@@ -3,7 +3,7 @@
 set -e
 
 NAME="transit-api"
-PORT=5000
+PORT=5001
 IMAGE="anywaysopen/itinero-transit-server"
 docker pull $IMAGE
 
