@@ -57,14 +57,14 @@ namespace Itinero.Transit.Api.Controllers
                 return BadRequest("A station could not be found. Check the identifiers");
             }
 
+
             var p = new Profile<TransferStats>(
-                State.TransitDb,
                 new InternalTransferGenerator(internalTransferTime),
                 null,
                 TransferStats.Factory,
                 TransferStats.ProfileTransferCompare);
-            var journeys = p.CalculateJourneys(
-                from, to, departure, arrival
+            var journeys = State.TransitDb.CalculateJourneys(
+                p,from, to, departure, arrival
             );
 
             if (journeys == null || !journeys.Any())
