@@ -16,7 +16,7 @@ if [ "$RUNNING" != "$LATEST" ];then
     echo "restart $NAME"
     docker stop $NAME
     docker rm $NAME
-    docker run -d --name $NAME -p $PORT:5000 $IMAGE
+    docker run -d --name $NAME -p $PORT:5001 $IMAGE
 else
   echo "$NAME up to date."
 fi
