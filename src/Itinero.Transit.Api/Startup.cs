@@ -215,6 +215,8 @@ namespace Itinero.Transit.Api
                 return internalUiRoute;
             });
 
+            app.UseCors("AllowAllOrigins");
+            
             app.UseHttpsRedirection();
             app.UseMvc();
         }
