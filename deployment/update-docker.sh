@@ -5,7 +5,7 @@ set -e
 NAME="transit-api"
 PORT=5000
 IMAGE="anywaysopen/itinero-transit-server"
-docker pull
+docker pull $IMAGE
 
 LATEST=`docker inspect --format "{{.Id}}" $IMAGE`
 RUNNING=`docker inspect --format "{{.Image}}" $NAME`
