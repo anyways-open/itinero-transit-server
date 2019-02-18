@@ -60,6 +60,7 @@ namespace Itinero.Transit.Api
 
             State.JourneyTranslator = new JourneyTranslator(State.TransitDb);
 
+            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
 
             services.AddCors(options =>
             {
@@ -67,7 +68,6 @@ namespace Itinero.Transit.Api
                     builder => builder.AllowAnyOrigin().AllowAnyHeader().WithMethods("GET"));
             });
 
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
 
             Log.Information("Adding swagger");
             services.AddSwaggerDocument();
@@ -86,7 +86,7 @@ namespace Itinero.Transit.Api
                 var timeBefore = policy.GetValue<ulong>("TimeBefore");
                 var timeAfter = policy.GetValue<ulong>("TimeAfter");
                 var intervalSplit = policy.GetValue<ulong>("IntervalSplit");
-                
+
                 if (intervalSplit == 0)
                 {
                     Log.Warning("No interval split given, or is zero");
@@ -215,9 +215,9 @@ namespace Itinero.Transit.Api
                 return internalUiRoute;
             });
 
-            app.UseCors("AllowAllOrigins");
-            
+
             app.UseMvc();
+            app.UseCors("AllowAllOrigins");
         }
 
         private static void ConfigureLogging()
