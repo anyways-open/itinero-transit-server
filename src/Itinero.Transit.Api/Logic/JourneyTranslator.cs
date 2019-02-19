@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Itinero.Transit.Api.Models;
 using Itinero.Transit.Journeys;
@@ -86,6 +87,59 @@ namespace Itinero.Transit.Api.Logic
         {
             var stops = State.TransitDb.Latest.StopsDb.GetReader();
             return !stops.MoveTo(localId) ? null : new Location(stops);
+        }
+
+        internal LocationSegmentsResult SegmentsForLocation(string globalId, DateTime time, TimeSpan window)
+        {
+            var latest = State.TransitDb.Latest;
+            var stops = latest.StopsDb.GetReader();
+            if (!stops.MoveTo(globalId))
+            {
+                return null;
+            }
+
+            var location = new Location(stops);
+            var stop = stops.Id;
+
+            var departureEnumerator = latest.ConnectionsDb.GetDepartureEnumerator();
+            if (!departureEnumerator.MoveNext(time))
+            {
+                return new LocationSegmentsResult()
+                {
+                    Location = location,
+                    Segments = new Segment[0]
+                };
+            }
+
+            var trips = latest.TripsDb.GetReader();
+            var timeMax = time.Add(window).ToUnixTime();
+            var segments = new List<Segment>();
+            while (departureEnumerator.MoveNext())
+            {
+                if (departureEnumerator.DepartureStop != stop) continue;
+                if (departureEnumerator.DepartureTime >= timeMax) break;
+
+                if (!trips.MoveTo(departureEnumerator.TripId)) continue;
+                trips.Attributes.TryGetValue("headsign", out var headSign);
+                trips.Attributes.TryGetValue("route", out var route);
+
+                if (!stops.MoveTo(departureEnumerator.DepartureStop)) continue;
+                var departure = new TimedLocation(new Location(stops),
+                    departureEnumerator.DepartureTime);
+
+                if (!stops.MoveTo(departureEnumerator.ArrivalStop)) continue;
+                var arrival = new TimedLocation(new Location(stops),
+                    departureEnumerator.ArrivalTime);
+
+
+                segments.Add(new Segment(departure, arrival, route, headSign));
+            }
+            
+            return new LocationSegmentsResult()
+            {
+                Location = location,
+                Segments = segments.ToArray()
+            };
         }
     }
 }
