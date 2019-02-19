@@ -10,9 +10,6 @@ namespace Itinero.Transit.Api.Controllers
     [ProducesResponseType(404)]  
     public class LocationController : ControllerBase
     {
-        public static JourneyTranslator Translator;
-
-        
         /// <summary>
         /// Gets information about a location, based on the location id
         /// </summary>
@@ -20,7 +17,7 @@ namespace Itinero.Transit.Api.Controllers
         [HttpGet]
         public ActionResult<Location> Get(string id)
         {
-            var found = Translator.LocationOf(id);
+            var found = State.JourneyTranslator.LocationOf(id);
             if (found == null)
             {
                 return NotFound("No location with this id found");
