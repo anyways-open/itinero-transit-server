@@ -58,13 +58,13 @@ namespace Itinero.Transit.Api
                 source.GetSection("Connections").Value,
                 source.GetSection("Locations").Value);
 
-            State.JourneyTranslator = new JourneyTranslator(State.TransitDb);
+            State.JourneyTranslator = new JourneyTranslator();
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
 
             services.AddCors(options =>
             {
-                options.AddPolicy("AllowAllOrigin",
+                options.AddPolicy("AllowAnyOrigin",
                     builder => builder.AllowAnyOrigin().AllowAnyHeader().WithMethods("GET"));
             });
 

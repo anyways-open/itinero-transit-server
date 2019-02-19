@@ -46,18 +46,6 @@ namespace Itinero.Transit.Api.Controllers
                 return BadRequest("The given from- and to- locations are the same");
             }
 
-            try
-            {
-                State.JourneyTranslator.InternalidOf(from);
-                State.JourneyTranslator.InternalidOf(to);
-            }
-            catch (Exception e)
-            {
-                Log.Error(e.ToString());
-                return BadRequest("A station could not be found. Check the identifiers");
-            }
-
-
             var p = new Profile<TransferStats>(
                 new InternalTransferGenerator(internalTransferTime),
                 null,

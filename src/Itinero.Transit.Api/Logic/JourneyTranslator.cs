@@ -1,7 +1,5 @@
-using System;
 using System.Collections.Generic;
 using Itinero.Transit.Api.Models;
-using Itinero.Transit.Data;
 using Itinero.Transit.Journeys;
 
 namespace Itinero.Transit.Api.Logic
@@ -11,15 +9,6 @@ namespace Itinero.Transit.Api.Logic
     /// </summary>
     public class JourneyTranslator
     {
-        private readonly TripsDb.TripsDbReader _trips;
-        private readonly StopsDb.StopsDbReader _stops;
-
-        public JourneyTranslator(TransitDb db)
-        {
-            _trips = db.Latest.TripsDb.GetReader();
-            _stops = db.Latest.StopsDb.GetReader();
-        }
-
         private (Segment segment, Journey<T> rest) ExtractSegment<T>(Journey<T> j)
             where T : IJourneyStats<T>
         {
@@ -44,10 +33,11 @@ namespace Itinero.Transit.Api.Logic
             var route = "";
 
             // ReSharper disable once InvertIf
-            if (_trips.MoveTo(j.TripId))
+            var trips = State.TransitDb.Latest.TripsDb.GetReader();
+            if (trips.MoveTo(j.TripId))
             {
-                _trips.Attributes.TryGetValue("headsign", out headSign);
-                _trips.Attributes.TryGetValue("route", out route);
+                trips.Attributes.TryGetValue("headsign", out headSign);
+                trips.Attributes.TryGetValue("route", out route);
             }
 
             return (new Segment(departure, arrivalLocation, route, headSign), rest.PreviousLink);
@@ -88,22 +78,14 @@ namespace Itinero.Transit.Api.Logic
 
         public Location LocationOf(string globalId)
         {
-            return !_stops.MoveTo(globalId) ? null : new Location(_stops);
+            var stops = State.TransitDb.Latest.StopsDb.GetReader();
+            return !stops.MoveTo(globalId) ? null : new Location(stops);
         }
 
-        public Location LocationOf((uint, uint) localId)
+        private Location LocationOf((uint, uint) localId)
         {
-            return !_stops.MoveTo(localId) ? null : new Location(_stops);
-        }
-
-        public (uint, uint) InternalidOf(string globalId)
-        {
-            if (!_stops.MoveTo(globalId))
-            {
-                throw new Exception($"Id {globalId} not found");
-            }
-
-            return _stops.Id;
+            var stops = State.TransitDb.Latest.StopsDb.GetReader();
+            return !stops.MoveTo(localId) ? null : new Location(stops);
         }
     }
 }
