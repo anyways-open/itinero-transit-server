@@ -99,8 +99,7 @@ namespace Itinero.Transit.Api.Controllers
                 }
             }
 
-            json = json.GetRange(0, 25);
-            
+            if (json.Count > 25) json = json.GetRange(0, 25);
 
             if (json.Count == 0)
             {
