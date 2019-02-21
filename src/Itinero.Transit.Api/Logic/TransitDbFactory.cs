@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Itinero.Transit.Data;
 using Itinero.Transit.IO.LC.CSA;
 using Itinero.Transit.IO.LC.IO.LC;
@@ -39,6 +40,32 @@ namespace Itinero.Transit.Api.Logic
                     using (var stream = File.OpenRead(cacheLocation))
                     {
                         db = TransitDb.ReadFrom(stream);
+
+
+                        try
+                        {
+
+                            // This is a bit of an unstable hack, only good for logging and debugging
+                            var enumerator = db.Latest.ConnectionsDb.GetDepartureEnumerator();
+                            enumerator.MoveNext(new DateTime(1970, 1, 1));
+                            enumerator.MoveNext();
+                            var startDate = enumerator.DepartureTime.FromUnixTime();
+
+                            /*
+                            enumerator = db.Latest.ConnectionsDb.GetDepartureEnumerator();
+
+                            enumerator.MoveNext(new DateTime(2100, 1, 1));
+                            enumerator.MovePrevious();*/
+                            var endDate = enumerator.DepartureTime.FromUnixTime();
+
+
+                            Log.Information(
+                                $"Loaded transitdb from {cacheLocation}. Estimated range {startDate} --> {endDate} ");
+                        }
+                        catch (Exception e)
+                        {
+                            Log.Warning(e.Message);
+                        }
                     }
                 }
                 catch (Exception e)
@@ -49,10 +76,15 @@ namespace Itinero.Transit.Api.Logic
             }
 
 
-            // TODO Use multiple sources
             Log.Information($"Found data source {source.connections}, {source.locations}");
-            var (synchronizer, lcProfile) =
-                db.UseLinkedConnections(source.connections, source.locations, reloadingPolicies);
+            Synchronizer synchronizer = null;
+            LinkedConnectionDataset lcProfile = null;
+
+            if (reloadingPolicies.Any())
+            {
+                (synchronizer, lcProfile) =
+                    db.UseLinkedConnections(source.connections, source.locations, reloadingPolicies);
+            }
 
             if (cacheReload > 0 && cacheReload < long.MaxValue)
             {
