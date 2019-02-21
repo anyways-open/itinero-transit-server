@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Itinero.Transit.Api.Logic;
+using Itinero.Transit.IO.LC.IO.LC.Synchronization;
 using Itinero.Transit.Logging;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -35,42 +35,10 @@ namespace Itinero.Transit.Api
             State.BootTime = DateTime.Now;
 
 
-            var sources = Configuration.GetSection("Datasources");
-            if (!sources.GetChildren().Any())
-            {
-                throw new ArgumentException(
-                    "No datasource is specified in the configuration. Please add at least one operator");
-            }
-
-            if (sources.GetChildren().Count() > 1)
-            {
-                throw new ArgumentException("For this beta version, only one operator is supported");
-            }
-
-            // Get first element of the list in datasources
-            var source = sources.GetChildren().First();
-
-
-            Log.Information(
-                $"Loading PT operator {source.GetSection("Locations").Value} {source.GetSection("Connections").Value}");
-
-            (State.TransitDb, State.LcProfile) = TransitDbFactory.CreateTransitDb(
-                source.GetSection("Connections").Value,
-                source.GetSection("Locations").Value);
+            (State.TransitDb, State.LcProfile, State.Synchronizer)
+                = Configuration.GetSection("TransitDb").CreateTransitDb();
 
             State.JourneyTranslator = new JourneyTranslator();
-
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
-
-            services.AddCors(options =>
-            {
-                options.AddPolicy("AllowAnyOrigin",
-                    builder => builder.AllowAnyOrigin().AllowAnyHeader().WithMethods("GET"));
-            });
-
-
-            Log.Information("Adding swagger");
-            services.AddSwaggerDocument();
 
 
             void SampleImportances()
@@ -80,53 +48,20 @@ namespace Itinero.Transit.Api
                     State.LcProfile, DateTime.Today, DateTime.Today.AddDays(1));
             }
 
-            List<(DateTime start, DateTime end)> CreateWindows(DateTime now)
-            {
-                var policy = Configuration.GetSection("AutoLoad");
-                var timeBefore = policy.GetValue<ulong>("TimeBefore");
-                var timeAfter = policy.GetValue<ulong>("TimeAfter");
-                var intervalSplit = policy.GetValue<ulong>("IntervalSplit");
-
-                if (intervalSplit == 0)
-                {
-                    Log.Warning("No interval split given, or is zero");
-                    intervalSplit = timeAfter + timeBefore;
-                }
-
-                var windows = new List<(DateTime start, DateTime end)>();
-
-                var t = now.ToUnixTime();
-
-                var start = t - timeBefore;
-                var end = t + timeAfter;
-
-                var wStart = start;
-                ulong wEnd;
-                do
-                {
-                    wEnd = Math.Min(wStart + intervalSplit, end);
-                    windows.Add((wStart.FromUnixTime(), wEnd.FromUnixTime()));
-
-                    wStart = wEnd;
-                } while (wEnd < end);
-
-                return windows;
-            }
-
-            void StartAutoReloads()
-            {
-                // Loads and reloads the connectionsDB
-                var reloadEvery = Configuration.GetSection("AutoLoad").GetValue<ulong>("ReloadEvery");
-                new ConnectionAutoLoader(State.TransitDb, TimeSpan.FromSeconds(reloadEvery), CreateWindows);
-            }
-
-
-            Task.Factory.StartNew(StartAutoReloads);
             Task.Factory.StartNew(SampleImportances);
-            // TODO Headsigns are gone! Where are they?
+
+
+            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+            services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAnyOrigin",
+                    builder => builder.AllowAnyOrigin().AllowAnyHeader().WithMethods("GET"));
+            });
+
+            services.AddSwaggerDocument();
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
             if (env.IsDevelopment())
@@ -143,8 +78,6 @@ namespace Itinero.Transit.Api
                 ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedHost |
                                    ForwardedHeaders.XForwardedProto
             };
-
-
             app.UseForwardedHeaders(options);
             app.Use((context, next) =>
             {
@@ -164,9 +97,11 @@ namespace Itinero.Transit.Api
                     if (context.Request.Path.Value.StartsWith(context.Request.PathBase.Value))
                     {
                         var before = context.Request.Path.Value;
+
                         var after = context.Request.Path.Value.Substring(
                             context.Request.PathBase.Value.Length,
                             context.Request.Path.Value.Length - context.Request.PathBase.Value.Length);
+
                         Log.Information($"Path changed to: {after}, was {before}.");
                         context.Request.Path = after;
                     }
@@ -174,7 +109,6 @@ namespace Itinero.Transit.Api
 
                 return next();
             });
-
             app.UseSwagger(settings =>
             {
                 settings.PostProcess = (document, req) =>
@@ -189,17 +123,15 @@ namespace Itinero.Transit.Api
                         Email = "info@anyways.eu",
                         Url = "https://www.anyways.eu"
                     };
-
                     document.BasePath = req.PathBase;
                     Log.Information($"Set swagger document base path to: {document.BasePath}.");
-
                     document.Host = req.Host.Value;
                     Log.Information($"Set swagger document host to: {document.Host}.");
                 };
             });
             app.UseSwaggerUi3(config => config.TransformToExternalPath = (internalUiRoute, request) =>
             {
-                // The header X-External-Path is set in the nginx.conf file
+// The header X-External-Path is set in the nginx.conf file
                 var externalPath = request.PathBase.Value;
                 if (externalPath != null && externalPath.EndsWith("/"))
                 {
@@ -214,8 +146,6 @@ namespace Itinero.Transit.Api
 
                 return internalUiRoute;
             });
-
-
             app.UseMvc();
             app.UseCors("AllowAllOrigins");
         }
@@ -226,13 +156,12 @@ namespace Itinero.Transit.Api
             var logFile = Path.Combine("logs", $"log-itinero-{date}.txt");
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Debug()
-                //.MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Information)
+//.MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Information)
                 .Enrich.FromLogContext()
                 .WriteTo.File(new JsonFormatter(), logFile)
                 .WriteTo.Console()
                 .CreateLogger();
             Log.Information($"Logging has started. Logfile can be found at {logFile}");
-
             Logger.LogAction = (o, level, message, parameters) =>
             {
                 if (string.Equals(level, TraceEventType.Error.ToString(), StringComparison.CurrentCultureIgnoreCase))
@@ -259,7 +188,6 @@ namespace Itinero.Transit.Api
                     Log.Information($"{level} (unknown log level): {message}");
                 }
             };
-            Logger.LogAction("a", "b", "c", null);
         }
     }
 }

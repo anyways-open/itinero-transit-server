@@ -1,6 +1,8 @@
-using System;
+using System.Collections.Generic;
 using Itinero.Transit.Data;
 using Serilog;
+
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace Itinero.Transit.Api.Models
 {
@@ -16,12 +18,23 @@ namespace Itinero.Transit.Api.Models
             try
             {
                 source.Attributes.TryGetValue("name", out var name);
-                this.Name = name;
+                Name = name;
             }
             catch
             {
                 Log.Information($"No name found for {source.GlobalId}");
             }
+
+
+            foreach (var attr in source.Attributes)
+            {
+                if (attr.Key.StartsWith("name:"))
+                {
+                    TranslatedNames[attr.Key.Substring(5)] = attr.Value;
+                }
+            }
+            
+            
         }
         
         internal Location(string id, string name, double lat, double lon)
@@ -51,5 +64,10 @@ namespace Itinero.Transit.Api.Models
         /// The name.
         /// </summary>
         public string Name { get; }
+
+        /// <summary>
+        /// Eventual translations, will contain 'nl --> Brugge', 'fr --> Bruges', ... if the names are known
+        /// </summary>
+        public Dictionary<string, string> TranslatedNames { get; } = new Dictionary<string, string>();
     }
 }

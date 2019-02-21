@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using Itinero.Transit.Data;
+using Itinero.Transit.Data.Walks;
 using Itinero.Transit.IO.LC.CSA;
+using Itinero.Transit.IO.LC.IO.LC.Synchronization;
 
 namespace Itinero.Transit.Api.Logic
 {
@@ -14,8 +16,10 @@ namespace Itinero.Transit.Api.Logic
         /// </summary>
         public static TransitDb TransitDb;
 
-        public static JourneyTranslator JourneyTranslator;
 
+        public static Synchronizer Synchronizer;
+        
+        public static JourneyTranslator JourneyTranslator;
         public static LinkedConnectionDataset LcProfile;
 
         /// <summary>
@@ -29,9 +33,9 @@ namespace Itinero.Transit.Api.Logic
         /// </summary>
         public static DateTime BootTime;
 
-        public const string Version = "Enable HTTP";
+        public const string Version = "Fancy stuff for reloading";
 
 
-        public static (DateTime start, DateTime end, double percetage)? CurrentlyLoadingWindow;
+
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+// ReSharper disable NotAccessedField.Global
 
 // ReSharper disable MemberCanBePrivate.Global
 
@@ -18,13 +19,13 @@ namespace Itinero.Transit.Api.Models
         /// <summary>
         /// When the server got online
         /// </summary>
-        public DateTime OnlineSince { get; }
+        public DateTime OnlineSince;
 
         /// <summary>
         /// The time (in seconds) that the server has been running
         /// </summary>
-        public long Uptime { get; }
-
+        public long Uptime;
+        
         /// <summary>
         /// Indicates what time fragments are loaded into the database.
         /// This is a list of (start, end) values
@@ -38,12 +39,12 @@ namespace Itinero.Transit.Api.Models
         /// </summary>
         public readonly string Version;
 
-        public readonly TimeWindow LoadingWindow;
-        public readonly double LoadingWindowPercentage;
+        public readonly string CurrentRunningTask;
 
 
-        public StatusReport(DateTime onlineSince, long uptime, IEnumerable<(DateTime start, DateTime end)> loadedTimeWindows,
-            string version, (DateTime start, DateTime end, double percentage)? currentlyLoadingWindow)
+        public StatusReport(DateTime onlineSince, long uptime,
+            IEnumerable<(DateTime start, DateTime end)> loadedTimeWindows,
+            string version, string currentRunningTask)
         {
             OnlineSince = onlineSince;
             Uptime = uptime;
@@ -54,11 +55,7 @@ namespace Itinero.Transit.Api.Models
             }
 
             Version = version;
-            if (currentlyLoadingWindow != null)
-            {
-                LoadingWindow = new TimeWindow(currentlyLoadingWindow.Value.start, currentlyLoadingWindow.Value.end);
-                LoadingWindowPercentage = currentlyLoadingWindow.Value.percentage;
-            }
+            CurrentRunningTask = currentRunningTask;
         }
 
         public class TimeWindow

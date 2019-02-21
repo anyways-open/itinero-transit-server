@@ -6,3 +6,5 @@
 **/cache-dir/*
 *.routerdb
 *.osm.pbf
+**/testlog.txt
+**/*.transitdb
