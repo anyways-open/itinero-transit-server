@@ -18,6 +18,11 @@ ProjectSection(SolutionItems) = preProject
 	.gitignore = .gitignore
 EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "deployment", "deployment", "{7CC9BC56-35EB-40F3-A620-DD6E2D4FA9C0}"
+ProjectSection(SolutionItems) = preProject
+	deployment\update-docker.sh = deployment\update-docker.sh
+EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
