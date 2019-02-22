@@ -48,7 +48,7 @@ namespace Itinero.Transit.Api
                     State.LcProfile, DateTime.Today, DateTime.Today.AddDays(1));
             }
 
-            Task.Factory.StartNew(SampleImportances);
+//            Task.Factory.StartNew(SampleImportances);
 
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);

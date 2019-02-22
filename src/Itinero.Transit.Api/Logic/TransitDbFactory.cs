@@ -80,16 +80,17 @@ namespace Itinero.Transit.Api.Logic
             Synchronizer synchronizer = null;
             LinkedConnectionDataset lcProfile = null;
 
+            if (cacheReload > 0 && cacheReload < long.MaxValue)
+            {
+                reloadingPolicies.Add(new WriteToDisk((uint) cacheReload, cacheLocation));
+            }
+            
             if (reloadingPolicies.Any())
             {
                 (synchronizer, lcProfile) =
                     db.UseLinkedConnections(source.connections, source.locations, reloadingPolicies);
             }
 
-            if (cacheReload > 0 && cacheReload < long.MaxValue)
-            {
-                db.AddSyncPolicy(new WriteToDisk((uint) cacheReload, cacheLocation));
-            }
 
             return (db, lcProfile, synchronizer);
         }
