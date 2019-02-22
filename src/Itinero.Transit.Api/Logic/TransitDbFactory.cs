@@ -32,53 +32,20 @@ namespace Itinero.Transit.Api.Logic
             var cacheReload = configuration.GetValue("CacheUpdateEvery", long.MaxValue);
 
 
-            var db = new TransitDb();
+            TransitDb db = null;
             if (!string.IsNullOrEmpty(cacheLocation))
             {
-                try
-                {
-                    using (var stream = File.OpenRead(cacheLocation))
-                    {
-                        db = TransitDb.ReadFrom(stream);
-
-
-                        try
-                        {
-
-                            // This is a bit of an unstable hack, only good for logging and debugging
-                            var enumerator = db.Latest.ConnectionsDb.GetDepartureEnumerator();
-                            enumerator.MoveNext(new DateTime(1970, 1, 1));
-                            enumerator.MoveNext();
-                            var startDate = enumerator.DepartureTime.FromUnixTime();
-
-                            /*
-                            enumerator = db.Latest.ConnectionsDb.GetDepartureEnumerator();
-
-                            enumerator.MoveNext(new DateTime(2100, 1, 1));
-                            enumerator.MovePrevious();*/
-                            var endDate = enumerator.DepartureTime.FromUnixTime();
-
-
-                            Log.Information(
-                                $"Loaded transitdb from {cacheLocation}. Estimated range {startDate} --> {endDate} ");
-                        }
-                        catch (Exception e)
-                        {
-                            Log.Warning(e.Message);
-                        }
-                    }
-                }
-                catch (Exception e)
-                {
-                    Log.Error(
-                        $"Could not load transitDB from disk (path is {cacheLocation}). Will start with an empty transitDB instead.\n{e.Message}");
-                }
+                db = TryLoadFromDisk(cacheLocation);
             }
+
+            db = db ?? new TransitDb();
 
 
             Log.Information($"Found data source {source.connections}, {source.locations}");
             Synchronizer synchronizer = null;
             LinkedConnectionDataset lcProfile = null;
+
+            reloadingPolicies.Add(new ImportanceCounter());
 
             if (cacheReload > 0 && cacheReload < long.MaxValue)
             {
@@ -93,6 +60,56 @@ namespace Itinero.Transit.Api.Logic
 
 
             return (db, lcProfile, synchronizer);
+        }
+
+        /// <summary>
+        /// Tries to load the transitDB from disk. Gives null if loading failed
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        private static TransitDb TryLoadFromDisk(string path)
+        {
+            try
+            {
+                using (var stream = File.OpenRead(path))
+                {
+                    var db = TransitDb.ReadFrom(stream);
+
+
+                    try
+                    {
+                        // This is a bit of an unstable hack, only good for logging and debugging
+                        var enumerator = db.Latest.ConnectionsDb.GetDepartureEnumerator();
+                        enumerator.MoveNext(new DateTime(1970, 1, 1));
+                        enumerator.MoveNext();
+                        var startDate = enumerator.DepartureTime.FromUnixTime();
+
+                        /*
+                        enumerator = db.Latest.ConnectionsDb.GetDepartureEnumerator();
+
+                        enumerator.MoveNext(new DateTime(2100, 1, 1));
+                        enumerator.MovePrevious();*/
+                        var endDate = enumerator.DepartureTime.FromUnixTime();
+
+
+                        Log.Information(
+                            $"Loaded transitdb from {path}. Estimated range {startDate} --> {endDate} ");
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Warning(e.Message);
+                    }
+
+
+                    return db;
+                }
+            }
+            catch (Exception e)
+            {
+                Log.Error(
+                    $"Could not load transitDB from disk (path is {path}). Will start with an empty transitDB instead.\n{e.Message}");
+                return null;
+            }
         }
 
         private static (string locations, string connections) GetDataSource(this IConfiguration config)

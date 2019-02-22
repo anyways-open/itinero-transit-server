@@ -18,7 +18,8 @@ namespace Itinero.Transit.Api.Controllers
     {
        
         /// <summary>
-        /// Searches for stops having the given name or something similar. 
+        /// Searches for stops having the given name or something similar.
+        /// Includes an 'importance'-score for each station.
         /// </summary>
         /// <remarks>
         /// A match is calculated as following:
@@ -31,6 +32,12 @@ namespace Itinero.Transit.Api.Controllers
         /// 2) If the station name starts with the requested query, it is returned with a value of **2**
         /// 3) At last, stations are matched with a string distance function. If the string distance is smaller then 5, it is returned.
         ///    The difference will be the string comparison difference + 1
+        ///
+        ///
+        /// The importance-score is based on how many trains arrive/depart in the given station.
+        /// This is calculated using the connections which are stored in the database.
+        /// Note that the importance scores are _not_ available directly after booting the server. It takes a few minutes, until the entire server has been refreshed.
+        /// Up till that point, all stations are scored at 0.
         /// </remarks>
         [HttpGet]
         public ActionResult<List<LocationResult>> Get(string name)
