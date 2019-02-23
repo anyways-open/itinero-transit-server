@@ -18,12 +18,12 @@ echo "Running:" $RUNNING
 
 if [ "$RUNNING" == "Error: No such object: transit-api" ]; then
    docker rm $NAME
-   docker run -d --name $NAME -p $PORT:5000 $IMAGE
+   docker run -d --name $NAME -v /var/services/transit-api/logs:/var/app/logs  -p $PORT:5000 $IMAGE
 elif [ "$RUNNING" != "$LATEST" ];then
     echo "restart $NAME"
     docker stop $NAME
     docker rm $NAME
-    docker run -d --name $NAME -p $PORT:5000 $IMAGE
+    docker run -d --name $NAME -v /var/services/transit-api/logs:/var/app/logs -p $PORT:5000 $IMAGE
 else
   echo "$NAME up to date."
 fi
