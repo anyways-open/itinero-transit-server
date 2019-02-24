@@ -53,7 +53,7 @@ namespace Itinero.Transit.Api
             services.AddSwaggerDocument();
         }
 
-// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
             if (env.IsDevelopment())
@@ -75,15 +75,11 @@ namespace Itinero.Transit.Api
             {
                 if (context.Request.Headers.TryGetValue("X-Forwarded-PathBase", out var pathBases))
                 {
-                    Log.Information(
-                        $"Detected path base header, changing {context.Request.PathBase} to {pathBases.First()}");
                     context.Request.PathBase = pathBases.First();
                     if (context.Request.PathBase.Value.EndsWith("/"))
                     {
-                        Log.Information($"Removing trailing slash from: {context.Request.PathBase.Value}.");
                         context.Request.PathBase =
                             context.Request.PathBase.Value.Substring(0, context.Request.PathBase.Value.Length - 1);
-                        Log.Information($"Removing trailing slash, now: {context.Request.PathBase.Value}.");
                     }
 
                     if (context.Request.Path.Value.StartsWith(context.Request.PathBase.Value))
@@ -93,8 +89,7 @@ namespace Itinero.Transit.Api
                         var after = context.Request.Path.Value.Substring(
                             context.Request.PathBase.Value.Length,
                             context.Request.Path.Value.Length - context.Request.PathBase.Value.Length);
-
-                        Log.Information($"Path changed to: {after}, was {before}.");
+                        
                         context.Request.Path = after;
                     }
                 }
@@ -116,14 +111,12 @@ namespace Itinero.Transit.Api
                         Url = "https://www.anyways.eu"
                     };
                     document.BasePath = req.PathBase;
-                    Log.Information($"Set swagger document base path to: {document.BasePath}.");
                     document.Host = req.Host.Value;
-                    Log.Information($"Set swagger document host to: {document.Host}.");
                 };
             });
             app.UseSwaggerUi3(config => config.TransformToExternalPath = (internalUiRoute, request) =>
             {
-// The header X-External-Path is set in the nginx.conf file
+                // The header X-External-Path is set in the nginx.conf file
                 var externalPath = request.PathBase.Value;
                 if (externalPath != null && externalPath.EndsWith("/"))
                 {
@@ -132,7 +125,6 @@ namespace Itinero.Transit.Api
 
                 if (!internalUiRoute.StartsWith(externalPath))
                 {
-                    Log.Information($"Configured external path to: {externalPath + internalUiRoute}.");
                     return externalPath + internalUiRoute;
                 }
 
