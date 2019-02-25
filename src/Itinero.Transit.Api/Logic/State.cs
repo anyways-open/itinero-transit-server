@@ -32,7 +32,7 @@ namespace Itinero.Transit.Api.Logic
         /// </summary>
         public static DateTime BootTime;
 
-        public const string Version = "Fancy stuff for reloading";
+        public const string Version = "Getting there on time";
 
 
 
