@@ -19,7 +19,6 @@ namespace Itinero.Transit.Api.Logic
 
         public static Synchronizer Synchronizer;
         
-        public static JourneyTranslator JourneyTranslator;
         public static LinkedConnectionDataset LcProfile;
 
         /// <summary>

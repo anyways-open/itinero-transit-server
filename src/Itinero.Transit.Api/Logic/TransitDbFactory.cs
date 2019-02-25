@@ -44,7 +44,7 @@ namespace Itinero.Transit.Api.Logic
             Log.Information($"Found data source {source.connections}, {source.locations}");
             Synchronizer synchronizer = null;
             LinkedConnectionDataset lcProfile = null;
-
+            
             reloadingPolicies.Add(new ImportanceCounter());
 
             if (cacheReload > 0 && cacheReload < long.MaxValue)

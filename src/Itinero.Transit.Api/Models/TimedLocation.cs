@@ -7,16 +7,18 @@ namespace Itinero.Transit.Api.Models
     /// </summary>
     public class TimedLocation
     {
-        internal TimedLocation(Location location, ulong time)
-            : this(location, time.FromUnixTime())
+        internal TimedLocation(Location location, ulong time, uint delay)
+            : this(location, time.FromUnixTime(), delay)
         {
             
         }
 
-        internal TimedLocation(Location location, DateTime time)
+        internal TimedLocation(Location location, DateTime time, uint delay)
         {
             Location = location;
             Time = time;
+            Delay = delay;
+            PlannedTime = Time - TimeSpan.FromSeconds(delay);
         }
         
         /// <summary>
@@ -25,8 +27,21 @@ namespace Itinero.Transit.Api.Models
         public Location Location { get; }
         
         /// <summary>
-        /// The time.
+        /// The time of departure/arrival.
         /// </summary>
         public DateTime Time { get; }
+        
+        /// <summary>
+        /// The planned time of departure/arrival
+        /// </summary>
+        public DateTime PlannedTime { get;  }
+        
+        
+        /// <summary>
+        /// The delay on departure/arrival
+        /// Note that the delay is _included_ into time.
+        /// PlannedTime + Delay = Time
+        /// </summary>
+        public uint Delay { get; }
     }
 }

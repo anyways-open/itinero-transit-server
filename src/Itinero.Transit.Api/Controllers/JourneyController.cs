@@ -60,7 +60,7 @@ namespace Itinero.Transit.Api.Controllers
                 return NotFound("No possible journeys were found for your request");
             }
 
-            return State.JourneyTranslator.Translate(journeys);
+            return State.TransitDb.Latest.Translate(journeys);
         }
     }
 }
