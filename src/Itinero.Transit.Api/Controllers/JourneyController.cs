@@ -1,14 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Itinero.Transit.Algorithms.CSA;
 using Itinero.Transit.Api.Logic;
 using Itinero.Transit.Api.Models;
 using Itinero.Transit.Data;
+using Itinero.Transit.Algorithms.CSA;
 using Itinero.Transit.Data.Walks;
 using Itinero.Transit.Journeys;
 using Microsoft.AspNetCore.Mvc;
-using Serilog;
 
 namespace Itinero.Transit.Api.Controllers
 {
@@ -51,15 +50,17 @@ namespace Itinero.Transit.Api.Controllers
                 null,
                 TransferStats.Factory,
                 TransferStats.ProfileTransferCompare);
-            var journeys = State.TransitDb.CalculateJourneys(
+            var journeys = State.TransitDb.Latest.CalculateJourneys(
                 p,from, to, departure, arrival
             );
 
+            // ReSharper disable once PossibleMultipleEnumeration
             if (journeys == null || !journeys.Any())
             {
                 return NotFound("No possible journeys were found for your request");
             }
 
+            // ReSharper disable once PossibleMultipleEnumeration
             return State.TransitDb.Latest.Translate(journeys);
         }
     }

@@ -1,9 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using Itinero.Transit.Api.Logic;
-using Itinero.Transit.IO.LC.IO.LC.Synchronization;
 using Itinero.Transit.Logging;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -82,9 +80,9 @@ namespace Itinero.Transit.Api
                     {
                         var before = context.Request.Path.Value;
 
-                        var after = context.Request.Path.Value.Substring(
+                        var after = before.Substring(
                             context.Request.PathBase.Value.Length,
-                            context.Request.Path.Value.Length - context.Request.PathBase.Value.Length);
+                            before.Length - context.Request.PathBase.Value.Length);
                         
                         context.Request.Path = after;
                     }

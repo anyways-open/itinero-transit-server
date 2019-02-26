@@ -1,11 +1,10 @@
 using System.Collections.Generic;
 using System.Linq;
-using Itinero.Transit.Algorithms.Search;
 using Itinero.Transit.Api.Logic;
 using Itinero.Transit.Api.Models;
 using Itinero.Transit.Data;
-using Itinero.Transit.Data.Walks;
 using Microsoft.AspNetCore.Mvc;
+// ReSharper disable PossibleMultipleEnumeration
 
 namespace Itinero.Transit.Api.Controllers
 {
@@ -39,7 +38,7 @@ namespace Itinero.Transit.Api.Controllers
             }
 
             var locations = new List<Location>();
-            foreach (Location location in found)
+            foreach (var location in found)
             {
                 // The 'found' list does _not_ contain the attributes such as 'Name'
                 // So we query each station individually again

@@ -6,7 +6,6 @@ using Itinero.Transit.Api.Logic;
 using Itinero.Transit.Api.Models;
 using Microsoft.AspNetCore.Mvc;
 using static System.String;
-using Location = Itinero.Transit.IO.LC.CSA.LocationProviders.Location;
 
 namespace Itinero.Transit.Api.Controllers
 {
@@ -16,7 +15,6 @@ namespace Itinero.Transit.Api.Controllers
     [ProducesResponseType(404)]
     public class LocationsByNameController : ControllerBase
     {
-       
         /// <summary>
         /// Searches for stops having the given name or something similar.
         /// Includes an 'importance'-score for each station.
@@ -44,18 +42,18 @@ namespace Itinero.Transit.Api.Controllers
         {
             const int maxDistance = 15;
 
-            var results = new List<List<Location>>();
+            var results = new List<List<Itinero.Transit.IO.LC.Data.Location>>();
 
             for (var i = 0; i <= maxDistance + 2; i++)
             {
-                results.Add(new List<Location>());
+                results.Add(new List<Itinero.Transit.IO.LC.Data.Location>());
             }
 
             name = Simplify(name);
 
             foreach (var lp in State.LcProfile.LocationProvider)
             {
-                foreach (var l in lp.Locations)
+                foreach (Itinero.Transit.IO.LC.Data.Location l in lp.Locations)
                 {
                     var lName = Simplify(l.Name);
 
@@ -101,7 +99,7 @@ namespace Itinero.Transit.Api.Controllers
                         importance = State.Importances[id];
                     }
 
-                    var loc = new Models.Location(r.Id().ToString(), r.Name, r.Lat, r.Lon);
+                    var loc = new Location(r.Id().ToString(), r.Name, r.Lat, r.Lon);
                     json.Add(new LocationResult(loc, i, importance));
                 }
             }
@@ -168,7 +166,9 @@ namespace Itinero.Transit.Api.Controllers
             var lengthA = a.Length;
             var lengthB = b.Length;
             var distances = new int[lengthA + 1, lengthB + 1];
+            // ReSharper disable once EmptyEmbeddedStatement
             for (var i = 0; i <= lengthA; distances[i, 0] = i++) ;
+            // ReSharper disable once EmptyEmbeddedStatement
             for (var j = 0; j <= lengthB; distances[0, j] = j++) ;
 
             for (var i = 1; i <= lengthA; i++)

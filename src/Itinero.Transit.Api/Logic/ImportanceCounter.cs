@@ -1,9 +1,6 @@
 using System;
 using System.Collections.Generic;
-using Itinero.Transit.IO.LC.CSA;
-using Itinero.Transit.IO.LC.CSA.ConnectionProviders;
-using Itinero.Transit.IO.LC.CSA.LocationProviders;
-using Itinero.Transit.IO.LC.IO.LC.Synchronization;
+using Itinero.Transit.IO.LC.Synchronization;
 
 namespace Itinero.Transit.Api.Logic
 {
@@ -48,6 +45,7 @@ namespace Itinero.Transit.Api.Logic
         }
 
 
+        // ReSharper disable once InconsistentNaming
         private static void IncreaseCount<K>(IDictionary<K, uint> dict, K key)
         {
             if (!dict.ContainsKey(key))

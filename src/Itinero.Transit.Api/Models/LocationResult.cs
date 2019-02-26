@@ -1,5 +1,6 @@
-using System.Collections.Generic;
-using Itinero.Transit.Data;
+
+// ReSharper disable UnusedAutoPropertyAccessor.Global
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace Itinero.Transit.Api.Models
 {

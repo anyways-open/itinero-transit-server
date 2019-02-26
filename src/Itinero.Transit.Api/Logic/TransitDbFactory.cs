@@ -3,9 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Itinero.Transit.Data;
-using Itinero.Transit.IO.LC.CSA;
-using Itinero.Transit.IO.LC.IO.LC;
-using Itinero.Transit.IO.LC.IO.LC.Synchronization;
+using Itinero.Transit.IO.LC;
+using Itinero.Transit.IO.LC.Synchronization;
 using Microsoft.Extensions.Configuration;
 using Serilog;
 
