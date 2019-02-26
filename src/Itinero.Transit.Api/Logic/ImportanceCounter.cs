@@ -8,13 +8,12 @@ namespace Itinero.Transit.Api.Logic
     {
         public uint Frequency { get; }
 
-        private string _state;
-        private ulong nowScanning = 0;
+        private string _state = "";
+        private ulong _nowScanning;
 
-        public ImportanceCounter(uint frequency = 24*60*60)
+        public ImportanceCounter(uint frequency = 24 * 60 * 60)
         {
             Frequency = frequency;
-            _state = "Initialized, not running";
         }
 
         public void Run(DateTime triggerDate, TransitDbUpdater db)
@@ -28,17 +27,16 @@ namespace Itinero.Transit.Api.Logic
             foreach (var (start, end) in db.LoadedTimeWindows)
             {
                 enumerator.MoveNext(start);
-                while (enumerator.DepartureTime < end.ToUnixTime())
+                do
                 {
-                    nowScanning = enumerator.DepartureTime;
+                    _nowScanning = enumerator.DepartureTime;
                     IncreaseCount(frequencies, enumerator.DepartureStop);
                     IncreaseCount(frequencies, enumerator.ArrivalStop);
-                    enumerator.MoveNext();
-                }
+                } while (enumerator.MoveNext() && enumerator.DepartureTime < end.ToUnixTime());
             }
 
             _state = "Converting internal IDs into URIs";
-            nowScanning = 0;
+            _nowScanning = 0;
             var stopsReader = db.TransitDb.Latest.StopsDb.GetReader();
             var importances = new Dictionary<string, uint>();
             // Translate internal ids to URI's
@@ -68,7 +66,7 @@ namespace Itinero.Transit.Api.Logic
 
         public override string ToString()
         {
-            var date = nowScanning == 0 ? "" : $"{nowScanning.FromUnixTime():O}";
+            var date = _nowScanning == 0 ? "" : $"{_nowScanning.FromUnixTime():O}";
             return $"Importance counter. {_state} {date}";
         }
     }
