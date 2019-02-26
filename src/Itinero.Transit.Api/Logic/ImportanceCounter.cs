@@ -8,10 +8,13 @@ namespace Itinero.Transit.Api.Logic
     {
         public uint Frequency { get; }
 
+        private string _state;
+        private ulong nowScanning = 0;
 
         public ImportanceCounter(uint frequency = 24*60*60)
         {
             Frequency = frequency;
+            _state = "Initialized, not running";
         }
 
         public void Run(DateTime triggerDate, TransitDbUpdater db)
@@ -19,18 +22,23 @@ namespace Itinero.Transit.Api.Logic
             var frequencies = new Dictionary<(uint, uint), uint>();
 
             // Count how many connections depart at the given station
+
+            _state = "Scanning connections, currently at:h ";
             var enumerator = db.TransitDb.Latest.ConnectionsDb.GetDepartureEnumerator();
             foreach (var (start, end) in db.LoadedTimeWindows)
             {
                 enumerator.MoveNext(start);
                 while (enumerator.DepartureTime < end.ToUnixTime())
                 {
+                    nowScanning = enumerator.DepartureTime;
                     IncreaseCount(frequencies, enumerator.DepartureStop);
                     IncreaseCount(frequencies, enumerator.ArrivalStop);
+                    enumerator.MoveNext();
                 }
             }
 
-
+            _state = "Converting internal IDs into URIs";
+            nowScanning = 0;
             var stopsReader = db.TransitDb.Latest.StopsDb.GetReader();
             var importances = new Dictionary<string, uint>();
             // Translate internal ids to URI's
@@ -40,8 +48,8 @@ namespace Itinero.Transit.Api.Logic
                 importances[stopsReader.GlobalId] = importance;
             }
 
-
             State.Importances = importances;
+            _state = "Done";
         }
 
 
@@ -56,6 +64,12 @@ namespace Itinero.Transit.Api.Logic
             {
                 dict[key] += 1;
             }
+        }
+
+        public override string ToString()
+        {
+            var date = nowScanning == 0 ? "" : $"{nowScanning.FromUnixTime():O}";
+            return $"Importance counter. {_state} {date}";
         }
     }
 }

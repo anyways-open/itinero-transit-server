@@ -31,7 +31,7 @@ namespace Itinero.Transit.Api.Logic
         /// </summary>
         public static DateTime BootTime;
 
-        public const string Version = "Getting there on time";
+        public const string Version = "Haven of stability";
 
 
 
