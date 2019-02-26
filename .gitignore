@@ -8,3 +8,4 @@
 *.osm.pbf
 **/testlog.txt
 **/*.transitdb
+**log.txt
