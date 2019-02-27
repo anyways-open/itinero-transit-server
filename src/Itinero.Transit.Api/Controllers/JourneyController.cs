@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Itinero.Transit.Api.Logic;
@@ -8,6 +9,7 @@ using Itinero.Transit.Algorithms.CSA;
 using Itinero.Transit.Data.Walks;
 using Itinero.Transit.Journeys;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Itinero.Transit.Api.Controllers
 {
@@ -31,13 +33,15 @@ namespace Itinero.Transit.Api.Controllers
         /// <param name="departure">The earliest moment when the traveller would like to depart, in ISO8601 format</param>
         /// <param name="arrival">The last moment where the traveller would like to arrive, in ISO8601 format</param>
         /// <param name="internalTransferTime">The number of seconds the traveller needs to transfer trains within the station. Increase for less mobile users</param>
+        /// <param name="prune">If false, more options will be given (mostly choices in transfer station)</param>
         [HttpGet]
         public ActionResult<List<Journey>> Get(
             string from,
             string to,
             DateTime? departure = null,
             DateTime? arrival = null,
-            uint internalTransferTime = 180
+            uint internalTransferTime = 180,
+            bool prune = true
         )
         {
             if (Equals(from, to))
@@ -51,13 +55,20 @@ namespace Itinero.Transit.Api.Controllers
                 TransferStats.Factory,
                 TransferStats.ProfileTransferCompare);
             var journeys = State.TransitDb.Latest.CalculateJourneys(
-                p,from, to, departure, arrival
+                p, from, to, departure, arrival
             );
 
-            // ReSharper disable once PossibleMultipleEnumeration
+            // ReSharper disable once PossibleMultiplepEnumeration
             if (journeys == null || !journeys.Any())
             {
                 return NotFound("No possible journeys were found for your request");
+            }
+
+            if (prune)
+            {
+                journeys = journeys.PruneInAlternatives
+                (TravellingTimeMinimizer.Factory,
+                    new TravellingTimeMinimizer.Minimizer(State.ImportancesInternal));
             }
 
             // ReSharper disable once PossibleMultipleEnumeration

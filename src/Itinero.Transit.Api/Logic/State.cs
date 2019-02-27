@@ -25,13 +25,20 @@ namespace Itinero.Transit.Api.Logic
         /// Maps URI -> Number of trains stopping
         /// </summary>
         public static Dictionary<string, uint> Importances;
+        
+        /// <summary>
+        /// How important is each station?
+        /// Maps InternalID -> Number of trains stopping
+        /// </summary>
+        public static Dictionary<(uint, uint), uint> ImportancesInternal;
+
 
         /// <summary>
         /// When did the server start?
         /// </summary>
         public static DateTime BootTime;
 
-        public const string Version = "Haven of stability";
+        public const string Version = "Getting rid of duplicates";
 
 
 

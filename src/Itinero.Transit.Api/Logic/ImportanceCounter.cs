@@ -22,7 +22,7 @@ namespace Itinero.Transit.Api.Logic
 
             // Count how many connections depart at the given station
 
-            _state = "Scanning connections, currently at:h ";
+            _state = "Scanning connections, currently at: ";
             var enumerator = db.TransitDb.Latest.ConnectionsDb.GetDepartureEnumerator();
             foreach (var (start, end) in db.LoadedTimeWindows)
             {
@@ -46,6 +46,7 @@ namespace Itinero.Transit.Api.Logic
                 importances[stopsReader.GlobalId] = importance;
             }
 
+            State.ImportancesInternal = frequencies;
             State.Importances = importances;
             _state = "Done";
         }
