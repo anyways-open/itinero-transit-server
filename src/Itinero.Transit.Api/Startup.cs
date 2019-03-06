@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using Itinero.Transit.Api.Logic;
 using Itinero.Transit.Logging;
 using Microsoft.AspNetCore.Builder;
