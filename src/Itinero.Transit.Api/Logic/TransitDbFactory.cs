@@ -73,22 +73,22 @@ namespace Itinero.Transit.Api.Logic
             {
                 using (var stream = File.OpenRead(path))
                 {
+                    Log.Information($"Attempting to read a transitDB from {path}");
                     var db = TransitDb.ReadFrom(stream);
-
+                    Log.Information("All read! Trying to determine loaded period");
 
                     try
                     {
                         // This is a bit of an unstable hack, only good for logging and debugging
                         var enumerator = db.Latest.ConnectionsDb.GetDepartureEnumerator();
-                        enumerator.MoveNext(new DateTime(1970, 1, 1));
+                        enumerator.MoveNext(new DateTime(DateTime.Now.Year, 1, 1));
                         enumerator.MoveNext();
                         var startDate = enumerator.DepartureTime.FromUnixTime();
 
-                        /*
                         enumerator = db.Latest.ConnectionsDb.GetDepartureEnumerator();
 
-                        enumerator.MoveNext(new DateTime(2100, 1, 1));
-                        enumerator.MovePrevious();*/
+                        enumerator.MoveNext(new DateTime(DateTime.Now.Year+1, 1, 1));
+                        enumerator.MovePrevious();
                         var endDate = enumerator.DepartureTime.FromUnixTime();
 
 

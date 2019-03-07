@@ -38,7 +38,7 @@ namespace Itinero.Transit.Api.Logic
         /// </summary>
         public static DateTime BootTime;
 
-        public const string Version = "In storage we trust (Itinero-transit 0.8.2-pre61)";
+        public const string Version = "In storage we trust (Itinero-transit 0.8.2-pre63)";
 
     }
 }
