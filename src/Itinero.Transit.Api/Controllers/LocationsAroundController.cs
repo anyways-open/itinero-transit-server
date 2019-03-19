@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Itinero.Transit.Algorithms.Search;
 using Itinero.Transit.Api.Logic;
 using Itinero.Transit.Api.Models;
 using Itinero.Transit.Data;
@@ -30,8 +31,9 @@ namespace Itinero.Transit.Api.Controllers
 
             var stopsdb = State.TransitDb.Latest.StopsDb;
             
-            var found = stopsdb.LocationsInRange(lat, lon, distance);
             var reader = stopsdb.GetReader();
+            
+            var found = reader.LocationsInRange(lat, lon, distance);
             if (found == null || !found.Any())
             {
                 return NotFound($"Could not find any stop close by ({lat} lat,{lon} lon) within {distance}m");
