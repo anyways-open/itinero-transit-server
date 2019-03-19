@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Itinero.Transit.Data;
 using Itinero.Transit.IO.LC.Synchronization;
 
 namespace Itinero.Transit.Api.Logic
@@ -30,8 +31,15 @@ namespace Itinero.Transit.Api.Logic
                 do
                 {
                     _nowScanning = enumerator.DepartureTime;
-                    IncreaseCount(frequencies, enumerator.DepartureStop);
-                    IncreaseCount(frequencies, enumerator.ArrivalStop);
+                    if (enumerator.CanGetOn())
+                    {
+                        IncreaseCount(frequencies, enumerator.DepartureStop);
+                    }
+
+                    if (enumerator.CanGetOff())
+                    {
+                        IncreaseCount(frequencies, enumerator.ArrivalStop);
+                    }
                 } while (enumerator.MoveNext() && enumerator.DepartureTime < end.ToUnixTime());
             }
 
