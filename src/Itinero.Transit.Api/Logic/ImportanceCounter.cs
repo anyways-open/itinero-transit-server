@@ -4,7 +4,7 @@ using Itinero.Transit.IO.LC.Synchronization;
 
 namespace Itinero.Transit.Api.Logic
 {
-    public class ImportanceCounter : SynchronizationPolicy
+    public class ImportanceCounter : ISynchronizationPolicy
     {
         public uint Frequency { get; }
 

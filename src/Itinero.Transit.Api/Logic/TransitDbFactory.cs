@@ -121,9 +121,9 @@ namespace Itinero.Transit.Api.Logic
         }
 
 
-        private static List<SynchronizationPolicy> GetSynchronizedWindows(this IConfiguration configuration)
+        private static List<ISynchronizationPolicy> GetSynchronizedWindows(this IConfiguration configuration)
         {
-            var windows = new List<SynchronizationPolicy>();
+            var windows = new List<ISynchronizationPolicy>();
 
             foreach (var conf in configuration.GetChildren())
             {
