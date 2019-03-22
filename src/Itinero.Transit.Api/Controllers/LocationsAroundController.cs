@@ -1,10 +1,10 @@
 using System.Collections.Generic;
 using System.Linq;
-using Itinero.Transit.Algorithms.Search;
 using Itinero.Transit.Api.Logic;
 using Itinero.Transit.Api.Models;
 using Itinero.Transit.Data;
 using Microsoft.AspNetCore.Mvc;
+
 // ReSharper disable PossibleMultipleEnumeration
 
 namespace Itinero.Transit.Api.Controllers
