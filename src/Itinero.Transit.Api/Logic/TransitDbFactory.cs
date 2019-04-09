@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using Itinero.Transit.Data;
 using Itinero.Transit.IO.LC;
@@ -43,14 +42,14 @@ namespace Itinero.Transit.Api.Logic
             Log.Information($"Found data source {source.connections}, {source.locations}");
             Synchronizer synchronizer = null;
             LinkedConnectionDataset lcProfile = null;
-            
+
             reloadingPolicies.Add(new ImportanceCounter());
 
             if (cacheReload > 0 && cacheReload < long.MaxValue)
             {
                 reloadingPolicies.Add(new WriteToDisk((uint) cacheReload, cacheLocation));
             }
-            
+
             if (reloadingPolicies.Any())
             {
                 (synchronizer, lcProfile) =
@@ -58,7 +57,6 @@ namespace Itinero.Transit.Api.Logic
             }
 
 
-            
             return (db, lcProfile, synchronizer);
         }
 
@@ -71,38 +69,35 @@ namespace Itinero.Transit.Api.Logic
         {
             try
             {
-                using (var stream = File.OpenRead(path))
+                Log.Information($"Attempting to read a transitDB from {path}");
+                var db = TransitDb.ReadFrom(path, 0);
+                Log.Information("All read! Trying to determine loaded period");
+
+                try
                 {
-                    Log.Information($"Attempting to read a transitDB from {path}");
-                    var db = TransitDb.ReadFrom(stream);
-                    Log.Information("All read! Trying to determine loaded period");
+                    // This is a bit of an unstable hack, only good for logging and debugging
+                    var enumerator = db.Latest.ConnectionsDb.GetDepartureEnumerator();
+                    enumerator.MoveNext(new DateTime(DateTime.Now.Year, 1, 1));
+                    enumerator.MoveNext();
+                    var startDate = enumerator.DepartureTime.FromUnixTime();
 
-                    try
-                    {
-                        // This is a bit of an unstable hack, only good for logging and debugging
-                        var enumerator = db.Latest.ConnectionsDb.GetDepartureEnumerator();
-                        enumerator.MoveNext(new DateTime(DateTime.Now.Year, 1, 1));
-                        enumerator.MoveNext();
-                        var startDate = enumerator.DepartureTime.FromUnixTime();
+                    enumerator = db.Latest.ConnectionsDb.GetDepartureEnumerator();
 
-                        enumerator = db.Latest.ConnectionsDb.GetDepartureEnumerator();
-
-                        enumerator.MoveNext(new DateTime(DateTime.Now.Year+1, 1, 1));
-                        enumerator.MovePrevious();
-                        var endDate = enumerator.DepartureTime.FromUnixTime();
+                    enumerator.MoveNext(new DateTime(DateTime.Now.Year + 1, 1, 1));
+                    enumerator.MovePrevious();
+                    var endDate = enumerator.DepartureTime.FromUnixTime();
 
 
-                        Log.Information(
-                            $"Loaded transitdb from {path}. Estimated range {startDate} --> {endDate} ");
-                    }
-                    catch (Exception e)
-                    {
-                        Log.Warning(e.Message);
-                    }
-
-
-                    return db;
+                    Log.Information(
+                        $"Loaded transitdb from {path}. Estimated range {startDate} --> {endDate} ");
                 }
+                catch (Exception e)
+                {
+                    Log.Warning(e.Message);
+                }
+
+
+                return db;
             }
             catch (Exception e)
             {

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Itinero.Transit.Data;
+using Itinero.Transit.IO.LC.Data;
 using Itinero.Transit.IO.LC.Synchronization;
 
 namespace Itinero.Transit.Api.Logic
@@ -19,7 +20,7 @@ namespace Itinero.Transit.Api.Logic
 
         public void Run(DateTime triggerDate, TransitDbUpdater db)
         {
-            var frequencies = new Dictionary<(uint, uint), uint>();
+            var frequencies = new Dictionary<LocationId, uint>();
 
             // Count how many connections depart at the given station
 

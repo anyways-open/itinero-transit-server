@@ -94,7 +94,7 @@ namespace Itinero.Transit.Api.Logic
             return !stops.MoveTo(globalId) ? null : new Location(stops);
         }
 
-        private static Location LocationOf(this TransitDb.TransitDbSnapShot tdb, (uint, uint) localId)
+        private static Location LocationOf(this TransitDb.TransitDbSnapShot tdb, LocationId localId)
         {
             var stops = tdb.StopsDb.GetReader();
             return !stops.MoveTo(localId) ? null : new Location(stops);
@@ -127,7 +127,7 @@ namespace Itinero.Transit.Api.Logic
             while (departureEnumerator.MoveNext())
             {
                 var connection = (IConnection) departureEnumerator;
-                if (departureEnumerator.DepartureStop != stop) continue;
+                if (!departureEnumerator.DepartureStop.Equals(stop)) continue;
                 if (departureEnumerator.DepartureTime >= timeMax) break;
 
                 if (!trips.MoveTo(departureEnumerator.TripId)) continue;

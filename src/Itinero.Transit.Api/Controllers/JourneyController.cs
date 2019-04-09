@@ -16,8 +16,6 @@ namespace Itinero.Transit.Api.Controllers
     [Route("[controller]")]
     [ApiController]
     [ProducesResponseType(200)]
-    [ProducesResponseType(404)]
-    [ProducesResponseType(400)]
     public class JourneyController : ControllerBase
     {
         /// <summary>

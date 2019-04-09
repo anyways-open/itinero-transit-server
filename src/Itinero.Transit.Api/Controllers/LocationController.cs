@@ -8,7 +8,6 @@ namespace Itinero.Transit.Api.Controllers
     [Route("[controller]")]
     [ApiController]
     [ProducesResponseType(200)]   
-    [ProducesResponseType(404)]  
     public class LocationController : ControllerBase
     {
         /// <summary>
