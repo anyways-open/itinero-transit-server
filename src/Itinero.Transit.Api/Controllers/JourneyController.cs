@@ -1,15 +1,10 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Itinero.Transit.Api.Logic;
 using Itinero.Transit.Api.Models;
-using Itinero.Transit.Data;
-using Itinero.Transit.Algorithms.CSA;
-using Itinero.Transit.Data.Walks;
 using Itinero.Transit.Journeys;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Itinero.Transit.Api.Controllers
 {
@@ -28,7 +23,7 @@ namespace Itinero.Transit.Api.Controllers
         /// </remarks>
         /// <param name="from">The location where the journey starts, e.g. http://irail.be/stations/NMBS/008891009</param>
         /// <param name="to">The location where the traveller would like to go, e.g. http://irail.be/stations/NMBS/008892007</param>
-        /// <param name="departure">The earliest moment when the traveller would like to depart, in ISO8601 format</param>
+        /// <param name="departure">The earliest moment when the traveller would like to depart, in ISO8601 format (e.g. `2019-12-31T23:59:59Z` where Z is the timezone)</param>
         /// <param name="arrival">The last moment where the traveller would like to arrive, in ISO8601 format</param>
         /// <param name="internalTransferTime">The number of seconds the traveller needs to transfer trains within the station. Increase for less mobile users</param>
         /// <param name="prune">If false, more options will be given (mostly choices in transfer station)</param>
@@ -47,14 +42,7 @@ namespace Itinero.Transit.Api.Controllers
                 return BadRequest("The given from- and to- locations are the same");
             }
 
-            var p = new Profile<TransferStats>(
-                new InternalTransferGenerator(internalTransferTime),
-                null,
-                TransferStats.Factory,
-                TransferStats.ProfileTransferCompare);
-            var journeys = State.TransitDb.Latest.CalculateJourneys(
-                p, from, to, departure, arrival
-            );
+            var journeys = JourneyBuilder.BuildJourneys(from, to, departure, arrival, internalTransferTime, prune);
 
             // ReSharper disable once PossibleMultiplepEnumeration
             if (journeys == null || !journeys.Any())
