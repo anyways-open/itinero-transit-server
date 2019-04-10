@@ -38,7 +38,7 @@ namespace Itinero.Transit.Api.Logic
         /// </summary>
         public static DateTime BootTime;
 
-        public const string Version = "Jojoing bugs (Itinero-transit 0.8.2-pre67)";
+        public const string Version = "Jojoing bugs (Itinero-transit 0.8.2-pre72)";
 
     }
 }

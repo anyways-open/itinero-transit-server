@@ -13,7 +13,7 @@ namespace Itinero.Transit.Api.Logic
     {
         public static List<Journey<TransferStats>> BuildJourneys(string from, string to, DateTime? departure,
             DateTime? arrival,
-            uint internalTransferTime, bool prune)
+            uint internalTransferTime)
         {
             if (departure == null && arrival == null)
             {
@@ -26,7 +26,7 @@ namespace Itinero.Transit.Api.Logic
             var toId = snapshot.FindStop(to);
 
 
-            var p = new RealLifeProfile();
+            var p = new RealLifeProfile(internalTransferTime);
 
 
             if (departure == null)
@@ -36,7 +36,7 @@ namespace Itinero.Transit.Api.Logic
                 var lasJ = snapshot.CalculateLatestDeparture(p, from, to, DateTime.MinValue, arrival.Value);
                 arrival = lasJ.Time.FromUnixTime();
                 departure = arrival - p.SearchLengthCalculator(lasJ.Root.Time.FromUnixTime(),
-                                arrival.Value + TimeSpan.FromMinutes(1));
+                                arrival.Value);
             }
 
             /*
@@ -79,7 +79,7 @@ namespace Itinero.Transit.Api.Logic
             {
                 var easJ = snapshot.CalculateEarliestArrival(profile, from, to, departure, arrival.Value,
                     out var filter);
-                return (easJ.Root.Time.FromUnixTime() - TimeSpan.FromMinutes(1),
+                return (easJ.Root.Time.FromUnixTime(),
                     arrival.Value, filter);
             }
             else
@@ -92,7 +92,7 @@ namespace Itinero.Transit.Api.Logic
                 var depTime = easJ.Root.Time.FromUnixTime();
                 var endTime = depTime +
                               profile.SearchLengthCalculator(easJ.Root.Time.FromUnixTime(), easJ.Time.FromUnixTime());
-                return (depTime - TimeSpan.FromMinutes(1), endTime, filter);
+                return (depTime, endTime, filter);
             }
         }
     }

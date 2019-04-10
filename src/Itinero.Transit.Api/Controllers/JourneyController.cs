@@ -42,7 +42,7 @@ namespace Itinero.Transit.Api.Controllers
                 return BadRequest("The given from- and to- locations are the same");
             }
 
-            var journeys = JourneyBuilder.BuildJourneys(from, to, departure, arrival, internalTransferTime, prune);
+            var journeys = JourneyBuilder.BuildJourneys(from, to, departure, arrival, internalTransferTime);
 
             // ReSharper disable once PossibleMultiplepEnumeration
             if (journeys == null || !journeys.Any())

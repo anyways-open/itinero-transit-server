@@ -17,7 +17,7 @@ namespace Itinero.Transit.Api.Logic
         public RealLifeProfile(IOtherModeGenerator internalTransferGenerator, IOtherModeGenerator walksGenerator,
             Func<DateTime, DateTime, TimeSpan> searchLengthCalculator) :
             base(
-                internalTransferGenerator, walksGenerator, TransferStats.Factory, TransferStats.ProfileCompare)
+                internalTransferGenerator, walksGenerator, TransferStats.Factory, TransferStats.ProfileTransferCompare)
         {
             SearchLengthCalculator = searchLengthCalculator;
         }
