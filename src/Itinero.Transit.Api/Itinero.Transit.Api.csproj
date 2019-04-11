@@ -12,7 +12,7 @@
 
     <ItemGroup>
         <PackageReference Include="Itinero.Transit" Version="0.8.2-pre72" />
-        <PackageReference Include="Itinero.Transit.IO.LC" Version="0.8.2-pre67" />
+        <PackageReference Include="Itinero.Transit.IO.LC" Version="0.8.2-pre72" />
         <PackageReference Include="Microsoft.AspNetCore.App" />
         <PackageReference Include="NSwag.AspNetCore" Version="12.0.10" />
         <PackageReference Include="NSwag.Core" Version="12.0.10" />

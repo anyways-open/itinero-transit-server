@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Itinero.Transit.Algorithms.CSA;
 using Itinero.Transit.Data;
 using Itinero.Transit.Journeys;
@@ -11,9 +12,61 @@ namespace Itinero.Transit.Api.Logic
     /// </summary>
     public static class JourneyBuilder
     {
-        public static List<Journey<TransferStats>> BuildJourneys(string from, string to, DateTime? departure,
-            DateTime? arrival,
-            uint internalTransferTime)
+        /// <summary>
+        /// This function creates a new list which contains all the journeys from the given list,
+        /// but without journeys which are just slightly faster at the cost of transfers.
+        ///
+        /// E.g. if a journey X arrives a few minutes earlier then a journey Y, but X has one more transfer, X is removed.
+        /// Note that we still keep X even if it would depart a few minutes later - a traveller missing the 'direct' train will be glad to know the indirect one a few minutes later!
+        ///
+        /// We thus only apply this if the departure times are the same
+        /// 
+        /// X: arrives at 10:00, one transfer -> Penalty time: 10:10
+        /// Y: arrives at 10:01, no transfers
+        /// Z: arrives at 10:02, one transfers -> Penalty time: 10:12
+        /// </summary>
+        /// <returns></returns>
+        public static List<Journey<TransferStats>> ApplyTransferPenalty(
+            this RealLifeProfile profile, List<Journey<TransferStats>> journeys)
+        {
+            var penaltyInSeconds = profile.TransferPenalty;
+            if (penaltyInSeconds == 0)
+            {
+                return journeys;
+            }
+            var sortedByArrivalDesc = journeys.OrderBy(j => 0 - j.Time);
+
+            var result = new List<Journey<TransferStats>>();
+            var lastTimeWithPenalty = ulong.MaxValue;
+            Journey<TransferStats> last = null;
+
+            foreach (var journey in sortedByArrivalDesc)
+            {
+                if (last != null && last.Root.Time != journey.Root.Time)
+                {
+                    continue;
+                }
+
+                // The arrival time gets a penalty per transfer
+                var arrivalWithPenalty = journey.Time + journey.Stats.NumberOfTransfers * penaltyInSeconds;
+
+                if (lastTimeWithPenalty < arrivalWithPenalty)
+                {
+                    continue;
+                }
+
+                result.Add(journey);
+                last = journey;
+                lastTimeWithPenalty = arrivalWithPenalty;
+            }
+
+            return result;
+        }
+
+        public static List<Journey<TransferStats>> BuildJourneys(
+            this RealLifeProfile p,
+            string from, string to, DateTime? departure,
+            DateTime? arrival)
         {
             if (departure == null && arrival == null)
             {
@@ -25,8 +78,6 @@ namespace Itinero.Transit.Api.Logic
             var fromId = snapshot.FindStop(from);
             var toId = snapshot.FindStop(to);
 
-
-            var p = new RealLifeProfile(internalTransferTime);
 
 
             if (departure == null)

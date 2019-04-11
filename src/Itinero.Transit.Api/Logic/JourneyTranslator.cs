@@ -12,14 +12,14 @@ namespace Itinero.Transit.Api.Logic
     public static class JourneyTranslator
     {
         private static (Segment segment, Journey<T> rest)
-            ExtractSegment<T>(this TransitDb.TransitDbSnapShot tdb, Journey<T> j)
+            ExtractSegment<T>(this TransitDb.TransitDbSnapShot snapShot, Journey<T> j)
             where T : IJourneyStats<T>
         {
-            var connections = tdb.ConnectionsDb.GetReader();
+            var connections = snapShot.ConnectionsDb.GetReader();
             connections.MoveTo(j.Connection);
             var arrivalLocation =
                 new TimedLocation(
-                    tdb.LocationOf(j.Location),
+                    snapShot.LocationOf(j.Location),
                     j.Time,
                     connections.ArrivalDelay
                     );
@@ -33,7 +33,7 @@ namespace Itinero.Transit.Api.Logic
 
             connections.MoveTo(j.Connection);
             var departure = new TimedLocation(
-                tdb.LocationOf(rest.Location),
+                snapShot.LocationOf(rest.Location),
                 rest.Time,
                 connections.DepartureDelay
                 );
@@ -43,7 +43,7 @@ namespace Itinero.Transit.Api.Logic
             var route = "";
 
             // ReSharper disable once InvertIf
-            var trips = State.TransitDb.Latest.TripsDb.GetReader();
+            var trips = snapShot.TripsDb.GetReader();
             if (trips.MoveTo(j.TripId))
             {
                 trips.Attributes.TryGetValue("headsign", out headSign);
@@ -54,17 +54,17 @@ namespace Itinero.Transit.Api.Logic
         }
 
         public static Journey Translate<T>(
-            this TransitDb.TransitDbSnapShot tdb, Journey<T> j) where T : IJourneyStats<T>
+            this TransitDb.TransitDbSnapShot snapShot, Journey<T> j) where T : IJourneyStats<T>
         {
             var segments = new List<Segment>();
             Segment segment;
             // Yep, we shorten j
-            (segment, j) = tdb.ExtractSegment(j);
+            (segment, j) = snapShot.ExtractSegment(j);
             segments.Add(segment);
 
             while (j != null)
             {
-                (segment, j) = tdb.ExtractSegment(j);
+                (segment, j) = snapShot.ExtractSegment(j);
                 segments.Add(segment);
             }
 
@@ -143,7 +143,7 @@ namespace Itinero.Transit.Api.Logic
                     connection.ArrivalTime, connection.ArrivalDelay);
 
 
-                segments.Add(new Segment(departure, arrival, route, headSign));
+                    segments.Add(new Segment(departure, arrival, route, headSign));
             }
             
             return new LocationSegmentsResult()

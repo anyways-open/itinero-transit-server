@@ -26,6 +26,7 @@ namespace Itinero.Transit.Api.Controllers
         /// <param name="departure">The earliest moment when the traveller would like to depart, in ISO8601 format (e.g. `2019-12-31T23:59:59Z` where Z is the timezone)</param>
         /// <param name="arrival">The last moment where the traveller would like to arrive, in ISO8601 format</param>
         /// <param name="internalTransferTime">The number of seconds the traveller needs to transfer trains within the station. Increase for less mobile users</param>
+        /// <param name="transferPenalty">If two journeys depart at the same moment, and one is slightly faster at the cost of transfers, don't show the train with transfers if it is only 'penalty*number of transfers' faster</param>
         /// <param name="prune">If false, more options will be given (mostly choices in transfer station)</param>
         [HttpGet]
         public ActionResult<List<Journey>> Get(
@@ -34,6 +35,7 @@ namespace Itinero.Transit.Api.Controllers
             DateTime? departure = null,
             DateTime? arrival = null,
             uint internalTransferTime = 180,
+            uint transferPenalty = 300,
             bool prune = true
         )
         {
@@ -41,10 +43,12 @@ namespace Itinero.Transit.Api.Controllers
             {
                 return BadRequest("The given from- and to- locations are the same");
             }
+            
+            var profile = new RealLifeProfile(internalTransferTime, transferPenalty);
 
-            var journeys = JourneyBuilder.BuildJourneys(from, to, departure, arrival, internalTransferTime);
+            var journeys = profile.BuildJourneys(from, to, departure, arrival);
 
-            // ReSharper disable once PossibleMultiplepEnumeration
+            // ReSharper disable once PossibleMultipleEnumeration
             if (journeys == null || !journeys.Any())
             {
                 return NotFound("No possible journeys were found for your request");
@@ -55,6 +59,7 @@ namespace Itinero.Transit.Api.Controllers
                 journeys = journeys.PruneInAlternatives
                 (TravellingTimeMinimizer.Factory,
                     new TravellingTimeMinimizer.Minimizer(State.ImportancesInternal));
+                journeys = profile.ApplyTransferPenalty(journeys);
             }
 
             // ReSharper disable once PossibleMultipleEnumeration
