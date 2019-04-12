@@ -137,7 +137,7 @@ namespace Itinero.Transit.Api.Logic
             else
             {
                 var easJ = snapshot.CalculateEarliestArrival
-                (profile, from, to, departure, departure+TimeSpan.FromDays(1), out var filter, gs
+                (profile, from, to, departure, departure+TimeSpan.FromDays(1), out var filter,
                     (start, end) => start + profile.SearchLengthCalculator(start, end));
                 // THe actual search end time is calculated based on the length of the earliest arrival journey
                 // and what the function in the profile makes from it
