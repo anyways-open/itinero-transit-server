@@ -26,8 +26,8 @@ namespace Itinero.Transit.Api.Logic
         /// Z: arrives at 10:02, one transfers -> Penalty time: 10:12
         /// </summary>
         /// <returns></returns>
-        public static List<Journey<TransferStats>> ApplyTransferPenalty(
-            this RealLifeProfile profile, List<Journey<TransferStats>> journeys)
+        public static List<Journey<TransferMetric>> ApplyTransferPenalty(
+            this RealLifeProfile profile, List<Journey<TransferMetric>> journeys)
         {
             var penaltyInSeconds = profile.TransferPenalty;
             if (penaltyInSeconds == 0)
@@ -36,9 +36,9 @@ namespace Itinero.Transit.Api.Logic
             }
             var sortedByArrivalDesc = journeys.OrderBy(j => 0 - j.Time);
 
-            var result = new List<Journey<TransferStats>>();
+            var result = new List<Journey<TransferMetric>>();
             var lastTimeWithPenalty = ulong.MaxValue;
-            Journey<TransferStats> last = null;
+            Journey<TransferMetric> last = null;
 
             foreach (var journey in sortedByArrivalDesc)
             {
@@ -48,7 +48,7 @@ namespace Itinero.Transit.Api.Logic
                 }
 
                 // The arrival time gets a penalty per transfer
-                var arrivalWithPenalty = journey.Time + journey.Stats.NumberOfTransfers * penaltyInSeconds;
+                var arrivalWithPenalty = journey.Time + journey.Metric.NumberOfTransfers * penaltyInSeconds;
 
                 if (lastTimeWithPenalty < arrivalWithPenalty)
                 {
@@ -63,7 +63,7 @@ namespace Itinero.Transit.Api.Logic
             return result;
         }
 
-        public static List<Journey<TransferStats>> BuildJourneys(
+        public static List<Journey<TransferMetric>> BuildJourneys(
             this RealLifeProfile p,
             string from, string to, DateTime? departure,
             DateTime? arrival)
@@ -84,8 +84,9 @@ namespace Itinero.Transit.Api.Logic
             {
                 // Departure time is null
                 // We calculate one with a latest arrival scan search
-                var lasJ = snapshot.CalculateLatestDeparture(p, from, to, arrival.Value - TimeSpan.FromDays(1), arrival.Value);
-                arrival = lasJ.Time.FromUnixTime();
+                var lasJ = snapshot.CalculateLatestDeparture
+                    (p, from, to, 
+                    arrival.Value - TimeSpan.FromDays(1), arrival.Value);
                 departure = arrival - p.SearchLengthCalculator(lasJ.Root.Time.FromUnixTime(),
                                 arrival.Value);
             }
@@ -136,7 +137,7 @@ namespace Itinero.Transit.Api.Logic
             else
             {
                 var easJ = snapshot.CalculateEarliestArrival
-                (profile, from, to, out var filter, departure,
+                (profile, from, to, departure, departure+TimeSpan.FromDays(1), out var filter, gs
                     (start, end) => start + profile.SearchLengthCalculator(start, end));
                 // THe actual search end time is calculated based on the length of the earliest arrival journey
                 // and what the function in the profile makes from it

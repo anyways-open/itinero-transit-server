@@ -13,7 +13,7 @@ namespace Itinero.Transit.Api.Logic
     {
         private static (Segment segment, Journey<T> rest)
             ExtractSegment<T>(this TransitDb.TransitDbSnapShot snapShot, Journey<T> j)
-            where T : IJourneyStats<T>
+            where T : IJourneyMetric<T>
         {
             var connections = snapShot.ConnectionsDb.GetReader();
             connections.MoveTo(j.Connection);
@@ -54,7 +54,7 @@ namespace Itinero.Transit.Api.Logic
         }
 
         public static Journey Translate<T>(
-            this TransitDb.TransitDbSnapShot snapShot, Journey<T> j) where T : IJourneyStats<T>
+            this TransitDb.TransitDbSnapShot snapShot, Journey<T> j) where T : IJourneyMetric<T>
         {
             var segments = new List<Segment>();
             Segment segment;
@@ -76,7 +76,7 @@ namespace Itinero.Transit.Api.Logic
 
         public static List<Journey> Translate<T>(
             this TransitDb.TransitDbSnapShot tdb, IEnumerable<Journey<T>> journeys)
-            where T : IJourneyStats<T>
+            where T : IJourneyMetric<T>
         {
             var list = new List<Journey>();
             foreach (var j in journeys)

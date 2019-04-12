@@ -5,7 +5,7 @@ using Itinero.Transit.Journeys;
 
 namespace Itinero.Transit.Api.Logic
 {
-    public class RealLifeProfile : Profile<TransferStats>
+    public class RealLifeProfile : Profile<TransferMetric>
     {
         public uint TransferPenalty { get; }
 
@@ -18,7 +18,7 @@ namespace Itinero.Transit.Api.Logic
         public RealLifeProfile(IOtherModeGenerator internalTransferGenerator, IOtherModeGenerator walksGenerator,
             Func<DateTime, DateTime, TimeSpan> searchLengthCalculator) :
             base(
-                internalTransferGenerator, walksGenerator, TransferStats.Factory, TransferStats.ProfileTransferCompare)
+                internalTransferGenerator, walksGenerator, TransferMetric.Factory, TransferMetric.ProfileTransferCompare)
         {
             SearchLengthCalculator = searchLengthCalculator;
         }
