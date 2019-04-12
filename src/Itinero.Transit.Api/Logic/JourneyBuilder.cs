@@ -84,7 +84,7 @@ namespace Itinero.Transit.Api.Logic
             {
                 // Departure time is null
                 // We calculate one with a latest arrival scan search
-                var lasJ = snapshot.CalculateLatestDeparture(p, from, to, DateTime.MinValue, arrival.Value);
+                var lasJ = snapshot.CalculateLatestDeparture(p, from, to, arrival.Value - TimeSpan.FromDays(1), arrival.Value);
                 arrival = lasJ.Time.FromUnixTime();
                 departure = arrival - p.SearchLengthCalculator(lasJ.Root.Time.FromUnixTime(),
                                 arrival.Value);
