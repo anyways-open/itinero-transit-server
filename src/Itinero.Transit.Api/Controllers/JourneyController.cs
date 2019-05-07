@@ -63,7 +63,7 @@ namespace Itinero.Transit.Api.Controllers
             }
 
             // ReSharper disable once PossibleMultipleEnumeration
-            return State.TransitDb.Latest.Translate(journeys);
+            return State.TransitDb.Translate(journeys);
         }
     }
 }

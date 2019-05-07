@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+
 // ReSharper disable NotAccessedField.Global
 
 // ReSharper disable MemberCanBePrivate.Global
@@ -25,12 +26,12 @@ namespace Itinero.Transit.Api.Models
         /// The time (in seconds) that the server has been running
         /// </summary>
         public long Uptime;
-        
+
         /// <summary>
         /// Indicates what time fragments are loaded into the database.
         /// This is a list of (start, end) values
         /// </summary>
-        public readonly List<TimeWindow> LoadedTimeWindows;
+        public readonly Dictionary<string, List<TimeWindow>> LoadedTimeWindows;
 
 
         /// <summary>
@@ -39,19 +40,24 @@ namespace Itinero.Transit.Api.Models
         /// </summary>
         public readonly string Version;
 
-        public readonly string CurrentRunningTask;
+        public readonly Dictionary<string, string> CurrentRunningTask;
 
 
         public StatusReport(DateTime onlineSince, long uptime,
-            IEnumerable<(DateTime start, DateTime end)> loadedTimeWindows,
-            string version, string currentRunningTask)
+            Dictionary<string, IEnumerable<(DateTime start, DateTime end)>> loadedTimeWindows,
+            string version, Dictionary<string, string> currentRunningTask)
         {
             OnlineSince = onlineSince;
             Uptime = uptime;
-            LoadedTimeWindows = new List<TimeWindow>();
-            foreach (var w in loadedTimeWindows)
+            LoadedTimeWindows = new Dictionary<string, List<TimeWindow>>();
+            foreach (var (k, windows) in loadedTimeWindows)
             {
-                LoadedTimeWindows.Add(new TimeWindow(w));
+                var ls = new List<TimeWindow>();
+                foreach (var w in windows)
+                {
+                    ls.Add(new TimeWindow(w));
+                }
+                LoadedTimeWindows.Add(k, ls);
             }
 
             Version = version;

@@ -17,7 +17,7 @@ namespace Itinero.Transit.Api.Controllers
         [HttpGet]
         public ActionResult<Location> Get(string id)
         {
-            var found = State.TransitDb.Latest.LocationOf(id);
+            var found = State.TransitDb.LocationOf(id);
             if (found == null)
             {
                 return NotFound("No location with this id found");
@@ -32,7 +32,7 @@ namespace Itinero.Transit.Api.Controllers
         [HttpGet("connections")]
         public ActionResult<LocationSegmentsResult> GetConnections(string id)
         {
-            var found = State.TransitDb.Latest.SegmentsForLocation(id, DateTime.Now, TimeSpan.FromHours(1));
+            var found = State.TransitDb.SegmentsForLocation(id, DateTime.Now, TimeSpan.FromHours(1));
             if (found == null)
             {
                 return NotFound("No location with this id found");

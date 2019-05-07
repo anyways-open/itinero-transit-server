@@ -11,15 +11,40 @@ namespace Itinero.Transit.Api.Logic
 {
     public static class TransitDbFactory
     {
+
+
         /// <summary>
         /// Builds the entire transitDB based on the relevant configuration section
         /// </summary>
         /// <param name="configuration"></param>
         /// <returns></returns>
-        public static (TransitDb db, Synchronizer synchronizer) CreateTransitDb(
+        public static Databases CreateTransitDbs(
             this IConfiguration configuration)
         {
 
+            var dbs = new Dictionary<string, (TransitDb tdb, Synchronizer synchronizer)>();
+            foreach (var config in configuration.GetChildren())
+            {
+                var (name, db, synch) = config.CreateTransitDb();
+                dbs.Add(name, (db, synch));
+            }
+
+
+            return new Databases(dbs);
+
+        }
+
+        /// <summary>
+        /// Builds the entire transitDB based on the relevant configuration section
+        /// </summary>
+        /// <param name="configuration"></param>
+        /// <returns></returns>
+        public static (String name, TransitDb db, Synchronizer synchronizer) CreateTransitDb(
+            this IConfiguration configuration)
+        {
+
+            var name = configuration.GetValue<string>("Name");
+            
             var source = configuration.GetSection("Datasource").GetDataSource();
 
             var reloadingPolicies =
@@ -42,7 +67,6 @@ namespace Itinero.Transit.Api.Logic
 
             Log.Information($"Found data source {source.connections}, {source.locations}");
             Synchronizer synchronizer = null;
-            LinkedConnectionDataset lcProfile = null;
 
             reloadingPolicies.Add(new ImportanceCounter());
 
@@ -58,7 +82,7 @@ namespace Itinero.Transit.Api.Logic
             }
 
 
-            return (db, synchronizer);
+            return (name, db, synchronizer);
         }
 
         /// <summary>

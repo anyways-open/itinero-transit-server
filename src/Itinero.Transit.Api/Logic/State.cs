@@ -1,11 +1,59 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Itinero.Transit.Data;
-using Itinero.Transit.IO.LC;
+using Itinero.Transit.Data.Aggregators;
 using Itinero.Transit.IO.LC.Synchronization;
 
 namespace Itinero.Transit.Api.Logic
 {
+    public class Databases
+    {
+        public Dictionary<string, (TransitDb tdb, Synchronizer synchronizer)> TransitDbs;
+
+        public Databases(Dictionary<string, (TransitDb tdb, Synchronizer synchronizer)> transitDbs)
+        {
+            TransitDbs = transitDbs;
+        }
+
+        public IStopsReader GetStopsReader()
+        {
+            var readers = All().Select(tdb =>
+                (IStopsReader) tdb.StopsDb.GetReader()).ToList();
+            return
+                StopsReaderAggregator.CreateFrom(readers);
+        }
+
+        public IConnectionReader GetConnectionsReader()
+        {
+            var readers = All().Select(tdb =>
+                (IConnectionReader) tdb.ConnectionsDb.GetReader()).ToList();
+
+            return ConnectionReaderAggregator.CreateFrom(readers);
+        }
+
+        public IConnectionEnumerator GetConnections()
+        {
+            var readers = All().Select(tdb =>
+                (IConnectionEnumerator) tdb.ConnectionsDb.GetDepartureEnumerator()).ToList();
+
+            return ConnectionEnumeratorAggregator.CreateFrom(readers);
+        }
+
+
+        public ITripReader GetTripsReader()
+        {
+            var readers =
+                All().Select(tdb => (ITripReader) tdb.TripsDb.GetReader());
+            return  TripReaderAggregator.CreateFrom(readers);
+        }
+
+        public IEnumerable<TransitDb.TransitDbSnapShot> All()
+        {
+            return TransitDbs.Select(v => v.Value.tdb.Latest);
+        }
+    }
+
     public class State
     {
         // All the global state for the controllers goes here
@@ -13,19 +61,18 @@ namespace Itinero.Transit.Api.Logic
         /// <summary>
         /// The central transit DB where everyone refers to
         /// </summary>
-        public static TransitDb TransitDb;
+        public static Databases TransitDb;
 
-        
-        public static Synchronizer Synchronizer;
+        // public static Synchronizer Synchronizer;
 
         public static NameIndex NameIndex;
-        
+
         /// <summary>
         /// How important is each station?
         /// Maps URI -> Number of trains stopping
         /// </summary>
         public static Dictionary<string, uint> Importances;
-        
+
         /// <summary>
         /// How important is each station?
         /// Maps InternalID -> Number of trains stopping
@@ -40,5 +87,9 @@ namespace Itinero.Transit.Api.Logic
 
         public const string Version = "Kittens (Itinero-transit 1.0.0-pre8)";
 
+        public static IEnumerable<TransitDb.TransitDbSnapShot> TransitDbs()
+        {
+            return TransitDb.All();
+        }
     }
 }

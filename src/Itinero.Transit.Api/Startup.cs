@@ -35,15 +35,14 @@ namespace Itinero.Transit.Api
             State.BootTime = DateTime.Now;
 
 
-            (State.TransitDb, State.Synchronizer)
+            State.TransitDb
                 = Configuration
                     .GetSection("TransitDb")
-                    .GetChildren().First()
-                    .CreateTransitDb();
+                    .CreateTransitDbs();
 
             
             State.NameIndex = new NameIndexBuilder(new List<string>{"name:nl","name","name:fr"})
-                .Build(State.TransitDb.Latest.StopsDb.GetReader());
+                .Build(State.TransitDb.GetStopsReader());
             
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);

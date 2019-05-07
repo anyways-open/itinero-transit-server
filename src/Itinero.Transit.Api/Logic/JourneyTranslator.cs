@@ -12,14 +12,14 @@ namespace Itinero.Transit.Api.Logic
     public static class JourneyTranslator
     {
         private static (Segment segment, Journey<T> rest)
-            ExtractSegment<T>(this TransitDb.TransitDbSnapShot snapShot, Journey<T> j)
+            ExtractSegment<T>(this Databases dbs, Journey<T> j)
             where T : IJourneyMetric<T>
         {
-            var connections = snapShot.ConnectionsDb.GetReader();
-            connections.MoveTo(j.Connection);
+            var connections = dbs.GetConnectionsReader();
+            connections.MoveTo(j.Location.DatabaseId, j.Connection);
             var arrivalLocation =
                 new TimedLocation(
-                    snapShot.LocationOf(j.Location),
+                    dbs.LocationOf(j.Location),
                     j.Time,
                     connections.ArrivalDelay
                 );
@@ -33,9 +33,9 @@ namespace Itinero.Transit.Api.Logic
                      currTrip.Equals(rest.TripId) &&
                      !rest.SpecialConnection);
 
-            connections.MoveTo(j.Connection);
+            connections.MoveTo(j.Location.DatabaseId, j.Connection);
             var departure = new TimedLocation(
-                snapShot.LocationOf(rest.Location),
+                dbs.LocationOf(rest.Location),
                 rest.Time,
                 connections.DepartureDelay
             );
@@ -45,7 +45,7 @@ namespace Itinero.Transit.Api.Logic
             var route = "";
 
             // ReSharper disable once InvertIf
-            var trips = snapShot.TripsDb.GetReader();
+            var trips = dbs.GetTripsReader();
             if (trips.MoveTo(j.TripId))
             {
                 trips.Attributes.TryGetValue("headsign", out headSign);
@@ -56,17 +56,17 @@ namespace Itinero.Transit.Api.Logic
         }
 
         public static Journey Translate<T>(
-            this TransitDb.TransitDbSnapShot snapShot, Journey<T> j) where T : IJourneyMetric<T>
+            this Databases dbs, Journey<T> j) where T : IJourneyMetric<T>
         {
             var segments = new List<Segment>();
             Segment segment;
             // Yep, we shorten j
-            (segment, j) = snapShot.ExtractSegment(j);
+            (segment, j) = dbs.ExtractSegment(j);
             segments.Add(segment);
 
             while (j != null)
             {
-                (segment, j) = snapShot.ExtractSegment(j);
+                (segment, j) = dbs.ExtractSegment(j);
                 segments.Add(segment);
             }
 
@@ -77,35 +77,37 @@ namespace Itinero.Transit.Api.Logic
         }
 
         public static List<Journey> Translate<T>(
-            this TransitDb.TransitDbSnapShot tdb, IEnumerable<Journey<T>> journeys)
+            this Databases dbs, IEnumerable<Journey<T>> journeys)
             where T : IJourneyMetric<T>
         {
             var list = new List<Journey>();
             foreach (var j in journeys)
             {
-                list.Add(tdb.Translate(j));
+                list.Add(dbs.Translate(j));
             }
 
             return list;
         }
 
 
-        public static Location LocationOf(this TransitDb.TransitDbSnapShot tdb, string globalId)
+        public static Location LocationOf(this Databases dbs, string globalId)
         {
-            var stops = tdb.StopsDb.GetReader();
+            var stops = dbs.GetStopsReader();
             return !stops.MoveTo(globalId) ? null : new Location(stops);
         }
 
-        private static Location LocationOf(this TransitDb.TransitDbSnapShot tdb, LocationId localId)
+        private static Location LocationOf(this Databases dbs, LocationId localId)
         {
-            var stops = tdb.StopsDb.GetReader();
+            var stops = dbs.GetStopsReader();
             return !stops.MoveTo(localId) ? null : new Location(stops);
         }
 
-        internal static LocationSegmentsResult SegmentsForLocation(this TransitDb.TransitDbSnapShot latest,
+        internal static LocationSegmentsResult SegmentsForLocation
+        (this Databases dbs,
             string globalId, DateTime time, TimeSpan window)
         {
-            var stops = latest.StopsDb.GetReader();
+            if (dbs == null) throw new ArgumentNullException(nameof(dbs));
+            var stops = dbs.GetStopsReader();
             if (!stops.MoveTo(globalId))
             {
                 return null;
@@ -114,7 +116,7 @@ namespace Itinero.Transit.Api.Logic
             var location = new Location(stops);
             var stop = stops.Id;
 
-            var departureEnumerator = latest.ConnectionsDb.GetDepartureEnumerator();
+            var departureEnumerator = dbs.GetConnections();
             if (!departureEnumerator.MoveNext(time))
             {
                 return new LocationSegmentsResult()
@@ -124,7 +126,7 @@ namespace Itinero.Transit.Api.Logic
                 };
             }
 
-            var trips = latest.TripsDb.GetReader();
+            var trips = dbs.GetTripsReader();
             var timeMax = time.Add(window).ToUnixTime();
             var segments = new List<Segment>();
             while (departureEnumerator.MoveNext())

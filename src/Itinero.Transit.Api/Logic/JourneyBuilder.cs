@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Itinero.Transit.Algorithms.CSA;
-using Itinero.Transit.Data;
 using Itinero.Transit.Journeys;
 
 namespace Itinero.Transit.Api.Logic
@@ -75,9 +73,6 @@ namespace Itinero.Transit.Api.Logic
                     "At least one date should be given, either departure time or arrival time (or both)");
             }
 
-            var snapshot = State.TransitDb.Latest;
-
-            
             
             
             WithTime<TransferMetric> calculator;
@@ -85,7 +80,7 @@ namespace Itinero.Transit.Api.Logic
             {
                 // Departure time is null
                 // We calculate one with a latest arrival scan search
-                calculator = snapshot
+                calculator = State.TransitDbs()
                     .SelectProfile(p)
                     .SelectStops(from, to)
                     .SelectTimeFrame(arrival.Value.AddDays(-1), arrival.Value);
@@ -95,7 +90,7 @@ namespace Itinero.Transit.Api.Logic
             }
             else if(arrival == null)
             {
-                calculator = snapshot
+                calculator = State.TransitDbs()
                     .SelectProfile(p)
                     .SelectStops(from, to)
                     .SelectTimeFrame(departure.Value, departure.Value.AddDays(1));
@@ -108,7 +103,7 @@ namespace Itinero.Transit.Api.Logic
             }
             else
             {
-                 calculator = snapshot
+                 calculator = State.TransitDbs()
                     .SelectProfile(p)
                     .SelectStops(from, to)
                     .SelectTimeFrame(departure.Value, arrival.Value);
