@@ -15,11 +15,11 @@ namespace Itinero.Transit.Api.Logic
         /// </summary>
         public static TransitDb TransitDb;
 
-
-        public static Synchronizer Synchronizer;
         
-        public static LinkedConnectionDataset LcProfile;
+        public static Synchronizer Synchronizer;
 
+        public static NameIndex NameIndex;
+        
         /// <summary>
         /// How important is each station?
         /// Maps URI -> Number of trains stopping
@@ -38,7 +38,7 @@ namespace Itinero.Transit.Api.Logic
         /// </summary>
         public static DateTime BootTime;
 
-        public const string Version = "Jojoing bugs (Itinero-transit 0.8.2-pre72)";
+        public const string Version = "Kittens (Itinero-transit 1.0.0-pre8)";
 
     }
 }

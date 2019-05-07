@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using Itinero.Transit.Api.Logic;
+using Itinero.Transit.IO.LC;
 using Itinero.Transit.Logging;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -10,6 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using NSwag;
+using Reminiscence.Collections;
 using Serilog;
 using Serilog.Formatting.Json;
 using Log = Serilog.Log;
@@ -33,9 +35,16 @@ namespace Itinero.Transit.Api
             State.BootTime = DateTime.Now;
 
 
-            (State.TransitDb, State.LcProfile, State.Synchronizer)
-                = Configuration.GetSection("TransitDb").CreateTransitDb();
+            (State.TransitDb, State.Synchronizer)
+                = Configuration
+                    .GetSection("TransitDb")
+                    .GetChildren().First()
+                    .CreateTransitDb();
 
+            
+            State.NameIndex = new NameIndexBuilder(new List<string>{"name:nl","name","name:fr"})
+                .Build(State.TransitDb.Latest.StopsDb.GetReader());
+            
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
             services.AddCors(options =>

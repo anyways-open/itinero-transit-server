@@ -22,21 +22,23 @@ namespace Itinero.Transit.Api.Logic
                     snapShot.LocationOf(j.Location),
                     j.Time,
                     connections.ArrivalDelay
-                    );
+                );
 
             var currTrip = j.TripId;
             var rest = j;
             do
             {
                 rest = rest.PreviousLink;
-            } while (rest.PreviousLink != null && currTrip == rest.TripId && !rest.SpecialConnection);
+            } while (rest.PreviousLink != null &&
+                     currTrip.Equals(rest.TripId) &&
+                     !rest.SpecialConnection);
 
             connections.MoveTo(j.Connection);
             var departure = new TimedLocation(
                 snapShot.LocationOf(rest.Location),
                 rest.Time,
                 connections.DepartureDelay
-                );
+            );
 
 
             var headSign = "";
@@ -100,7 +102,8 @@ namespace Itinero.Transit.Api.Logic
             return !stops.MoveTo(localId) ? null : new Location(stops);
         }
 
-        internal static LocationSegmentsResult SegmentsForLocation(this TransitDb.TransitDbSnapShot latest, string globalId, DateTime time, TimeSpan window)
+        internal static LocationSegmentsResult SegmentsForLocation(this TransitDb.TransitDbSnapShot latest,
+            string globalId, DateTime time, TimeSpan window)
         {
             var stops = latest.StopsDb.GetReader();
             if (!stops.MoveTo(globalId))
@@ -133,7 +136,7 @@ namespace Itinero.Transit.Api.Logic
                 if (!trips.MoveTo(departureEnumerator.TripId)) continue;
                 trips.Attributes.TryGetValue("headsign", out var headSign);
                 trips.Attributes.TryGetValue("route", out var route);
-                
+
                 if (!stops.MoveTo(departureEnumerator.DepartureStop)) continue;
                 var departure = new TimedLocation(new Location(stops),
                     connection.DepartureTime, connection.DepartureDelay);
@@ -143,9 +146,9 @@ namespace Itinero.Transit.Api.Logic
                     connection.ArrivalTime, connection.ArrivalDelay);
 
 
-                    segments.Add(new Segment(departure, arrival, route, headSign));
+                segments.Add(new Segment(departure, arrival, route, headSign));
             }
-            
+
             return new LocationSegmentsResult()
             {
                 Location = location,

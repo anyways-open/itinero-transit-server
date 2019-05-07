@@ -16,9 +16,10 @@ namespace Itinero.Transit.Api.Logic
         /// </summary>
         /// <param name="configuration"></param>
         /// <returns></returns>
-        public static (TransitDb db, LinkedConnectionDataset lcProfile, Synchronizer synchronizer) CreateTransitDb(
+        public static (TransitDb db, Synchronizer synchronizer) CreateTransitDb(
             this IConfiguration configuration)
         {
+
             var source = configuration.GetSection("Datasource").GetDataSource();
 
             var reloadingPolicies =
@@ -52,12 +53,12 @@ namespace Itinero.Transit.Api.Logic
 
             if (reloadingPolicies.Any())
             {
-                (synchronizer, lcProfile) =
+                (synchronizer, _) =
                     db.UseLinkedConnections(source.connections, source.locations, reloadingPolicies);
             }
 
 
-            return (db, lcProfile, synchronizer);
+            return (db, synchronizer);
         }
 
         /// <summary>

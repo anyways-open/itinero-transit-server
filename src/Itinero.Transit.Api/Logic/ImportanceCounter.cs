@@ -25,6 +25,7 @@ namespace Itinero.Transit.Api.Logic
 
             _state = "Scanning connections, currently at: ";
             var enumerator = db.TransitDb.Latest.ConnectionsDb.GetDepartureEnumerator();
+            var total = 0;
             foreach (var (start, end) in db.LoadedTimeWindows)
             {
                 enumerator.MoveNext(start);
@@ -34,11 +35,13 @@ namespace Itinero.Transit.Api.Logic
                     if (enumerator.CanGetOn())
                     {
                         IncreaseCount(frequencies, enumerator.DepartureStop);
+                        total++;
                     }
 
                     if (enumerator.CanGetOff())
                     {
                         IncreaseCount(frequencies, enumerator.ArrivalStop);
+                        total++;
                     }
                 } while (enumerator.MoveNext() && enumerator.DepartureTime < end.ToUnixTime());
             }
@@ -55,6 +58,9 @@ namespace Itinero.Transit.Api.Logic
             }
 
             State.ImportancesInternal = frequencies;
+            
+            
+            
             State.Importances = importances;
             _state = "Done";
         }
