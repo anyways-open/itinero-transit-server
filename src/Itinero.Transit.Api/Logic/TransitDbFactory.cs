@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Itinero.Transit.Data;
 using Itinero.Transit.IO.LC;
@@ -92,6 +93,12 @@ namespace Itinero.Transit.Api.Logic
         /// <returns></returns>
         private static TransitDb TryLoadFromDisk(string path)
         {
+            if (!File.Exists(path))
+            {
+                Log.Information($"TransitDb {path} does not exist. Skipping load");
+                return null;
+            }
+            
             try
             {
                 Log.Information($"Attempting to read a transitDB from {path}");

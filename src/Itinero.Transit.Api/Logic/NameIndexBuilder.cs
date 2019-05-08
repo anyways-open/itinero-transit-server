@@ -1,7 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Itinero.Transit.Data;
+using Serilog;
 
 namespace Itinero.Transit.Api.Logic
 {
@@ -31,8 +33,16 @@ namespace Itinero.Transit.Api.Logic
             while (allStops.MoveNext())
             {
                 var names = ExtractNames(allStops);
+                if (names == null)
+                {
+                    continue;
+                }
                 foreach (var (name, dist) in names)
                 {
+                    if (name == null)
+                    {
+                        continue;
+                    }
                     trie.Add(name.ToCharArray().ToList(), (allStops.GlobalId, dist));
                 }
             }
@@ -75,6 +85,11 @@ namespace Itinero.Transit.Api.Logic
 
         private static string Initials2(string s)
         {
+            if (s.Length <= 2)
+            {
+                return null;
+            }
+            
             return s.Substring(0, 2) + Initials(s).Substring(1);
         }
 
@@ -101,15 +116,25 @@ namespace Itinero.Transit.Api.Logic
 
         private string NameByAttribute(IStop stop)
         {
-            var attr = stop.Attributes;
-            foreach (var key in _attributeKeysToUse)
+            try
             {
-                if (attr.TryGetValue(key, out var v))
+
+                var attr = stop.Attributes;
+                foreach (var key in _attributeKeysToUse)
                 {
-                    return v;
+                    if (attr.TryGetValue(key, out var v))
+                    {
+                        return v;
+                    }
                 }
             }
+            catch (Exception e)
+            {
+                Log.Error($"Error while determining name: {e}");
+                return null;
+            }
 
+            Log.Warning($"No name found for {stop.GlobalId}");
             return null;
         }
     }
