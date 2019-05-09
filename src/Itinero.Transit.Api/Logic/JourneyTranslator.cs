@@ -26,12 +26,13 @@ namespace Itinero.Transit.Api.Logic
 
             var currTrip = j.TripId;
             var rest = j;
-            do
+            while (rest.PreviousLink != null &&
+                   currTrip.Equals(rest.TripId) &&
+                   !rest.SpecialConnection)
+
             {
                 rest = rest.PreviousLink;
-            } while (rest.PreviousLink != null &&
-                     currTrip.Equals(rest.TripId) &&
-                     !rest.SpecialConnection);
+            }
 
             connections.MoveTo(j.Location.DatabaseId, j.Connection);
             var departure = new TimedLocation(

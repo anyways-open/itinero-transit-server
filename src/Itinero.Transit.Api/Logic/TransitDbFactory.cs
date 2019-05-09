@@ -20,13 +20,13 @@ namespace Itinero.Transit.Api.Logic
         /// <param name="configuration"></param>
         /// <returns></returns>
         public static Databases CreateTransitDbs(
-            this IConfiguration configuration)
+            this IConfiguration configuration, bool dryRun = false)
         {
 
             var dbs = new Dictionary<string, (TransitDb tdb, Synchronizer synchronizer)>();
             foreach (var config in configuration.GetChildren())
             {
-                var (name, db, synch) = config.CreateTransitDb();
+                var (name, db, synch) = config.CreateTransitDb(dryRun);
                 dbs.Add(name, (db, synch));
             }
 
@@ -41,7 +41,7 @@ namespace Itinero.Transit.Api.Logic
         /// <param name="configuration"></param>
         /// <returns></returns>
         public static (String name, TransitDb db, Synchronizer synchronizer) CreateTransitDb(
-            this IConfiguration configuration)
+            this IConfiguration configuration, bool dryRun = false)
         {
 
             var name = configuration.GetValue<string>("Name");
@@ -56,6 +56,12 @@ namespace Itinero.Transit.Api.Logic
             var cacheLocation = configuration.GetValue<string>("Cache");
             var cacheReload = configuration.GetValue("CacheUpdateEvery", long.MaxValue);
 
+            if (dryRun)
+            {
+                // Only test config file
+                return ("", null, null);
+            }
+            
 
             TransitDb db = null;
             if (!string.IsNullOrEmpty(cacheLocation))
