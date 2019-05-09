@@ -23,7 +23,7 @@ elif [ "$RUNNING" != "$LATEST" ];then
     echo "restart $NAME"
     docker stop $NAME
     docker rm $NAME
-    docker run -d --name $NAME -v /var/services/transit-api/logs:/var/app/logs -v /var/services/transit-api/db:/var/app/db -p $PORT:5000 $IMAGE
+    docker run -d --rm --name $NAME -v /var/services/transit-api/logs:/var/app/logs -v /var/services/transit-api/db:/var/app/db -p $PORT:5000 $IMAGE
 else
   echo "$NAME up to date."
 fi
