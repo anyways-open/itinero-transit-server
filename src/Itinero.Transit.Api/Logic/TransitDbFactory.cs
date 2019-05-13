@@ -21,10 +21,16 @@ namespace Itinero.Transit.Api.Logic
             var dbs = new Dictionary<string, (TransitDb tdb, Synchronizer synchronizer)>();
             foreach (var config in configuration.GetChildren())
             {
-                var (name, db, synch) = config.CreateTransitDb(dryRun);
-                dbs.Add(name, (db, synch));
+                try
+                {
+                    var (name, db, synch) = config.CreateTransitDb(dryRun);
+                    dbs.Add(name, (db, synch));
+                }
+                catch (Exception e)
+                {
+                    Log.Error($"ERROR - Upstream database is DOWN\n{e}");
+                }
             }
-
 
             return new Databases(dbs);
         }

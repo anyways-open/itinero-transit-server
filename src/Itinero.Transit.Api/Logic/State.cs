@@ -13,6 +13,10 @@ namespace Itinero.Transit.Api.Logic
 
         public Databases(Dictionary<string, (TransitDb tdb, Synchronizer synchronizer)> transitDbs)
         {
+            if (transitDbs.Count == 0)
+            {
+                throw new ArgumentException("No databases loaded. Is the internet connected?");
+            }
             TransitDbs = transitDbs;
         }
 
