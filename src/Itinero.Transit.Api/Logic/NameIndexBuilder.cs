@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Itinero.Transit.Data;
@@ -13,7 +14,7 @@ namespace Itinero.Transit.Api.Logic
     public class NameIndexBuilder
     {
         private Reminiscence.Collections.List<string> _attributeKeysToUse;
-        
+
 
         public NameIndexBuilder(Reminiscence.Collections.List<string> attributeKeysToUse)
         {
@@ -37,12 +38,14 @@ namespace Itinero.Transit.Api.Logic
                 {
                     continue;
                 }
+
                 foreach (var (name, dist) in names)
                 {
                     if (name == null)
                     {
                         continue;
                     }
+
                     trie.Add(name.ToCharArray().ToList(), (allStops.GlobalId, dist));
                 }
             }
@@ -69,31 +72,33 @@ namespace Itinero.Transit.Api.Logic
             var results = new List<(string, int)>
             {
                 (name, 0),
+                (Simplify(name), 0),
                 (Initials(name), 1),
                 (Initials2(name), 1)
             };
             SaintInitials(results, name);
-            return results;
+            return results.Where(v => v.Item1 != null);
         }
 
         private static string Initials(string s)
         {
-            var initials = new Regex(@"(\b[a-zA-Z])[a-zA-Z]* ?");
+            var initialsRegex = new Regex(@"(\b[a-zA-Z])[a-zA-Z]*[^a-z]?");
 
-            return initials.Replace(s, "$1");
+            var initials = initialsRegex.Replace(s, "$1");
+            return initials;
         }
 
         private static string Initials2(string s)
         {
-            if (s.Length <= 2)
+            if (s.Length <= 2 || !s.Contains(' '))
             {
                 return null;
             }
-            
+
             return s.Substring(0, 2) + Initials(s).Substring(1);
         }
 
-        private static void SaintInitials(List<(string, int)> addTo, string fullName)
+        private static void SaintInitials(ICollection<(string, int)> addTo, string fullName)
         {
             if (fullName.StartsWith("sint "))
             {
@@ -103,7 +108,7 @@ namespace Itinero.Transit.Api.Logic
 
             if (fullName.StartsWith("sint"))
             {
-                addTo.Add(("st" + fullName.Substring(4),1));
+                addTo.Add(("st" + fullName.Substring(4), 1));
             }
         }
 
@@ -118,7 +123,6 @@ namespace Itinero.Transit.Api.Logic
         {
             try
             {
-
                 var attr = stop.Attributes;
                 foreach (var key in _attributeKeysToUse)
                 {
@@ -136,6 +140,14 @@ namespace Itinero.Transit.Api.Logic
 
             Log.Warning($"No name found for {stop.GlobalId}");
             return null;
+        }
+
+        [Pure]
+        public static string Simplify(string s)
+        {
+            s = s.ToLower();
+            s = Regex.Replace(s, @"[^a-z]", "");
+            return s;
         }
     }
 }

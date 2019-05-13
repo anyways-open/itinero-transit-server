@@ -1,6 +1,7 @@
-
 // ReSharper disable NotAccessedField.Global
 // ReSharper disable MemberCanBePrivate.Global
+
+using System;
 
 namespace Itinero.Transit.Api.Models
 {
@@ -15,23 +16,27 @@ namespace Itinero.Transit.Api.Models
             Arrival = arrival;
             Vehicle = vehicle;
             Headsign = headSign;
+            if (Vehicle == null)
+            {
+                throw new ArgumentNullException(nameof(Vehicle));
+            }
         }
 
         /// <summary>
         /// The departure location.
         /// </summary>
         public TimedLocation Departure { get; }
-        
+
         /// <summary>
         /// The arrival location.
         /// </summary>
         public TimedLocation Arrival { get; }
-        
+
         /// <summary>
         /// The identifier of the vehicle
         /// </summary>
         public string Vehicle { get; }
-        
+
         /// <summary>
         /// The name of the train, e.g. its destination
         /// </summary>

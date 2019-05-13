@@ -21,7 +21,7 @@ namespace Itinero.Transit.Api.Logic
 
         public List<LocationResult> Match(string query)
         {
-            query = Simplify(query);
+            query = NameIndexBuilder.Simplify(query);
             var finds = _index.FindFuzzy(query, 10);
 
 
@@ -49,7 +49,7 @@ namespace Itinero.Transit.Api.Logic
                 results.Add(locationResult);
             }
 
-            results = results.OrderBy(lr => lr.Difference).OrderByDescending(lr => lr.Importance).ToList();
+            results = results.OrderBy(lr => lr.Difference).ThenBy(lr => -lr.Importance).ToList();
 
             if (results.Count > 10)
             {
@@ -60,12 +60,6 @@ namespace Itinero.Transit.Api.Logic
         }
 
 
-        [Pure]
-        private static string Simplify(string s)
-        {
-            s = s.ToLower();
-            s = Regex.Replace(s, @"[^a-z]", "");
-            return s;
-        }
+  
     }
 }

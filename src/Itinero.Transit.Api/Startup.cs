@@ -2,7 +2,6 @@
 using System.IO;
 using System.Linq;
 using Itinero.Transit.Api.Logic;
-using Itinero.Transit.IO.LC;
 using Itinero.Transit.Logging;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;

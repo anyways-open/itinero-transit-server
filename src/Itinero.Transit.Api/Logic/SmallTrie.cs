@@ -47,9 +47,9 @@ namespace Itinero.Transit.Api.Logic
             return _children[firstChar].Find(subKey);
         }
 
-        public List<(T, int)> FindFuzzy(List<char> key, int maxDistance)
+        public IEnumerable<(T, int)> FindFuzzy(List<char> key, int maxDistance)
         {
-            var results = new List<(T, int)>();
+            var results = new HashSet<(T, int)>();
             FindFuzzy(key, results, maxDistance, maxDistance);
             return results;
         }
@@ -86,7 +86,7 @@ namespace Itinero.Transit.Api.Logic
             }
         }
 
-        public List<(T, int)> FindFuzzy(string query, int maxDistance)
+        public IEnumerable<(T, int)> FindFuzzy(string query, int maxDistance)
         {
             return FindFuzzy(query.ToCharArray().ToList(), maxDistance);
         }

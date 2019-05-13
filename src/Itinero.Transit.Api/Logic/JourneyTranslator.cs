@@ -53,6 +53,9 @@ namespace Itinero.Transit.Api.Logic
                 trips.Attributes.TryGetValue("route", out route);
             }
 
+            route = route ?? "";
+            headSign = headSign ?? "";
+
             return (new Segment(departure, arrivalLocation, route, headSign), rest.PreviousLink);
         }
 

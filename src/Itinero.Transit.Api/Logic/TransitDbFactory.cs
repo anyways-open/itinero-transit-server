@@ -12,17 +12,12 @@ namespace Itinero.Transit.Api.Logic
 {
     public static class TransitDbFactory
     {
-
-
         /// <summary>
         /// Builds the entire transitDB based on the relevant configuration section
         /// </summary>
-        /// <param name="configuration"></param>
-        /// <returns></returns>
         public static Databases CreateTransitDbs(
             this IConfiguration configuration, bool dryRun = false)
         {
-
             var dbs = new Dictionary<string, (TransitDb tdb, Synchronizer synchronizer)>();
             foreach (var config in configuration.GetChildren())
             {
@@ -32,21 +27,16 @@ namespace Itinero.Transit.Api.Logic
 
 
             return new Databases(dbs);
-
         }
 
         /// <summary>
         /// Builds the entire transitDB based on the relevant configuration section
         /// </summary>
-        /// <param name="configuration"></param>
-        /// <returns></returns>
-        public static (String name, TransitDb db, Synchronizer synchronizer) CreateTransitDb(
+        private static (String name, TransitDb db, Synchronizer synchronizer) CreateTransitDb(
             this IConfiguration configuration, bool dryRun = false)
         {
-
             var name = configuration.GetValue<string>("Name");
-            
-            var source = configuration.GetSection("Datasource").GetDataSource();
+
 
             var reloadingPolicies =
                 configuration.GetSection("ReloadPolicy")
@@ -61,7 +51,7 @@ namespace Itinero.Transit.Api.Logic
                 // Only test config file
                 return ("", null, null);
             }
-            
+
 
             TransitDb db = null;
             if (!string.IsNullOrEmpty(cacheLocation))
@@ -72,7 +62,6 @@ namespace Itinero.Transit.Api.Logic
             db = db ?? new TransitDb();
 
 
-            Log.Information($"Found data source {source.connections}, {source.locations}");
             Synchronizer synchronizer = null;
 
             reloadingPolicies.Add(new ImportanceCounter());
@@ -82,14 +71,62 @@ namespace Itinero.Transit.Api.Logic
                 reloadingPolicies.Add(new WriteToDisk((uint) cacheReload, cacheLocation));
             }
 
-            if (reloadingPolicies.Any())
+            var sourceLc = configuration.GetSection("Datasource").GetDataSourceLc();
+            var sourceOsm = configuration.GetSection("Datasource").GetDataSourceOsm();
+
+            if (sourceOsm == null && sourceLc == null)
             {
-                (synchronizer, _) =
-                    db.UseLinkedConnections(source.connections, source.locations, reloadingPolicies);
+                throw new ArgumentException(
+                    "Use either a linked-connections or OSM-scheme as datasource, but not both at the same time");
+            }
+
+            if (sourceLc != null)
+            {
+                var source = sourceLc.Value;
+                Log.Information($"Found LC data source {source.connections}, {source.locations}");
+                if (reloadingPolicies.Any())
+                {
+                    (synchronizer, _) =
+                        db.UseLinkedConnections(source.connections, source.locations, reloadingPolicies);
+                }
+                else
+                {
+                    Log.Warning(
+                        "No reloading policies are found, so no fresh data will be loaded. Only an existing cache could be reused. If that failed too, the transitDB might be empty");
+                }
+            }
+
+            if (sourceOsm != null)
+            {
+                Log.Information($"Found OSM data source {sourceOsm}");
+                synchronizer = db.UseOsmRoute(sourceOsm, reloadingPolicies);
             }
 
 
             return (name, db, synchronizer);
+        }
+
+        private static string GetDataSourceOsm(this IConfiguration config)
+        {
+            return config.GetValue<string>("OsmRelation");
+        }
+
+        private static (string locations, string connections)? GetDataSourceLc(this IConfiguration config)
+        {
+            var locations = config.GetValue<string>("Locations");
+            var cons = config.GetValue<string>("Connections");
+            if (locations != null && cons != null)
+            {
+                return (locations, cons);
+            }
+
+            if (locations == null && cons == null)
+            {
+                return null;
+            }
+
+            throw new Exception(
+                "Error in configuration: Datasource of transitDB is incorrect: both 'Location' and 'Connections' are needed to use Linked Connections, but only one of them is given");
         }
 
         /// <summary>
@@ -104,7 +141,7 @@ namespace Itinero.Transit.Api.Logic
                 Log.Information($"TransitDb {path} does not exist. Skipping load");
                 return null;
             }
-            
+
             try
             {
                 Log.Information($"Attempting to read a transitDB from {path}");
@@ -143,14 +180,6 @@ namespace Itinero.Transit.Api.Logic
                     $"Could not load transitDB from disk (path is {path}). Will start with an empty transitDB instead.\n{e.Message}");
                 return null;
             }
-        }
-
-        private static (string locations, string connections) GetDataSource(this IConfiguration config)
-        {
-            return (
-                config.GetValue<string>("Locations"),
-                config.GetValue<string>("Connections")
-            );
         }
 
 
