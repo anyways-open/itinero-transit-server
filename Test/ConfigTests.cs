@@ -29,12 +29,20 @@ namespace Test
 
             foreach (var s in dirsToTest)
             {
-                var path = GetRepoPath() + s;
-                var configuration = new ConfigurationBuilder()
-                    .AddJsonFile(path);
-                configuration.Build();
+                try
+                {
 
-                TransitDbFactory.CreateTransitDbs(configuration.Build().GetSection("TransitDb"), true);
+                    var path = GetRepoPath() + s;
+                    var configuration = new ConfigurationBuilder()
+                        .AddJsonFile(path);
+                    configuration.Build();
+
+                    configuration.Build().CreateTransitDbs(true);
+                }
+                catch (Exception e)
+                {
+                    throw new Exception("Exception while testing "+s, e);
+                }
             }
         }
     }
