@@ -22,9 +22,18 @@ namespace Itinero.Transit.Api.Logic
             uint id = 0;
             foreach (var config in configuration.GetChildren())
             {
-                var (name, db, synch) = config.CreateTransitDb(id, dryRun);
-                dbs.Add(name, (db, synch));
-                id++;
+                try
+                {
+                    var (name, db, synch) = config.CreateTransitDb(id, dryRun);
+                    dbs.Add(name, (db, synch));
+                    id++;
+                }
+                catch (Exception e)
+                {
+                    Log.Error($"Could not load database with config {config}\n" +
+                              $"Probable cause: upstream server is offline (or internet is down)\n" +
+                              $"{e}");
+                }
             }
 
 
