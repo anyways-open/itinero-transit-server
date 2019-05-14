@@ -1,3 +1,5 @@
+using System;
+using System.IO;
 using Itinero.Transit.Api.Logic;
 using Microsoft.Extensions.Configuration;
 using Xunit;
@@ -6,6 +8,14 @@ namespace Test
 {
     public class ConfigTests
     {
+
+        private string GetRepoPath()
+        {
+            var dir = Directory.GetCurrentDirectory();
+            var i = dir.IndexOf("itinero-transit-server/", StringComparison.Ordinal);
+            return dir.Substring(0, i+"itinero-transit-server/".Length);
+        }
+        
         [Fact]
         public void TestConfig()
         {
@@ -19,7 +29,7 @@ namespace Test
 
             foreach (var s in dirsToTest)
             {
-                var path = "/home/pietervdvn/git/itinero-transit-server/" + s;
+                var path = GetRepoPath() + s;
                 var configuration = new ConfigurationBuilder()
                     .AddJsonFile(path);
                 configuration.Build();
