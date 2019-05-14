@@ -19,10 +19,12 @@ namespace Itinero.Transit.Api.Logic
             this IConfiguration configuration, bool dryRun = false)
         {
             var dbs = new Dictionary<string, (TransitDb tdb, Synchronizer synchronizer)>();
+            uint id = 0;
             foreach (var config in configuration.GetChildren())
             {
-                var (name, db, synch) = config.CreateTransitDb(dryRun);
+                var (name, db, synch) = config.CreateTransitDb(id, dryRun);
                 dbs.Add(name, (db, synch));
+                id++;
             }
 
 
@@ -33,7 +35,7 @@ namespace Itinero.Transit.Api.Logic
         /// Builds the entire transitDB based on the relevant configuration section
         /// </summary>
         private static (String name, TransitDb db, Synchronizer synchronizer) CreateTransitDb(
-            this IConfiguration configuration, bool dryRun = false)
+            this IConfiguration configuration, uint id, bool dryRun = false)
         {
             var name = configuration.GetValue<string>("Name");
 
@@ -56,10 +58,10 @@ namespace Itinero.Transit.Api.Logic
             TransitDb db = null;
             if (!string.IsNullOrEmpty(cacheLocation))
             {
-                db = TryLoadFromDisk(cacheLocation);
+                db = TryLoadFromDisk(cacheLocation, id);
             }
 
-            db = db ?? new TransitDb();
+            db = db ?? new TransitDb(id);
 
 
             Synchronizer synchronizer = null;
@@ -79,6 +81,7 @@ namespace Itinero.Transit.Api.Logic
                 throw new ArgumentException(
                     "Use either a linked-connections or OSM-scheme as datasource, but not both at the same time");
             }
+
 
             if (sourceLc != null)
             {
@@ -134,7 +137,7 @@ namespace Itinero.Transit.Api.Logic
         /// </summary>
         /// <param name="path"></param>
         /// <returns></returns>
-        private static TransitDb TryLoadFromDisk(string path)
+        private static TransitDb TryLoadFromDisk(string path, uint id)
         {
             if (!File.Exists(path))
             {
@@ -145,7 +148,7 @@ namespace Itinero.Transit.Api.Logic
             try
             {
                 Log.Information($"Attempting to read a transitDB from {path}");
-                var db = TransitDb.ReadFrom(path, 0);
+                var db = TransitDb.ReadFrom(path, id);
                 Log.Information("All read! Trying to determine loaded period");
 
                 try

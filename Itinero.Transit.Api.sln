@@ -23,6 +23,10 @@ ProjectSection(SolutionItems) = preProject
 	deployment\update-docker.sh = deployment\update-docker.sh
 EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{BF5279C5-4E99-40D8-A0DB-5F5B37C0480F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "Test\Test.csproj", "{23974C5B-6B87-40D7-884F-16712D119E1C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,8 +37,13 @@ Global
 		{1ED1FA27-8AED-4998-B121-39589A20E49D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1ED1FA27-8AED-4998-B121-39589A20E49D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1ED1FA27-8AED-4998-B121-39589A20E49D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{23974C5B-6B87-40D7-884F-16712D119E1C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{23974C5B-6B87-40D7-884F-16712D119E1C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{23974C5B-6B87-40D7-884F-16712D119E1C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{23974C5B-6B87-40D7-884F-16712D119E1C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{1ED1FA27-8AED-4998-B121-39589A20E49D} = {5AD1023E-2A92-4CDC-951D-170B77AD9DB2}
+		{23974C5B-6B87-40D7-884F-16712D119E1C} = {BF5279C5-4E99-40D8-A0DB-5F5B37C0480F}
 	EndGlobalSection
 EndGlobal
