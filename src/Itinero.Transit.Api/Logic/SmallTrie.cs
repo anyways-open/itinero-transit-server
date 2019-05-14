@@ -9,6 +9,11 @@ namespace Itinero.Transit.Api.Logic
         private readonly Dictionary<char, SmallTrie<T>> _children = new Dictionary<char, SmallTrie<T>>();
         private T _value;
 
+        public void Add(string key, T value)
+        {
+            Add(key.ToCharArray().ToList(), value);
+        }
+        
         public void Add(List<char> key, T value)
         {
             if (key.Count == 0)
@@ -25,6 +30,12 @@ namespace Itinero.Transit.Api.Logic
 
             var subKey = key.GetRange(1, key.Count - 1);
             _children[firstChar].Add(subKey, value);
+        }
+
+        [Pure]
+        public T Find(string key)
+        {
+            return Find(key.ToCharArray().ToList());
         }
 
         [Pure]
@@ -47,6 +58,7 @@ namespace Itinero.Transit.Api.Logic
             return _children[firstChar].Find(subKey);
         }
 
+        [Pure]
         public IEnumerable<(T, int)> FindFuzzy(List<char> key, int maxDistance)
         {
             var results = new HashSet<(T, int)>();
@@ -54,6 +66,7 @@ namespace Itinero.Transit.Api.Logic
             return results;
         }
 
+        [Pure]
         private void FindFuzzy(List<char> key, ICollection<(T, int)> results, int startDistance, int maxDistance)
         {
             if (key.Count == 0)
@@ -86,6 +99,7 @@ namespace Itinero.Transit.Api.Logic
             }
         }
 
+        [Pure]
         public IEnumerable<(T, int)> FindFuzzy(string query, int maxDistance)
         {
             return FindFuzzy(query.ToCharArray().ToList(), maxDistance);
