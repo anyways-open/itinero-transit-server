@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -11,7 +12,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using NSwag;
-using Reminiscence.Collections;
 using Serilog;
 using Serilog.Formatting.Json;
 using Log = Serilog.Log;
@@ -25,7 +25,40 @@ namespace Itinero.Transit.Api
             Configuration = configuration;
         }
 
-        public IConfiguration Configuration { get; }
+        private IConfiguration Configuration { get; }
+
+
+        private void StartLoadingTransitDbs()
+        {
+            State.FreeMessage = "Loading transitdbs";
+            State.TransitDb = Configuration.CreateTransitDbs();
+
+            State.NameIndex = new NameIndexBuilder(new List<string> {"name:nl", "name", "name:fr"})
+                .Build(State.TransitDb.GetStopsReader());
+
+
+            Log.Information("Performing initial runs");
+            State.FreeMessage = "Running initial data syncs";
+
+
+
+            var tasks = new List<Task>();
+            foreach (var (name, (_, synchronizer)) in State.TransitDb.TransitDbs)
+            {
+                var t = Task.Run(() =>
+                {
+                    Log.Information($"Starting initial run of {name}");
+                    synchronizer.InitialRun();
+                    synchronizer.Start();
+                });
+                tasks.Add(t);
+            }
+
+            Task.WaitAll(tasks.ToArray());
+
+
+            State.FreeMessage = "Fully operational";
+        }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
@@ -44,31 +77,7 @@ namespace Itinero.Transit.Api
 
             services.AddSwaggerDocument();
 
-            Task t = Task.Factory.StartNew(() =>
-            {
-                State.FreeMessage = "Loading transitdbs";
-                State.TransitDb = Configuration.CreateTransitDbs();
-
-                State.NameIndex = new NameIndexBuilder(new List<string> {"name:nl", "name", "name:fr"})
-                    .Build(State.TransitDb.GetStopsReader());
-
-/*
-                Log.Information("Performing initial runs");
-                foreach (var (name, (_, synchronizer)) in State.TransitDb.TransitDbs)
-                {
-                    State.FreeMessage = $"Initial data run, currently {name}";
-                    synchronizer.InitialRun();
-                }*/
-
-                State.FreeMessage = "Starting clocks";
-                Log.Information("Starting the synchronizers");
-                foreach (var (_, (_, synchronizer)) in State.TransitDb.TransitDbs)
-                {
-                    synchronizer.Start();
-                }
-
-                State.FreeMessage = "Fully operational";
-            });
+            Task.Factory.StartNew(StartLoadingTransitDbs);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

@@ -13,10 +13,10 @@ namespace Itinero.Transit.Api.Logic
     /// </summary>
     public class NameIndexBuilder
     {
-        private Reminiscence.Collections.List<string> _attributeKeysToUse;
+        private List<string> _attributeKeysToUse;
 
 
-        public NameIndexBuilder(Reminiscence.Collections.List<string> attributeKeysToUse)
+        public NameIndexBuilder(List<string> attributeKeysToUse)
         {
             _attributeKeysToUse = attributeKeysToUse;
         }
