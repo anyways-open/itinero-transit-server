@@ -20,14 +20,19 @@ namespace Itinero.Transit.Api.Controllers
             var loadedTimeWindows = new Dictionary<string, IEnumerable<(DateTime start, DateTime end)>>();
             var tasks = new Dictionary<string, string>();
 
-            foreach (var (name, (_, synchronizer)) in State.TransitDb.TransitDbs)
+            if (State.TransitDb != null)
             {
-                loadedTimeWindows.Add(name, synchronizer.LoadedTimeWindows);
-                if (synchronizer.CurrentlyRunning != null)
+                foreach (var (name, (_, synchronizer)) in State.TransitDb.TransitDbs)
                 {
-                    tasks.Add(name, synchronizer.CurrentlyRunning.ToString());
+                    loadedTimeWindows.Add(name, synchronizer.LoadedTimeWindows);
+                    if (synchronizer.CurrentlyRunning != null)
+                    {
+                        tasks.Add(name, synchronizer.CurrentlyRunning.ToString());
+                    }
                 }
             }
+
+            tasks.Add("freemessage", State.FreeMessage);
 
 
             var report = new StatusReport(

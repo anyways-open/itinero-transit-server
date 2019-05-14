@@ -12,20 +12,42 @@ namespace Itinero.Transit.Api.Logic
 {
     public static class TransitDbFactory
     {
+        public static Databases CreateTransitDbs(this IConfiguration configuration, bool dryRun = false)
+        {
+            // First, we read the reusable reload windows
+            var reloadingPolicies = configuration.GetSection("ReloadingPolicies");
+            var policies = new Dictionary<string, List<ISynchronizationPolicy>>();
+            foreach (var rp in reloadingPolicies.GetChildren())
+            {
+                
+                policies.Add(rp.GetValue<string>("Name"), rp.GetSection("Windows").GetSynchronizedWindows());
+            }
+
+            return configuration.GetSection("TransitDb").CreateTransitDbsFromConfig(policies, dryRun);
+        }
+
+
         /// <summary>
         /// Builds the entire transitDB based on the relevant configuration section
         /// </summary>
-        public static Databases CreateTransitDbs(
-            this IConfiguration configuration, bool dryRun = false)
+        private static Databases CreateTransitDbsFromConfig(
+            this IConfigurationSection configuration, Dictionary<string, List<ISynchronizationPolicy>> reusablePolicies,
+            bool dryRun = false)
         {
+
+            if (!configuration.GetChildren().Any())
+            {
+                throw new ArgumentException("The 'transitDb'-element has no children, no transitdbs defined");
+            }
+            
             var dbs = new Dictionary<string, (TransitDb tdb, Synchronizer synchronizer)>();
             uint id = 0;
             foreach (var config in configuration.GetChildren())
             {
                 try
                 {
-                    var (name, db, synch) = config.CreateTransitDb(id, dryRun);
-                    dbs.Add(name, (db, synch));
+                    var (name, db, sync) = config.CreateTransitDb(id, reusablePolicies, dryRun);
+                    dbs.Add(name, (db, sync));
                     id++;
                 }
                 catch (Exception e)
@@ -36,22 +58,51 @@ namespace Itinero.Transit.Api.Logic
                 }
             }
 
+            // ReSharper disable once ConvertIfStatementToReturnStatement
+            if (dryRun)
+            {
+                return null;
+            }
             return new Databases(dbs);
+        }
+
+        private static List<ISynchronizationPolicy> GetReloadPolicy(this IConfiguration rp,
+            Dictionary<string, List<ISynchronizationPolicy>> reusable)
+        {
+            if (rp.GetSection("Windows").Value != null)
+            {
+                return rp.GetSection("Windows")
+                    .GetSynchronizedWindows();
+            }
+
+            var nm = rp.Get<string>();
+            // ReSharper disable once InvertIf
+            if (nm != null)
+            {
+                if (!reusable.ContainsKey(nm))
+                {
+                    throw new KeyNotFoundException($"No reusable policy with name {nm} found");
+                }
+
+                return reusable[nm].ToList(); // Make a copy
+            }
+
+            throw new ArgumentException("No 'windows' or 'name' found in the reloadingPolicies");
         }
 
         /// <summary>
         /// Builds the entire transitDB based on the relevant configuration section
         /// </summary>
         private static (String name, TransitDb db, Synchronizer synchronizer) CreateTransitDb(
-            this IConfiguration configuration, uint id, bool dryRun = false)
+            this IConfiguration configuration, uint id,
+            Dictionary<string, List<ISynchronizationPolicy>> reusablePolicies, bool dryRun = false)
         {
             var name = configuration.GetValue<string>("Name");
 
 
+            
             var reloadingPolicies =
-                configuration.GetSection("ReloadPolicy")
-                    .GetSection("Windows")
-                    .GetSynchronizedWindows();
+                configuration.GetSection("ReloadPolicy").GetReloadPolicy(reusablePolicies);
 
             var cacheLocation = configuration.GetValue<string>("Cache");
             var cacheReload = configuration.GetValue("CacheUpdateEvery", long.MaxValue);
@@ -143,8 +194,6 @@ namespace Itinero.Transit.Api.Logic
         /// <summary>
         /// Tries to load the transitDB from disk. Gives null if loading failed
         /// </summary>
-        /// <param name="path"></param>
-        /// <returns></returns>
         private static TransitDb TryLoadFromDisk(string path, uint id)
         {
             if (!File.Exists(path))

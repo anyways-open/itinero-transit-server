@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Itinero.Transit.Api.Logic;
 using Itinero.Transit.Logging;
 using Microsoft.AspNetCore.Builder;
@@ -31,18 +32,8 @@ namespace Itinero.Transit.Api
         {
             ConfigureLogging();
 
+            State.FreeMessage = "Booting, loading config...";
             State.BootTime = DateTime.Now;
-
-
-            State.TransitDb
-                = Configuration
-                    .GetSection("TransitDb")
-                    .CreateTransitDbs();
-
-            
-            State.NameIndex = new NameIndexBuilder(new List<string>{"name:nl","name","name:fr"})
-                .Build(State.TransitDb.GetStopsReader());
-            
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
             services.AddCors(options =>
@@ -52,6 +43,32 @@ namespace Itinero.Transit.Api
             });
 
             services.AddSwaggerDocument();
+
+            Task t = Task.Factory.StartNew(() =>
+            {
+                State.FreeMessage = "Loading transitdbs";
+                State.TransitDb = Configuration.CreateTransitDbs();
+
+                State.NameIndex = new NameIndexBuilder(new List<string> {"name:nl", "name", "name:fr"})
+                    .Build(State.TransitDb.GetStopsReader());
+
+/*
+                Log.Information("Performing initial runs");
+                foreach (var (name, (_, synchronizer)) in State.TransitDb.TransitDbs)
+                {
+                    State.FreeMessage = $"Initial data run, currently {name}";
+                    synchronizer.InitialRun();
+                }*/
+
+                State.FreeMessage = "Starting clocks";
+                Log.Information("Starting the synchronizers");
+                foreach (var (_, (_, synchronizer)) in State.TransitDb.TransitDbs)
+                {
+                    synchronizer.Start();
+                }
+
+                State.FreeMessage = "Fully operational";
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -90,7 +107,7 @@ namespace Itinero.Transit.Api
                         var after = before.Substring(
                             context.Request.PathBase.Value.Length,
                             before.Length - context.Request.PathBase.Value.Length);
-                        
+
                         context.Request.Path = after;
                     }
                 }

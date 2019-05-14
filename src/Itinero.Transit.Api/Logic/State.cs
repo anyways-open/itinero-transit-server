@@ -67,6 +67,8 @@ namespace Itinero.Transit.Api.Logic
         /// </summary>
         public static Databases TransitDb;
 
+        public static string FreeMessage;
+
         // public static Synchronizer Synchronizer;
 
         public static NameIndex NameIndex;
