@@ -12,6 +12,10 @@ namespace Test
         {
             var dir = Directory.GetCurrentDirectory();
             var i = dir.IndexOf("itinero-transit-server/", StringComparison.Ordinal);
+            if (i < 0)
+            {
+                return dir;
+            }
             return dir.Substring(0, i + "itinero-transit-server/".Length);
         }
 
