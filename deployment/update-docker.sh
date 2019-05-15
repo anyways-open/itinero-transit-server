@@ -8,7 +8,7 @@ NAME="transit-api$1"
 PORT=5001
 IMAGE="anywaysopen/itinero-transit-server$1"
 docker pull $IMAGE
-echo "Docker pull is done"
+echo "Docker pull is done for $NAME"
 
 if [ "$(docker ps -q -f name=$NAME)" ]
 then
