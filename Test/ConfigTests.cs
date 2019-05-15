@@ -8,14 +8,13 @@ namespace Test
 {
     public class ConfigTests
     {
-
         private string GetRepoPath()
         {
             var dir = Directory.GetCurrentDirectory();
             var i = dir.IndexOf("itinero-transit-server/", StringComparison.Ordinal);
-            return dir.Substring(0, i+"itinero-transit-server/".Length);
+            return dir.Substring(0, i + "itinero-transit-server/".Length);
         }
-        
+
         [Fact]
         public void TestConfig()
         {
@@ -31,8 +30,7 @@ namespace Test
             {
                 try
                 {
-
-                    var path = GetRepoPath() + s;
+                    var path = Path.Combine(GetRepoPath(), s);
                     var configuration = new ConfigurationBuilder()
                         .AddJsonFile(path);
                     configuration.Build();
@@ -41,7 +39,7 @@ namespace Test
                 }
                 catch (Exception e)
                 {
-                    throw new Exception("Exception while testing "+s, e);
+                    throw new Exception("Exception while testing " + s, e);
                 }
             }
         }
