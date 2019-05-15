@@ -10,7 +10,7 @@ IMAGE="anywaysopen/itinero-transit-server$1"
 docker pull $IMAGE
 echo "Docker pull is done for $NAME"
 
-if [ "$(docker ps -q -f name=$NAME)" ]
+if [ "$(docker ps -q -f name=$NAME$)" ] # The dollar at the end forces the "end of line" in the regex, causing not to match prefixed names
 then
     echo "Does exist"
     # Docker container does exist
@@ -42,7 +42,8 @@ echo "Starting the docker image"
 if [ $1 == "-staging" ]
 then
     echo "Using staging deploy (port 5002)"
-    docker run -d --rm --name $NAME -v /var/services/transit-api/logs:/var/app/logs -v /var/services/transit-api/db:/var/app/db -p $PORT:5002 $IMAGE
+    PORT=5002
+    docker run -d --rm --name $NAME -v /var/services/transit-api/logs:/var/app/logs -v /var/services/transit-api/db:/var/app/db -p $PORT:5000 $IMAGE
 else
     docker run -d --rm --name $NAME -v /var/services/transit-api/logs:/var/app/logs -v /var/services/transit-api/db:/var/app/db -p $PORT:5000 $IMAGE
 fi
