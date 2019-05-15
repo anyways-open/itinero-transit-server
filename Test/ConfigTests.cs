@@ -11,12 +11,12 @@ namespace Test
         private string GetRepoPath()
         {
             var dir = Directory.GetCurrentDirectory();
-            var i = dir.IndexOf("itinero-transit-server/", StringComparison.Ordinal);
+            var i = dir.IndexOf("Test/", StringComparison.Ordinal);
             if (i < 0)
             {
                 return dir;
             }
-            return dir.Substring(0, i + "itinero-transit-server/".Length);
+            return dir.Substring(0, i);
         }
 
         [Fact]
