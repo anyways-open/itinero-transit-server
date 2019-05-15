@@ -39,7 +39,7 @@ fi
 
 echo "Starting the docker image"
 
-if [ $1 == "-staging"]
+if [ $1 == "-staging" ]
 then
     echo "Using staging deploy (port 5002)"
     docker run -d --rm --name $NAME -v /var/services/transit-api/logs:/var/app/logs -v /var/services/transit-api/db:/var/app/db -p $PORT:5002 $IMAGE
