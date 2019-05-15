@@ -4,7 +4,7 @@
 
 set -e
 echo "Use with '-staging' as argument to use the staging build"
-NAME="transit-api"
+NAME="transit-api$1"
 PORT=5001
 IMAGE="anywaysopen/itinero-transit-server$1"
 docker pull $IMAGE
