@@ -91,7 +91,7 @@ namespace Itinero.Transit.Api.Logic
         /// </summary>
         public static DateTime BootTime;
 
-        public const string Version = "Kittens (Itinero-transit 1.0.0-pre18)";
+        public const string Version = "Lions (Itinero-transit 1.0.0-pre25)";
 
         public static IEnumerable<TransitDb.TransitDbSnapShot> TransitDbs()
         {
