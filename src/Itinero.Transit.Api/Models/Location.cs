@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Itinero.Transit.Data;
 using Serilog;
@@ -20,23 +21,29 @@ namespace Itinero.Transit.Api.Models
                 source.Attributes.TryGetValue("name", out var name);
                 Name = name;
             }
-            catch
+            catch(Exception e)
             {
-                Log.Information($"No name found for {source.GlobalId}");
+                Log.Information($"No name found for {source.GlobalId}\n{e}");
             }
 
 
-            foreach (var attr in source.Attributes)
+            try
             {
-                if (attr.Key.StartsWith("name:"))
+
+                foreach (var attr in source.Attributes)
                 {
-                    TranslatedNames[attr.Key.Substring(5)] = attr.Value;
+                    if (attr.Key.StartsWith("name:"))
+                    {
+                        TranslatedNames[attr.Key.Substring(5)] = attr.Value;
+                    }
                 }
             }
-            
-            
+            catch (Exception e)
+            {
+                Log.Information($"Something went wrong getting the translated names of a stop {source.GlobalId}\n{e}");
+            }
         }
-        
+
         internal Location(string id, string name, double lat, double lon)
         {
             Id = id;
@@ -49,17 +56,17 @@ namespace Itinero.Transit.Api.Models
         /// The latitude.
         /// </summary>
         public double Lat { get; }
-        
+
         /// <summary>
         /// The longitude.
         /// </summary>
         public double Lon { get; }
-        
+
         /// <summary>
         /// The id.
         /// </summary>
         public string Id { get; }
-        
+
         /// <summary>
         /// The name.
         /// </summary>

@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+// ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable UnusedAutoPropertyAccessor.Global
 
 namespace Itinero.Transit.Api.Models
 {
@@ -11,7 +13,7 @@ namespace Itinero.Transit.Api.Models
         /// Creates a new journey.
         /// </summary>
         /// <param name="segments"></param>
-        internal Journey(List<Segment> segments)
+        internal Journey(List<Segment> segments, int transfers)
         {
             Segments = segments;
 
@@ -21,7 +23,7 @@ namespace Itinero.Transit.Api.Models
             Arrival = last.Arrival;
 
             TravelTime = (int) (last.Arrival.Time - segments[0].Departure.Time).TotalSeconds;
-            Transfers = segments.Count - 1;
+            Transfers = transfers;
         }
         
         /// <summary>

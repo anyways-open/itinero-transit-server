@@ -17,6 +17,8 @@ namespace Itinero.Transit.Api.Logic
         {
             var connections = dbs.GetConnectionsReader();
             connections.MoveTo(j.Location.DatabaseId, j.Connection);
+
+
             var arrivalLocation =
                 new TimedLocation(
                     dbs.LocationOf(j.Location),
@@ -25,21 +27,6 @@ namespace Itinero.Transit.Api.Logic
                 );
 
             var currTrip = j.TripId;
-            var rest = j;
-            while (rest.PreviousLink != null &&
-                   currTrip.Equals(rest.TripId) &&
-                   !rest.SpecialConnection)
-
-            {
-                rest = rest.PreviousLink;
-            }
-
-            connections.MoveTo(j.Location.DatabaseId, j.Connection);
-            var departure = new TimedLocation(
-                dbs.LocationOf(rest.Location),
-                rest.Time,
-                connections.DepartureDelay
-            );
 
 
             var headSign = "";
@@ -56,28 +43,72 @@ namespace Itinero.Transit.Api.Logic
             route = route ?? "";
             headSign = headSign ?? "";
 
-            return (new Segment(departure, arrivalLocation, route, headSign), rest.PreviousLink);
+
+            var rest = j;
+            while (rest.PreviousLink != null &&
+                   currTrip.Equals(rest.TripId) &&
+                   !rest.SpecialConnection)
+
+            {
+                rest = rest.PreviousLink;
+            }
+
+
+            connections.MoveTo(rest.Location.DatabaseId, rest.Connection);
+            var departure = new TimedLocation(
+                dbs.LocationOf(rest.Location),
+                rest.Time,
+                connections.DepartureDelay
+            );
+
+
+            return (new Segment(departure, arrivalLocation, route, headSign), rest);
         }
 
         public static Journey Translate<T>(
             this Databases dbs, Journey<T> j) where T : IJourneyMetric<T>
         {
             var segments = new List<Segment>();
-            Segment segment;
-            // Yep, we shorten j
-            (segment, j) = dbs.ExtractSegment(j);
-            segments.Add(segment);
-
+            var takenVehicleCount = 0;
             while (j != null)
             {
+                if (j.SpecialConnection)
+                {
+                    switch (j.Connection)
+                    {
+                        case Journey<T>.GENESIS:
+                        case Journey<T>.TRANSFER:
+                            j = j.PreviousLink;
+                            continue;
+                        case Journey<T>.WALK:
+                        {
+                            var arr = new TimedLocation(
+                                dbs.LocationOf(j.Location), j.Time, 0);
+                            j = j.PreviousLink;
+                            var dep = new TimedLocation(
+                                dbs.LocationOf(j.Location), j.Time, 0);
+                            segments.Add(new Segment(dep, arr, "", "Walk"));
+                            continue;
+                        }
+                        default: break;
+                    }
+                }
+
+                Segment segment;
+                var oldJ = j;
                 (segment, j) = dbs.ExtractSegment(j);
                 segments.Add(segment);
+                takenVehicleCount++;
+                if (j == oldJ)
+                {
+                    j = j.PreviousLink;
+                }
             }
 
             segments.Reverse();
 
             // We have reached the genesis, and should thus have all the segments
-            return new Journey(segments);
+            return new Journey(segments, takenVehicleCount-1);
         }
 
         public static List<Journey> Translate<T>(

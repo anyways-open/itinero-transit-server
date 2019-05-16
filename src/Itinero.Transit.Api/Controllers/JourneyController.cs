@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using Itinero.Transit.Api.Logic;
 using Itinero.Transit.Api.Models;
@@ -29,7 +28,7 @@ namespace Itinero.Transit.Api.Controllers
         /// <param name="transferPenalty">If two journeys depart at the same moment, and one is slightly faster at the cost of transfers, don't show the train with transfers if it is only 'penalty*number of transfers' faster</param>
         /// <param name="prune">If false, more options will be given (mostly choices in transfer station)</param>
         [HttpGet]
-        public ActionResult<List<Journey>> Get(
+        public ActionResult<QueryResult> Get(
             string from,
             string to,
             DateTime? departure = null,
@@ -43,10 +42,12 @@ namespace Itinero.Transit.Api.Controllers
             {
                 return BadRequest("The given from- and to- locations are the same");
             }
-            
+
+            var start = DateTime.Now;
+
             var profile = new RealLifeProfile(internalTransferTime, transferPenalty);
 
-            var journeys = profile.BuildJourneys(from, to, departure, arrival);
+            var (journeys, queryStart, queryEnd) = profile.BuildJourneys(from, to, departure, arrival);
 
             // ReSharper disable once PossibleMultipleEnumeration
             if (journeys == null || !journeys.Any())
@@ -54,16 +55,20 @@ namespace Itinero.Transit.Api.Controllers
                 return NotFound("No possible journeys were found for your request");
             }
 
+
+            // ReSharper disable once InvertIf
             if (prune)
             {
                 journeys = journeys.PruneInAlternatives
                 (TravellingTimeMinimizer.Factory,
                     new TravellingTimeMinimizer.Minimizer(State.ImportancesInternal));
-                journeys = profile.ApplyTransferPenalty(journeys);
             }
 
+            var end = DateTime.Now;
+
             // ReSharper disable once PossibleMultipleEnumeration
-            return State.TransitDb.Translate(journeys);
+            return new QueryResult(State.TransitDb.Translate(journeys), start, end,
+                queryStart, queryEnd);
         }
     }
 }

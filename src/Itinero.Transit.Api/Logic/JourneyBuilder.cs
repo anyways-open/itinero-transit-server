@@ -62,7 +62,7 @@ namespace Itinero.Transit.Api.Logic
             return result;
         }
 
-        public static List<Journey<TransferMetric>> BuildJourneys(
+        public static (List<Journey<TransferMetric>>, DateTime start, DateTime end) BuildJourneys(
             this RealLifeProfile p,
             string from, string to, DateTime? departure,
             DateTime? arrival)
@@ -73,7 +73,8 @@ namespace Itinero.Transit.Api.Logic
                     "At least one date should be given, either departure time or arrival time (or both)");
             }
 
-            
+            departure = departure?.ToUniversalTime();
+            arrival = arrival?.ToUniversalTime();
             
             WithTime<TransferMetric> calculator;
             if (departure == null)
@@ -84,7 +85,7 @@ namespace Itinero.Transit.Api.Logic
                     .SelectProfile(p)
                     .SelectStops(from, to)
                     .SelectTimeFrame(arrival.Value.AddDays(-1), arrival.Value);
-                // This will set the timeframe correctly
+                // This will set the time frame correctly
                 calculator
                     .LatestDepartureJourney(tuple => tuple.journeyStart - p.SearchLengthCalculator(tuple.journeyStart, tuple.journeyEnd));
             }
@@ -113,7 +114,7 @@ namespace Itinero.Transit.Api.Logic
             }
 
 
-            return calculator.AllJourneys();
+            return (calculator.AllJourneys(), calculator.Start, calculator.End);
         }
     }
 }
