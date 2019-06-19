@@ -66,7 +66,6 @@ namespace Itinero.Transit.Api.Logic
             return results;
         }
 
-        [Pure]
         private void FindFuzzy(List<char> key, ICollection<(T, int)> results, int startDistance, int maxDistance)
         {
             if (key.Count == 0)

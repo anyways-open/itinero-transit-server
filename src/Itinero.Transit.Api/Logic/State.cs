@@ -4,8 +4,6 @@ using System.Linq;
 using Itinero.Transit.Data;
 using Itinero.Transit.Data.Aggregators;
 using Itinero.Transit.Data.Synchronization;
-using Itinero.Transit.Journey;
-using Itinero.Transit.Journey.Metric;
 
 namespace Itinero.Transit.Api.Logic
 {

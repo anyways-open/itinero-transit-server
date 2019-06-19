@@ -12,8 +12,7 @@ namespace Itinero.Transit.Api.Models
         /// <summary>
         /// Creates a new journey.
         /// </summary>
-        /// <param name="segments"></param>
-        internal Journey(List<Segment> segments, int transfers)
+        internal Journey(List<Segment> segments, int vehiclesTaken)
         {
             Segments = segments;
 
@@ -23,7 +22,7 @@ namespace Itinero.Transit.Api.Models
             Arrival = last.Arrival;
 
             TravelTime = (int) (last.Arrival.Time - segments[0].Departure.Time).TotalSeconds;
-            Transfers = transfers;
+            VehiclesTaken = vehiclesTaken;
         }
         
         /// <summary>
@@ -48,8 +47,8 @@ namespace Itinero.Transit.Api.Models
         public int TravelTime { get; }
         
         /// <summary>
-        /// The total number of intermediate transfers. Equals `segments.Length - 1`
+        /// The total number PT-vehicles taken. Often Segments.Count - 1
         /// </summary>
-        public int Transfers { get; }
+        public int VehiclesTaken { get; }
     }
 }

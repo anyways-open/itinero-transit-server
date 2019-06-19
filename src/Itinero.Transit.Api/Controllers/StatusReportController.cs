@@ -21,6 +21,18 @@ namespace Itinero.Transit.Api.Controllers
             var tasks = new Dictionary<string, string>();
 
             var state = State.GlobalState;
+            if (state == null)
+            {
+                return new StatusReport(
+                    DateTime.MaxValue,
+                    (long) (DateTime.Now - state.BootTime).TotalSeconds,
+                    null,
+                    State.Version,
+                    new Dictionary<string, string>()
+                        {{"statusmessage", "Still booting, hang on"}}
+                );
+            }
+
             if (state.TransitDbs != null)
             {
                 foreach (var (name, (_, synchronizer)) in state.TransitDbs)
@@ -33,17 +45,16 @@ namespace Itinero.Transit.Api.Controllers
                 }
             }
 
-            tasks.Add("freemessage", state.FreeMessage);
+            tasks.Add("statusmessage", state.FreeMessage);
 
 
-            var report = new StatusReport(
+            return new StatusReport(
                 state.BootTime,
                 (long) (DateTime.Now - state.BootTime).TotalSeconds,
                 loadedTimeWindows,
                 State.Version,
                 tasks
             );
-            return report;
         }
     }
 }

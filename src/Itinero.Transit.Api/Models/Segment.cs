@@ -33,12 +33,14 @@ namespace Itinero.Transit.Api.Models
         public TimedLocation Arrival { get; }
 
         /// <summary>
-        /// The identifier of the vehicle
+        /// The identifier of the vehicle (the global trip id).
+        /// Meant for machines
         /// </summary>
         public string Vehicle { get; }
 
         /// <summary>
-        /// The name of the train, e.g. its destination
+        /// The name of the train, e.g. its destination.
+        /// Meant for humans
         /// </summary>
         public string Headsign { get; }
     }

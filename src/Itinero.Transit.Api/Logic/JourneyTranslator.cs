@@ -12,101 +12,115 @@ namespace Itinero.Transit.Api.Logic
     /// </summary>
     public static class JourneyTranslator
     {
-        private static (Segment segment, Journey<T> rest)
-            ExtractSegment<T>(this State dbs, Journey<T> j)
-            where T : IJourneyMetric<T>
+        /// <summary>
+        /// Translates a single, forward journey into the Models which can be JSONified
+        /// </summary>
+        /// <returns></returns>
+        public static Models.Journey Translate<T>(
+            this State dbs, Journey<T> journey) where T : IJourneyMetric<T>
         {
-            var connections = dbs.GetConnectionsReader();
-            connections.MoveTo(j.Location.DatabaseId, j.Connection);
-
-
-            var arrivalLocation =
-                new TimedLocation(
-                    dbs.LocationOf(j.Location),
-                    j.Time,
-                    connections.ArrivalDelay
-                );
-
-            var currTrip = j.TripId;
-
-
-            var headSign = "";
-            var route = "";
-
-            // ReSharper disable once InvertIf
-            var trips = dbs.GetTripsReader();
-            if (trips.MoveTo(j.TripId))
-            {
-                trips.Attributes.TryGetValue("headsign", out headSign);
-                trips.Attributes.TryGetValue("route", out route);
-            }
-
-            route = route ?? "";
-            headSign = headSign ?? "";
-
-
-            var rest = j;
-            while (rest.PreviousLink != null &&
-                   currTrip.Equals(rest.TripId) &&
-                   !rest.SpecialConnection)
-
-            {
-                rest = rest.PreviousLink;
-            }
-
-
-            connections.MoveTo(rest.Location.DatabaseId, rest.Connection);
-            var departure = new TimedLocation(
-                dbs.LocationOf(rest.Location),
-                rest.Time,
-                connections.DepartureDelay
-            );
-
-
-            return (new Segment(departure, arrivalLocation, route, headSign), rest);
-        }
-
-        private static Models.Journey Translate<T>(
-            this State dbs, Journey<T> j) where T : IJourneyMetric<T>
-        {
+            var parts = journey.ToList(); // Puts genesis neatly at the start
             var segments = new List<Segment>();
-            var takenVehicleCount = 0;
-            while (j != null)
+
+            var vehiclesTaken = 0;
+
+
+            var connection = dbs.GetConnectionsReader();
+            var trip = dbs.GetTripsReader();
+
+            // Skip the first connection, that is the boring genesis anyway
+            for (var i = 1; i < parts.Count; i++)
             {
-                if (j.SpecialConnection)
+                var j = parts[i];
+
+                if (!j.SpecialConnection)
                 {
-                    switch (j.Connection)
+                    // First, we get the departure information
+                    connection.MoveTo(
+                        j.Location.DatabaseId,
+                        j.Connection); // The connection will always be hosted by the operator owning the stop position
+                    var departure = dbs.LocationOf(connection.DepartureStop);
+                    var departureTimed = new TimedLocation(
+                        departure,
+                        connection.DepartureTime.FromUnixTime(),
+                        connection.DepartureDelay);
+
+                    // ... and the trip info
+                    trip.MoveTo(j.TripId);
+                    var vehicleId = trip.GlobalId;
+                    trip.Attributes.TryGetValue("headsign", out var headsign);
+                    headsign = headsign ?? "";
+
+
+                    // Now, we walk along the journey to find the end of this segment
+
+                    while (true)
                     {
-                        case Journey<T>.GENESIS:
-                        case Journey<T>.OTHERMODE:
+                        if (i + 1 >= parts.Count)
                         {
-                            var arr = new TimedLocation(
-                                dbs.LocationOf(j.Location), j.Time, 0);
-                            j = j.PreviousLink;
-                            var dep = new TimedLocation(
-                                dbs.LocationOf(j.Location), j.Time, 0);
-                            segments.Add(new Segment(dep, arr, "", "Walk/Transfer to"));
-                            continue;
+                            // We have reached the last journey part and thus found the last piece of our journey
+                            break;
                         }
-                        default: break;
+
+                        i++;
+                        var p = parts[i];
+                        if (p.SpecialConnection)
+                        {
+                            // We are too far!
+                            // This part is a transfer/walk/...
+                            i--;
+                            break;
+                        }
+
+                        // ReSharper disable once InvertIf
+                        if (!p.TripId.Equals(j.TripId))
+                        {
+                            // We are too far!
+                            // This part has a different trip id
+                            i--;
+                            break;
+                        }
                     }
+                    // At this point, parts[i] is the last part of our journey
+
+                    j = parts[i];
+                    connection.MoveTo(j.Location.DatabaseId, j.Connection);
+                    var arrival = dbs.LocationOf(connection.ArrivalStop);
+                    var arrivalTimed = new TimedLocation(arrival,
+                        connection.ArrivalTime, connection.ArrivalDelay);
+
+                    var segment = new Segment(departureTimed, arrivalTimed, vehicleId, headsign);
+                    segments.Add(segment);
+                    vehiclesTaken++;
+                    continue;
                 }
 
-                Segment segment;
-                var oldJ = j;
-                (segment, j) = dbs.ExtractSegment(j);
-                segments.Add(segment);
-                takenVehicleCount++;
-                if (Equals(j, oldJ))
+
+                if (j.SpecialConnection && j.Connection == Journey<T>.OTHERMODE)
                 {
-                    j = j.PreviousLink;
+                    // This is a piece where we walk/cycle/... or some other continuous transportation mode
+
+                    var departure = dbs.LocationOf(j.PreviousLink.Location);
+                    var departureTimed = new TimedLocation(
+                        departure, j.PreviousLink.Time, 0);
+                    var arrival = dbs.LocationOf(j.Location);
+                    var arrivalTimed = new TimedLocation(
+                        arrival, j.Time, 0);
+
+                    var segment = new Segment(
+                        departureTimed, arrivalTimed,
+                        "WALK",
+                        "WALK"
+                    );
+                    segments.Add(segment);
+                    continue;
                 }
+
+                throw new Exception("Case fallthrough");
             }
 
-            segments.Reverse();
 
-            // We have reached the genesis, and should thus have all the segments
-            return new Models.Journey(segments, takenVehicleCount-1);
+            return new Models.Journey(segments, vehiclesTaken - 1);
         }
 
         public static List<Models.Journey> Translate<T>(
@@ -132,7 +146,12 @@ namespace Itinero.Transit.Api.Logic
         private static Location LocationOf(this State dbs, LocationId localId)
         {
             var stops = dbs.GetStopsReader();
-            return !stops.MoveTo(localId) ? null : new Location(stops);
+            if (!stops.MoveTo(localId))
+            {
+                throw new NullReferenceException("Location " + localId + " not found");
+            }
+
+            return new Location(stops);
         }
 
         internal static LocationSegmentsResult SegmentsForLocation
