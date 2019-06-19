@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Net.Http;
-using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 
@@ -9,8 +8,20 @@ namespace Itinero.Transit.API.Tests.Functional
 {
     static class Program
     {
+        private static string _host = "http://localhost:5000";
+
         static void Main(string[] args)
         {
+            if (args.Length > 0)
+            {
+                _host = args[0];
+            }
+
+            if (!_host.EndsWith('/'))
+            {
+                _host += '/';
+            }
+
             Console.WriteLine("Running integration tests");
             Challenge("status",
                 jobj =>
@@ -25,7 +36,6 @@ namespace Itinero.Transit.API.Tests.Functional
                 {
                     // The first entry should respond with NMBS-station 'Brugge'
                     var stationBrugge = jobj[0];
-                    var result = true;
                     AssertEqual("http://irail.be/stations/NMBS/008891009",
                         stationBrugge["location"]["id"].Value<string>(),
                         "Search returned something else then the main station of Bruges");
@@ -128,6 +138,8 @@ namespace Itinero.Transit.API.Tests.Functional
             }
         }
 
+
+        // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
         private static void AssertTrue(bool val, string errMessage = "Expected True")
         {
             if (!val)
@@ -151,7 +163,7 @@ namespace Itinero.Transit.API.Tests.Functional
                           urlParams.Substring(0, Math.Min(80, urlParams.Length)));
             var start = DateTime.Now;
             var client = new HttpClient();
-            var uri = "http://localhost:5000/" + urlParams;
+            var uri = _host + urlParams;
             var response = await client.GetAsync(uri).ConfigureAwait(false);
             if (response == null || !response.IsSuccessStatusCode)
             {
