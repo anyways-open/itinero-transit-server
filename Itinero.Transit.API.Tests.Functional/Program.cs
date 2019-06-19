@@ -17,6 +17,7 @@ namespace Itinero.Transit.API.Tests.Functional
                 _host = args[0];
             }
 
+            Console.WriteLine("Host is " + _host);
             if (!_host.EndsWith('/'))
             {
                 _host += '/';
@@ -65,18 +66,11 @@ namespace Itinero.Transit.API.Tests.Functional
             Challenge("LocationsAround?lat=51.1978&lon=3.2184&distance=500",
                 jobj =>
                 {
-                    // The first entry should respond with K&R CentrumShuttle'
-                    var kr = jobj[0];
-                    AssertEqual("https://www.openstreetmap.org/node/6348496391",
-                        kr["id"].Value<string>(),
-                        "Search returned something else then the main K&R of the CentrumShuttle");
-
-
-                    // The second entry should respond with NMBS-station 'Brugge'
-                    var stationBrugge = jobj[1];
-                    AssertEqual("http://irail.be/stations/NMBS/008891009",
-                        stationBrugge["id"].Value<string>(),
-                        "Search returned something else then the main station of Bruges");
+                    var ids = jobj.Select(location => location["id"]);
+                    AssertTrue(
+                        ids.Contains("https://www.openstreetmap.org/node/6348496391"), "CentrumShuttle stop not found");
+                    AssertTrue(
+                        ids.Contains("http://irail.be/stations/NMBS/008891009"), "Station Brugge not found");
                 }
             );
 
@@ -159,7 +153,7 @@ namespace Itinero.Transit.API.Tests.Functional
         private static async Task ChallengeAsync(string urlParams,
             Action<JToken> property)
         {
-            Console.Write($" ...          Running test with URL " +
+            Console.Write(" ...          Running test with URL " +
                           urlParams.Substring(0, Math.Min(80, urlParams.Length)));
             var start = DateTime.Now;
             var client = new HttpClient();
@@ -192,7 +186,7 @@ namespace Itinero.Transit.API.Tests.Functional
             catch (Exception e)
             {
                 Console.Write(" " + e.Message);
-                Console.WriteLine("\rFAIL {timing}");
+                Console.WriteLine($"\rFAIL {timing}");
                 _failed = true;
             }
         }
