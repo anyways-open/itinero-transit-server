@@ -66,7 +66,7 @@ namespace Itinero.Transit.API.Tests.Functional
             Challenge("LocationsAround?lat=51.1978&lon=3.2184&distance=500",
                 jobj =>
                 {
-                    var ids = jobj.Select(location => location["id"]);
+                    var ids = jobj.Select(location => location["id"]).ToList();
                     AssertTrue(
                         ids.Contains("https://www.openstreetmap.org/node/6348496391"), "CentrumShuttle stop not found");
                     AssertTrue(
