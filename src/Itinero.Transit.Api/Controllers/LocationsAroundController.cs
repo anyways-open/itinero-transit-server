@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Itinero.Transit.Api.Logic;
 using Itinero.Transit.Api.Models;
+using Itinero.Transit.Data;
 using Microsoft.AspNetCore.Mvc;
 
 // ReSharper disable PossibleMultipleEnumeration
@@ -27,7 +28,7 @@ namespace Itinero.Transit.Api.Controllers
         public ActionResult<List<Location>> Get(float lat, float lon, float distance=500)
         {
 
-            var reader = State.TransitDb.GetStopsReader();
+            var reader = State.GlobalState.GetStopsReader();
             
             var found = reader.LocationsInRange(lat, lon, distance);
             if (found == null || !found.Any())

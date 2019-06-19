@@ -1,7 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Itinero.Transit.Journeys;
+using Itinero.Transit.Journey.Metric;
+using Itinero.Transit.Journey;
 
 namespace Itinero.Transit.Api.Logic
 {
@@ -81,7 +82,7 @@ namespace Itinero.Transit.Api.Logic
             {
                 // Departure time is null
                 // We calculate one with a latest arrival scan search
-                calculator = State.TransitDbs()
+                calculator = State.GlobalState.All()
                     .SelectProfile(p)
                     .SelectStops(from, to)
                     .SelectTimeFrame(arrival.Value.AddDays(-1), arrival.Value);
@@ -91,7 +92,7 @@ namespace Itinero.Transit.Api.Logic
             }
             else if(arrival == null)
             {
-                calculator = State.TransitDbs()
+                calculator = State.GlobalState.All()
                     .SelectProfile(p)
                     .SelectStops(from, to)
                     .SelectTimeFrame(departure.Value, departure.Value.AddDays(1));
@@ -104,7 +105,7 @@ namespace Itinero.Transit.Api.Logic
             }
             else
             {
-                 calculator = State.TransitDbs()
+                 calculator = State.GlobalState.All()
                     .SelectProfile(p)
                     .SelectStops(from, to)
                     .SelectTimeFrame(departure.Value, arrival.Value);

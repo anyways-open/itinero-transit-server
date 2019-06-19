@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Itinero.Transit.Data;
+using Itinero.Transit.Data.Synchronization;
 using Itinero.Transit.IO.LC;
-using Itinero.Transit.IO.LC.Synchronization;
+using Itinero.Transit.IO.OSM.Data;
+using Itinero.Transit.Utils;
 using Microsoft.Extensions.Configuration;
 using Serilog;
 
@@ -12,7 +14,7 @@ namespace Itinero.Transit.Api.Logic
 {
     public static class TransitDbFactory
     {
-        public static Databases CreateTransitDbs(this IConfiguration configuration, bool dryRun = false)
+        public static Dictionary<string, (TransitDb tdb, Synchronizer synchronizer)> CreateTransitDbs(this IConfiguration configuration, bool dryRun = false)
         {
             // First, we read the reusable reload windows
             var reloadingPolicies = configuration.GetSection("ReloadingPolicies");
@@ -30,8 +32,8 @@ namespace Itinero.Transit.Api.Logic
         /// <summary>
         /// Builds the entire transitDB based on the relevant configuration section
         /// </summary>
-        private static Databases CreateTransitDbsFromConfig(
-            this IConfigurationSection configuration, Dictionary<string, List<ISynchronizationPolicy>> reusablePolicies,
+        private static Dictionary<string, (TransitDb tdb, Synchronizer synchronizer)> CreateTransitDbsFromConfig(
+            this IConfiguration configuration, Dictionary<string, List<ISynchronizationPolicy>> reusablePolicies,
             bool dryRun = false)
         {
 
@@ -63,7 +65,7 @@ namespace Itinero.Transit.Api.Logic
             {
                 return null;
             }
-            return new Databases(dbs);
+            return dbs;
         }
 
         private static List<ISynchronizationPolicy> GetReloadPolicy(this IConfiguration rp,
@@ -144,12 +146,12 @@ namespace Itinero.Transit.Api.Logic
 
             if (sourceLc != null)
             {
-                var source = sourceLc.Value;
-                Log.Information($"Found LC data source {source.connections}, {source.locations}");
+                var (locations, connections) = sourceLc.Value;
+                Log.Information($"Found LC data source {connections}, {locations}");
                 if (reloadingPolicies.Any())
                 {
                     (synchronizer, _) =
-                        db.UseLinkedConnections(source.connections, source.locations, reloadingPolicies);
+                        db.UseLinkedConnections(connections, locations, reloadingPolicies);
                 }
                 else
                 {
@@ -158,6 +160,7 @@ namespace Itinero.Transit.Api.Logic
                 }
             }
 
+            // ReSharper disable once InvertIf
             if (sourceOsm != null)
             {
                 Log.Information($"Found OSM data source {sourceOsm}");

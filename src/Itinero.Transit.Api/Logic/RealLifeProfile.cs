@@ -1,7 +1,7 @@
 using System;
 using Itinero.Transit.Data;
-using Itinero.Transit.Data.Walks;
-using Itinero.Transit.Journeys;
+using Itinero.Transit.Journey.Metric;
+using Itinero.Transit.OtherMode;
 
 namespace Itinero.Transit.Api.Logic
 {

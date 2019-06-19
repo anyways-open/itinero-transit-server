@@ -2,7 +2,8 @@ using System;
 using System.Collections.Generic;
 using Itinero.Transit.Api.Models;
 using Itinero.Transit.Data;
-using Itinero.Transit.Journeys;
+using Itinero.Transit.Journey;
+using Itinero.Transit.Utils;
 
 namespace Itinero.Transit.Api.Logic
 {
@@ -12,7 +13,7 @@ namespace Itinero.Transit.Api.Logic
     public static class JourneyTranslator
     {
         private static (Segment segment, Journey<T> rest)
-            ExtractSegment<T>(this Databases dbs, Journey<T> j)
+            ExtractSegment<T>(this State dbs, Journey<T> j)
             where T : IJourneyMetric<T>
         {
             var connections = dbs.GetConnectionsReader();
@@ -65,8 +66,8 @@ namespace Itinero.Transit.Api.Logic
             return (new Segment(departure, arrivalLocation, route, headSign), rest);
         }
 
-        public static Journey Translate<T>(
-            this Databases dbs, Journey<T> j) where T : IJourneyMetric<T>
+        private static Models.Journey Translate<T>(
+            this State dbs, Journey<T> j) where T : IJourneyMetric<T>
         {
             var segments = new List<Segment>();
             var takenVehicleCount = 0;
@@ -77,17 +78,14 @@ namespace Itinero.Transit.Api.Logic
                     switch (j.Connection)
                     {
                         case Journey<T>.GENESIS:
-                        case Journey<T>.TRANSFER:
-                            j = j.PreviousLink;
-                            continue;
-                        case Journey<T>.WALK:
+                        case Journey<T>.OTHERMODE:
                         {
                             var arr = new TimedLocation(
                                 dbs.LocationOf(j.Location), j.Time, 0);
                             j = j.PreviousLink;
                             var dep = new TimedLocation(
                                 dbs.LocationOf(j.Location), j.Time, 0);
-                            segments.Add(new Segment(dep, arr, "", "Walk"));
+                            segments.Add(new Segment(dep, arr, "", "Walk/Transfer to"));
                             continue;
                         }
                         default: break;
@@ -99,7 +97,7 @@ namespace Itinero.Transit.Api.Logic
                 (segment, j) = dbs.ExtractSegment(j);
                 segments.Add(segment);
                 takenVehicleCount++;
-                if (j == oldJ)
+                if (Equals(j, oldJ))
                 {
                     j = j.PreviousLink;
                 }
@@ -108,14 +106,14 @@ namespace Itinero.Transit.Api.Logic
             segments.Reverse();
 
             // We have reached the genesis, and should thus have all the segments
-            return new Journey(segments, takenVehicleCount-1);
+            return new Models.Journey(segments, takenVehicleCount-1);
         }
 
-        public static List<Journey> Translate<T>(
-            this Databases dbs, IEnumerable<Journey<T>> journeys)
+        public static List<Models.Journey> Translate<T>(
+            this State dbs, IEnumerable<Journey<T>> journeys)
             where T : IJourneyMetric<T>
         {
-            var list = new List<Journey>();
+            var list = new List<Models.Journey>();
             foreach (var j in journeys)
             {
                 list.Add(dbs.Translate(j));
@@ -125,20 +123,20 @@ namespace Itinero.Transit.Api.Logic
         }
 
 
-        public static Location LocationOf(this Databases dbs, string globalId)
+        public static Location LocationOf(this State dbs, string globalId)
         {
             var stops = dbs.GetStopsReader();
             return !stops.MoveTo(globalId) ? null : new Location(stops);
         }
 
-        private static Location LocationOf(this Databases dbs, LocationId localId)
+        private static Location LocationOf(this State dbs, LocationId localId)
         {
             var stops = dbs.GetStopsReader();
             return !stops.MoveTo(localId) ? null : new Location(stops);
         }
 
         internal static LocationSegmentsResult SegmentsForLocation
-        (this Databases dbs,
+        (this State dbs,
             string globalId, DateTime time, TimeSpan window)
         {
             if (dbs == null) throw new ArgumentNullException(nameof(dbs));

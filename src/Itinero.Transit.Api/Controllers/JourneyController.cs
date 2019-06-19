@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using Itinero.Transit.Api.Logic;
 using Itinero.Transit.Api.Models;
-using Itinero.Transit.Journeys;
+using Itinero.Transit.Journey.Metric;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Itinero.Transit.Api.Controllers
@@ -61,13 +61,13 @@ namespace Itinero.Transit.Api.Controllers
             {
                 journeys = journeys.PruneInAlternatives
                 (TravellingTimeMinimizer.Factory,
-                    new TravellingTimeMinimizer.Minimizer(State.ImportancesInternal));
+                    new TravellingTimeMinimizer.Minimizer(State.GlobalState.ImportancesInternal));
             }
 
             var end = DateTime.Now;
 
             // ReSharper disable once PossibleMultipleEnumeration
-            return new QueryResult(State.TransitDb.Translate(journeys), start, end,
+            return new QueryResult(State.GlobalState.Translate(journeys), start, end,
                 queryStart, queryEnd);
         }
     }

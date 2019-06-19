@@ -20,9 +20,10 @@ namespace Itinero.Transit.Api.Controllers
             var loadedTimeWindows = new Dictionary<string, IEnumerable<(DateTime start, DateTime end)>>();
             var tasks = new Dictionary<string, string>();
 
-            if (State.TransitDb != null)
+            var state = State.GlobalState;
+            if (state.TransitDbs != null)
             {
-                foreach (var (name, (_, synchronizer)) in State.TransitDb.TransitDbs)
+                foreach (var (name, (_, synchronizer)) in state.TransitDbs)
                 {
                     loadedTimeWindows.Add(name, synchronizer.LoadedTimeWindows);
                     if (synchronizer.CurrentlyRunning != null)
@@ -32,12 +33,12 @@ namespace Itinero.Transit.Api.Controllers
                 }
             }
 
-            tasks.Add("freemessage", State.FreeMessage);
+            tasks.Add("freemessage", state.FreeMessage);
 
 
             var report = new StatusReport(
-                State.BootTime,
-                (long) (DateTime.Now - State.BootTime).TotalSeconds,
+                state.BootTime,
+                (long) (DateTime.Now - state.BootTime).TotalSeconds,
                 loadedTimeWindows,
                 State.Version,
                 tasks

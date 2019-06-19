@@ -35,7 +35,7 @@ namespace Itinero.Transit.Api.Controllers
         [HttpGet]
         public ActionResult<List<LocationResult>> Get(string name)
         {
-            var matches = State.NameIndex.Match(name);
+            var matches = State.GlobalState.NameIndex.Match(name);
             
             if (matches.Count == 0)
             {

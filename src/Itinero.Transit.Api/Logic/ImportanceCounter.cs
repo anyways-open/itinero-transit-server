@@ -1,7 +1,8 @@
 using System;
 using System.Collections.Generic;
 using Itinero.Transit.Data;
-using Itinero.Transit.IO.LC.Synchronization;
+using Itinero.Transit.Data.Synchronization;
+using Itinero.Transit.Utils;
 
 namespace Itinero.Transit.Api.Logic
 {
@@ -57,11 +58,11 @@ namespace Itinero.Transit.Api.Logic
                 importances[stopsReader.GlobalId] = importance;
             }
 
-            State.ImportancesInternal = frequencies;
+            State.GlobalState.ImportancesInternal = frequencies;
             
             
             
-            State.Importances = importances;
+            State.GlobalState.Importances = importances;
             _state = "Done";
         }
 

@@ -36,8 +36,9 @@ namespace Itinero.Transit.Api.Logic
                 // ActualName is '0' if no difference with the actual name exists
                 var difference = 2 * isActualName + levDistance;
                 var importance =
-                    State.Importances != null && State.Importances.ContainsKey(locationUrl)
-                        ? State.Importances[locationUrl]
+                    State.GlobalState.Importances != null
+                    && State.GlobalState.Importances.ContainsKey(locationUrl)
+                        ? State.GlobalState.Importances[locationUrl]
                         : 0;
 
                 StopsReader.MoveTo(locationUrl);

@@ -30,26 +30,38 @@ namespace Itinero.Transit.Api
 
         private void StartLoadingTransitDbs()
         {
-            State.FreeMessage = "Loading transitdbs";
-            State.TransitDb = Configuration.CreateTransitDbs();
+            var state = new State(Configuration.CreateTransitDbs()) 
+                {FreeMessage = "Loading transitdbs"};
+            State.GlobalState = state;
 
-            State.NameIndex = new NameIndexBuilder(new List<string> {"name:nl", "name", "name:fr"})
-                .Build(State.TransitDb.GetStopsReader());
+            Log.Information("Loaded tdbs are " +
+                            string.Join(", ", state.TransitDbs
+                                .Select(kvp => kvp.Key)));
+
+            state.NameIndex = new NameIndexBuilder(new List<string> {"name:nl", "name", "name:fr"})
+                .Build(state.GetStopsReader());
 
 
             Log.Information("Performing initial runs");
-            State.FreeMessage = "Running initial data syncs";
-
+            state.FreeMessage = "Running initial data syncs";
 
 
             var tasks = new List<Task>();
-            foreach (var (name, (_, synchronizer)) in State.TransitDb.TransitDbs)
+            foreach (var (name, (_, synchronizer)) in state.TransitDbs)
             {
                 var t = Task.Run(() =>
                 {
-                    Log.Information($"Starting initial run of {name}");
-                    synchronizer.InitialRun();
-                    synchronizer.Start();
+                    try
+                    {
+
+                        Log.Information($"Starting initial run of {name}");
+                        synchronizer.InitialRun();
+                        synchronizer.Start();
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Error($"Caught exception while running initial data sync: {e.Message}\n{e}");
+                    }
                 });
                 tasks.Add(t);
             }
@@ -57,16 +69,13 @@ namespace Itinero.Transit.Api
             Task.WaitAll(tasks.ToArray());
 
 
-            State.FreeMessage = "Fully operational";
+            state.FreeMessage = "Fully operational";
         }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
             ConfigureLogging();
-
-            State.FreeMessage = "Booting, loading config...";
-            State.BootTime = DateTime.Now;
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
             services.AddCors(options =>
