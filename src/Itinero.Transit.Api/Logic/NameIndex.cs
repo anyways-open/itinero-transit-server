@@ -1,7 +1,5 @@
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Linq;
-using System.Text.RegularExpressions;
 using Itinero.Transit.Api.Models;
 using Itinero.Transit.Data;
 

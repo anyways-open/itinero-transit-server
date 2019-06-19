@@ -4,8 +4,6 @@ using System.Linq;
 using Itinero.Transit.Data;
 using Itinero.Transit.Data.Aggregators;
 using Itinero.Transit.Data.Synchronization;
-using Itinero.Transit.Journey;
-using Itinero.Transit.Journey.Metric;
 
 namespace Itinero.Transit.Api.Logic
 {
@@ -16,7 +14,7 @@ namespace Itinero.Transit.Api.Logic
         
         // All the global state for the controllers goes here
 
-        public const string Version = "Mostly finished (Itinero-transit 1.0.0-pre34)";
+        public const string Version = "Neophyte (Itinero-transit 1.0.0-pre34)";
 
         /// <summary>
         /// The central transit DB where everyone refers to
