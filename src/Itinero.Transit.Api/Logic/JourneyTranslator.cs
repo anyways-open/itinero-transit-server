@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using Itinero.Transit.Api.Models;
 using Itinero.Transit.Data;
+using Itinero.Transit.Data.Aggregators;
+using Itinero.Transit.IO.OSM.Data;
 using Itinero.Transit.Journey;
 using Itinero.Transit.Utils;
 

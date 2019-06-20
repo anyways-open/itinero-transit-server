@@ -20,12 +20,12 @@ namespace Itinero.Transit.Api.Controllers
         /// When both are given, all possible journeys between those points in time are calculated.
         /// If only one is given, a fastest possible test route is created. Then, the taken time is doubled and all possible journeys between `(journey.Departure, journey.Departure + 2*journey.TotalTime)` are given.
         /// </remarks>
-        /// <param name="from">The location where the journey starts, e.g. http://irail.be/stations/NMBS/008891009</param>
+        /// <param name="from">The location where the journey starts, e.g. http://irail.be/stations/NMBS/008891009 . Alternatively, an OSM-url is supported as well, such as https://www.openstreetmap.org/#map=19/51.21576/3.22001</param>
         /// <param name="to">The location where the traveller would like to go, e.g. http://irail.be/stations/NMBS/008892007</param>
         /// <param name="departure">The earliest moment when the traveller would like to depart, in ISO8601 format (e.g. `2019-12-31T23:59:59Z` where Z is the timezone)</param>
         /// <param name="arrival">The last moment where the traveller would like to arrive, in ISO8601 format</param>
         /// <param name="internalTransferTime">The number of seconds the traveller needs to transfer trains within the station. Increase for less mobile users</param>
-        /// <param name="transferPenalty">If two journeys depart at the same moment, and one is slightly faster at the cost of transfers, don't show the train with transfers if it is only 'penalty*number of transfers' faster</param>
+        /// <param name="walksGeneratorDescription">Describes the internal walk policy. Have a look at /status to see what is supported</param>
         /// <param name="prune">If false, more options will be given (mostly choices in transfer station)</param>
         [HttpGet]
         public ActionResult<QueryResult> Get(
@@ -34,7 +34,7 @@ namespace Itinero.Transit.Api.Controllers
             DateTime? departure = null,
             DateTime? arrival = null,
             uint internalTransferTime = 180,
-            uint transferPenalty = 300,
+            string walksGeneratorDescription = "https://openplanner.team/itinero-transit/walks/crowsflight&maxDistance=500",
             bool prune = true
         )
         {
@@ -45,8 +45,10 @@ namespace Itinero.Transit.Api.Controllers
 
             var start = DateTime.Now;
 
-            var profile = new RealLifeProfile(internalTransferTime, transferPenalty);
 
+            var profile =JourneyBuilder.CreateProfile(from, to, 
+                walksGeneratorDescription, 
+                internalTransferTime);
             var (journeys, queryStart, queryEnd) = profile.BuildJourneys(from, to, departure, arrival);
 
             // ReSharper disable once PossibleMultipleEnumeration

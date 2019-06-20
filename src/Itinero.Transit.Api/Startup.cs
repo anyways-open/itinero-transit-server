@@ -30,7 +30,7 @@ namespace Itinero.Transit.Api
 
         private void StartLoadingTransitDbs()
         {
-            var state = new State(Configuration.CreateTransitDbs()) 
+            var state = new State(Configuration.CreateTransitDbs(), new OtherModeBuilder()) 
                 {FreeMessage = "Loading transitdbs"};
             State.GlobalState = state;
 

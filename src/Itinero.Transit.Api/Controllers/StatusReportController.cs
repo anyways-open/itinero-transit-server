@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Itinero.Transit.Api.Logic;
 using Itinero.Transit.Api.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -24,12 +25,14 @@ namespace Itinero.Transit.Api.Controllers
             if (state == null)
             {
                 return new StatusReport(
-                    DateTime.MaxValue,
-                    (long) (DateTime.Now - state.BootTime).TotalSeconds,
+                    DateTime.Now,
+                    0,
                     null,
                     State.Version,
                     new Dictionary<string, string>()
-                        {{"statusmessage", "Still booting, hang on"}}
+                        {{"statusmessage", "Still booting, hang on"}},
+                    new List<string>(), 
+                    new List<string>()
                 );
             }
 
@@ -37,7 +40,11 @@ namespace Itinero.Transit.Api.Controllers
             {
                 foreach (var (name, (_, synchronizer)) in state.TransitDbs)
                 {
-                    loadedTimeWindows.Add(name, synchronizer.LoadedTimeWindows);
+                    if (synchronizer.LoadedTimeWindows != null)
+                    {
+                        loadedTimeWindows.Add(name, synchronizer.LoadedTimeWindows);
+                    }
+
                     if (synchronizer.CurrentlyRunning != null)
                     {
                         tasks.Add(name, synchronizer.CurrentlyRunning.ToString());
@@ -53,7 +60,9 @@ namespace Itinero.Transit.Api.Controllers
                 (long) (DateTime.Now - state.BootTime).TotalSeconds,
                 loadedTimeWindows,
                 State.Version,
-                tasks
+                tasks,
+                state.OtherModeBuilder.SupportedUrls(),
+                state.OtherModeBuilder.OsmVehicleProfiles.Select(prof => prof.Name).ToList()
             );
         }
     }

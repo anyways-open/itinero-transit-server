@@ -40,28 +40,38 @@ namespace Itinero.Transit.Api.Models
         /// </summary>
         public readonly string Version;
 
+        public readonly List<string> SupportedProfiles;
+        public readonly List<string> SupportedOsmProfiles;
+
         public readonly Dictionary<string, string> CurrentRunningTask;
 
 
         public StatusReport(DateTime onlineSince, long uptime,
             Dictionary<string, IEnumerable<(DateTime start, DateTime end)>> loadedTimeWindows,
-            string version, Dictionary<string, string> currentRunningTask)
+            string version, Dictionary<string, string> currentRunningTask, List<string> supportedProfiles,
+            List<string> supportedOsmProfiles)
         {
             OnlineSince = onlineSince;
             Uptime = uptime;
             LoadedTimeWindows = new Dictionary<string, List<TimeWindow>>();
-            foreach (var (k, windows) in loadedTimeWindows)
+            if (loadedTimeWindows != null)
             {
-                var ls = new List<TimeWindow>();
-                foreach (var w in windows)
+                foreach (var (k, windows) in loadedTimeWindows)
                 {
-                    ls.Add(new TimeWindow(w));
+                    var ls = new List<TimeWindow>();
+                    foreach (var w in windows)
+                    {
+                        ls.Add(new TimeWindow(w));
+                    }
+
+                    LoadedTimeWindows.Add(k, ls);
                 }
-                LoadedTimeWindows.Add(k, ls);
             }
 
             Version = version;
             CurrentRunningTask = currentRunningTask;
+            SupportedProfiles = supportedProfiles;
+            SupportedOsmProfiles = supportedOsmProfiles;
         }
 
         public class TimeWindow

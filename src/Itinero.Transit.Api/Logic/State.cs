@@ -4,6 +4,7 @@ using System.Linq;
 using Itinero.Transit.Data;
 using Itinero.Transit.Data.Aggregators;
 using Itinero.Transit.Data.Synchronization;
+using Itinero.Transit.IO.OSM.Data;
 
 namespace Itinero.Transit.Api.Logic
 {
@@ -45,8 +46,9 @@ namespace Itinero.Transit.Api.Logic
         /// </summary>
         public readonly DateTime BootTime;
 
+        public readonly OtherModeBuilder OtherModeBuilder;
 
-        public State(Dictionary<string, (TransitDb tdb, Synchronizer synchronizer)> transitDbs)
+        public State(Dictionary<string, (TransitDb tdb, Synchronizer synchronizer)> transitDbs, OtherModeBuilder otherModeBuilder)
         {
             if (transitDbs.Count == 0)
             {
@@ -54,6 +56,7 @@ namespace Itinero.Transit.Api.Logic
             }
             
             TransitDbs = transitDbs;
+            OtherModeBuilder = otherModeBuilder;
             BootTime = DateTime.Now;
             
         }
@@ -62,6 +65,7 @@ namespace Itinero.Transit.Api.Logic
         {
             var readers = All().Select(tdb =>
                 (IStopsReader) tdb.StopsDb.GetReader()).ToList();
+            readers.Add(new OsmLocationStopReader((uint) readers.Count));
             return
                 StopsReaderAggregator.CreateFrom(readers);
         }

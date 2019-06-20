@@ -43,13 +43,13 @@ namespace Test
 
             var journey1 = journey0.ChainSpecial(
                 Journey<TransferMetric>.OTHERMODE, depDate.AddMinutes(15).ToUnixTime(),
-                stop2, TripId.Walk);
+                stop2, new TripId(uint.MaxValue, uint.MaxValue));
 
 
             var state = new State(new Dictionary<string, (TransitDb tdb, Synchronizer synchronizer)>()
             {
                 {"test", (tdb, null)}
-            });
+            }, null);
 
             var translated = state.Translate(journey1);
             Assert.Equal("https://example.org/stop0", translated.Segments[0].Departure.Location.Id);
