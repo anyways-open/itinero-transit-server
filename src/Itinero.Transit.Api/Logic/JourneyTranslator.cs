@@ -102,6 +102,13 @@ namespace Itinero.Transit.Api.Logic
                 {
                     // This is a piece where we walk/cycle/... or some other continuous transportation mode
 
+                    if (j.Location.Equals(j.PreviousLink.Location))
+                    {
+                        // Object represent a transfer without moving...
+                        // We skip this if the next is an othermode as well
+                        continue;
+                    }
+
                     var departure = dbs.LocationOf(j.PreviousLink.Location);
                     var departureTimed = new TimedLocation(
                         departure, j.PreviousLink.Time, 0);
@@ -122,7 +129,7 @@ namespace Itinero.Transit.Api.Logic
             }
 
 
-            return new Models.Journey(segments, vehiclesTaken - 1);
+            return new Models.Journey(segments, vehiclesTaken);
         }
 
         public static List<Models.Journey> Translate<T>(
