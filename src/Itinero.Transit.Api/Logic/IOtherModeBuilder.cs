@@ -106,15 +106,26 @@ namespace Itinero.Transit.Api.Logic
             return urls;
         }
 
+        private readonly Dictionary<string, IOtherModeGenerator> _cachedOtherModeGenerators =
+            new Dictionary<string, IOtherModeGenerator>();
+
+
         public IOtherModeGenerator Create(string description, List<LocationId> starts, List<LocationId> ends)
         {
+            if (_cachedOtherModeGenerators.ContainsKey(description))
+            {
+                return _cachedOtherModeGenerators[description];
+            }
+
             var fixedPart = description.Split("&")[0];
             if (!Factories.ContainsKey(fixedPart))
             {
                 throw new KeyNotFoundException("The profile could not be decoded: " + description);
             }
 
-            return Factories[fixedPart](description, starts, ends);
+            var walkGen = Factories[fixedPart](description, starts, ends).UseCache();
+            _cachedOtherModeGenerators[description] = walkGen;
+            return walkGen;
         }
 
 

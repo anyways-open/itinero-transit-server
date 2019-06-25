@@ -12,7 +12,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Itinero.Transit" Version="1.0.0-pre35" />
+        <PackageReference Include="Itinero.Transit" Version="1.0.0-pre36" />
         <PackageReference Include="Itinero.Transit.IO.LC" Version="1.0.0-pre35" />
         <PackageReference Include="Itinero.Transit.IO.OSM" Version="1.0.0-pre35" />
         <PackageReference Include="Microsoft.AspNetCore.App" />

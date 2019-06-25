@@ -25,7 +25,8 @@ namespace Itinero.Transit.Api.Controllers
         /// <param name="departure">The earliest moment when the traveller would like to depart, in ISO8601 format (e.g. `2019-12-31T23:59:59Z` where Z is the timezone)</param>
         /// <param name="arrival">The last moment where the traveller would like to arrive, in ISO8601 format</param>
         /// <param name="internalTransferTime">The number of seconds the traveller needs to transfer trains within the station. Increase for less mobile users</param>
-        /// <param name="walksGeneratorDescription">Describes the internal walk policy. Have a look at /status to see what is supported</param>
+        /// <param name="walksGeneratorDescription">Describes the walk policy, such as a crows flight policy or osm-routing policy. These are URLs as well, have a look at /status to see what walk policies are supported. To have a different first mile and last mile, use the 'FirstLastMile' policy which exhibits this complex behaviour</param>
+        /// <param name="maxNumberOfTransfers">The maximum number of transfers allowed during the earliest arrival scan</param>
         /// <param name="prune">If false, more options will be given (mostly choices in transfer station)</param>
         [HttpGet]
         public ActionResult<QueryResult> Get(
@@ -34,7 +35,9 @@ namespace Itinero.Transit.Api.Controllers
             DateTime? departure = null,
             DateTime? arrival = null,
             uint internalTransferTime = 180,
-            string walksGeneratorDescription = "https://openplanner.team/itinero-transit/walks/crowsflight&maxDistance=500",
+            string walksGeneratorDescription =
+                "https://openplanner.team/itinero-transit/walks/crowsflight&maxDistance=500",
+            uint maxNumberOfTransfers = 4,
             bool prune = true
         )
         {
@@ -46,9 +49,10 @@ namespace Itinero.Transit.Api.Controllers
             var start = DateTime.Now;
 
 
-            var profile =JourneyBuilder.CreateProfile(from, to, 
-                walksGeneratorDescription, 
-                internalTransferTime);
+            var profile = JourneyBuilder.CreateProfile(from, to,
+                walksGeneratorDescription,
+                internalTransferTime,
+                maxNumberOfTransfers: maxNumberOfTransfers);
             var (journeys, queryStart, queryEnd) = profile.BuildJourneys(from, to, departure, arrival);
 
             // ReSharper disable once PossibleMultipleEnumeration
