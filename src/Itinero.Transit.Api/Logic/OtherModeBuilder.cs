@@ -1,13 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Text.RegularExpressions;
 using Itinero.Profiles;
 using Itinero.Profiles.Lua.Osm;
 using Itinero.Transit.Data;
 using Itinero.Transit.IO.OSM;
 using Itinero.Transit.OtherMode;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Newtonsoft.Json.Linq;
 
 namespace Itinero.Transit.Api.Logic

@@ -27,7 +27,9 @@ namespace Itinero.Transit.Api.Logic
             Func<DateTime, DateTime, TimeSpan> searchLengthCalculator
         ) :
             base(
-                internalTransferGenerator, walksGenerator, TransferMetric.Factory,
+                internalTransferGenerator,
+                walksGenerator,
+                TransferMetric.Factory,
                 TransferMetric.ProfileTransferCompare,
                 allowCancelled ? null : new CancelledConnectionFilter(),
                 new ChangeableMaxNumberOfTransferFilter(uint.MaxValue))

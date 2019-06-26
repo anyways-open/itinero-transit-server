@@ -9,3 +9,4 @@
 **/testlog.txt
 **/*.transitdb
 **log.txt
+**perf.data**

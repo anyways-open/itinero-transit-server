@@ -11,14 +11,14 @@ namespace Itinero.Transit.API.Tests.Functional
     {
         public static List<string> Sources = new List<string>
         {
+            "testdata_2019-06-24_2019-06-31/nmbs.latest.transitdb",
             "testdata_2019-06-24_2019-06-31/gent-P&R.latest.transitdb",
             "testdata_2019-06-24_2019-06-31/brugge-shuttlebus.latest.transitdb",
-            "testdata_2019-06-24_2019-06-31/nmbs.latest.transitdb",
             "testdata_2019-06-24_2019-06-31/delijn-ant.latest.transitdb",
             "testdata_2019-06-24_2019-06-31/delijn-lim.latest.transitdb",
             "testdata_2019-06-24_2019-06-31/delijn-ovl.latest.transitdb",
             "testdata_2019-06-24_2019-06-31/delijn-vlb.latest.transitdb",
-            "testdata_2019-06-24_2019-06-31/delijn-wvl.latest.transitdb",
+            "testdata_2019-06-24_2019-06-31/delijn-wvl.latest.transitdb"
         };
 
         public const string Gent = "http://irail.be/stations/NMBS/008892007";
@@ -38,22 +38,24 @@ namespace Itinero.Transit.API.Tests.Functional
             var dict = LoadTransitDbs(sources);
 
 
-
             var st = new State(dict, new OtherModeBuilder());
             State.GlobalState = st;
 
-            RunTest();
-            RunTest();
+            for (int i = 0; i < 25; i++)
+            {
+                Information($"{i}/25");
+                RunTest();
+            }
         }
 
         private void RunTest()
         {
             var start = DateTime.Now;
-            var from = Poperinge;
-            var to = Vielsalm;
+            var from = Brugge;
+            var to = Gent;
 
             var departure = new DateTime(2019, 06, 25, 9, 00, 00, DateTimeKind.Utc);
-            var arrival = new DateTime(2019, 06, 25, 18, 00, 00, DateTimeKind.Utc);
+            var arrival = new DateTime(2019, 06, 25, 12, 00, 00, DateTimeKind.Utc);
 
             var profile = JourneyBuilder.CreateProfile(
                 @from, to,
@@ -73,7 +75,8 @@ namespace Itinero.Transit.API.Tests.Functional
             Information($"Found {journeys.Count} journeys in {(end - start).TotalMilliseconds}ms");
         }
 
-        private Dictionary<string, (TransitDb tdb, Synchronizer synchronizer)> LoadTransitDbs(IEnumerable<string> sources)
+        private Dictionary<string, (TransitDb tdb, Synchronizer synchronizer)> LoadTransitDbs(
+            IEnumerable<string> sources)
         {
             var dict
                 = new Dictionary<string, (TransitDb tdb, Synchronizer synchronizer)>();

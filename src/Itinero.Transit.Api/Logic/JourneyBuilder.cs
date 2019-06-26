@@ -69,12 +69,12 @@ namespace Itinero.Transit.Api.Logic
             arrival = arrival?.ToUniversalTime();
 
 
-            var precalculator = 
+            var precalculator =
                 State.GlobalState.All()
-                .SelectProfile(p)
-                .SetStopsReader(State.GlobalState.GetStopsReader((uint) p.WalksGenerator.Range()))
-                .UseOsmLocations()
-                .SelectStops(from, to);
+                    .SelectProfile(p)
+                    .SetStopsReader(State.GlobalState.GetStopsReader((uint) (p.WalksGenerator?.Range() ?? 0)))
+                    .UseOsmLocations()
+                    .SelectStops(from, to);
             WithTime<TransferMetric> calculator;
             if (departure == null)
             {
