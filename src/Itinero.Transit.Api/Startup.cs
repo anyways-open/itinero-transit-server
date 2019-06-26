@@ -39,7 +39,7 @@ namespace Itinero.Transit.Api
                                 .Select(kvp => kvp.Key)));
 
             state.NameIndex = new NameIndexBuilder(new List<string> {"name:nl", "name", "name:fr"})
-                .Build(state.GetStopsReader());
+                .Build(state.GetStopsReader(0));
 
 
             Log.Information("Performing initial runs");
@@ -177,7 +177,7 @@ namespace Itinero.Transit.Api
             app.UseCors("AllowAllOrigins");
         }
 
-        private static void ConfigureLogging()
+        public static void ConfigureLogging()
         {
             var date = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
             var logFile = Path.Combine("logs", $"log-itinero-{date}.txt");

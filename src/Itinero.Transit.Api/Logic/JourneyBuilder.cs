@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
-using Itinero.Profiles;
 using Itinero.Transit.Data;
 using Itinero.Transit.IO.OSM.Data;
-using Itinero.Transit.Journey.Metric;
 using Itinero.Transit.Journey;
+using Itinero.Transit.Journey.Metric;
+using Itinero.Transit.OtherMode;
 
 namespace Itinero.Transit.Api.Logic
 {
@@ -17,13 +17,18 @@ namespace Itinero.Transit.Api.Logic
             string walksGeneratorDescription,
             uint internalTransferTime = 180,
             double searchFactor = 2.5,
-            uint minimalSearchTimeSeconds = 2 * 60 * 60)
+            uint minimalSearchTimeSeconds = 2 * 60 * 60,
+            bool allowCancelled = false,
+            uint maxNumberOfTransfers = uint.MaxValue
+        )
         {
-            var stops = State.GlobalState.GetStopsReader();
+            var stops = State.GlobalState.GetStopsReader(0);
+
             stops.MoveTo(from);
             var fromId = stops.Id;
             stops.MoveTo(to);
             var toId = stops.Id;
+
 
             var walksGenerator = State.GlobalState.OtherModeBuilder.Create(
                 walksGeneratorDescription,
@@ -31,11 +36,20 @@ namespace Itinero.Transit.Api.Logic
                 new List<LocationId> {toId}
             );
 
+
+            var internalTransferGenerator = new InternalTransferGenerator(internalTransferTime);
+
+            var searchFunction =
+                RealLifeProfile.DefaultSearchLengthSearcher(searchFactor,
+                    TimeSpan.FromSeconds(minimalSearchTimeSeconds));
+
             return new RealLifeProfile(
+                internalTransferGenerator,
                 walksGenerator,
-                internalTransferTime,
-                searchFactor,
-                minimalSearchTimeSeconds);
+                allowCancelled,
+                maxNumberOfTransfers,
+                searchFunction
+            );
         }
 
 
@@ -50,12 +64,15 @@ namespace Itinero.Transit.Api.Logic
                     "At least one date should be given, either departure time or arrival time (or both)");
             }
 
+
             departure = departure?.ToUniversalTime();
             arrival = arrival?.ToUniversalTime();
 
 
-            var precalculator = State.GlobalState.All()
+            var precalculator = 
+                State.GlobalState.All()
                 .SelectProfile(p)
+                .SetStopsReader(State.GlobalState.GetStopsReader((uint) p.WalksGenerator.Range()))
                 .UseOsmLocations()
                 .SelectStops(from, to);
             WithTime<TransferMetric> calculator;
@@ -84,6 +101,10 @@ namespace Itinero.Transit.Api.Logic
                 // Perform isochrone to speed up 'all journeys'
                 calculator.IsochroneFrom();
             }
+
+
+            // We lower the max number of transfers to speed up calculations
+            p.ApplyMaxNumberOfTransfers();
 
 
             return (calculator.AllJourneys(), calculator.Start, calculator.End);
