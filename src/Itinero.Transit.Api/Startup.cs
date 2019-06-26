@@ -148,15 +148,14 @@ namespace Itinero.Transit.Api
                     };
                     document.BasePath = req.PathBase;
                     document.Host = req.Host.Value;
+                    document.Schemes = new List<SwaggerSchema>(new []
+                    {
+                        SwaggerSchema.Https
+                    });
 #if DEBUG
                     document.Schemes = new List<SwaggerSchema>(new[]
                     {
                         SwaggerSchema.Http
-                    });
-#else
-                    document.Schemes = new List<SwaggerSchema>(new []
-                    {
-                        SwaggerSchema.Https
                     });
 #endif
                 };
