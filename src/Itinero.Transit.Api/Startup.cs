@@ -152,12 +152,12 @@ namespace Itinero.Transit.Api
                     {
                         SwaggerSchema.Https
                     });
-#if DEBUG
-                    document.Schemes = new List<SwaggerSchema>(new[]
-                    {
-                        SwaggerSchema.Http
-                    });
-#endif
+//#if DEBUG
+//                    document.Schemes = new List<SwaggerSchema>(new[]
+//                    {
+//                        SwaggerSchema.Http
+//                    });
+//#endif
                 };
             });
             app.UseSwaggerUi3(config => config.TransformToExternalPath = (internalUiRoute, request) =>
