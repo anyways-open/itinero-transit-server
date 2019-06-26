@@ -148,6 +148,13 @@ namespace Itinero.Transit.Api
                     };
                     document.BasePath = req.PathBase;
                     document.Host = req.Host.Value;
+                    if (req.Scheme == "https")
+                    {
+                        document.Schemes = new List<SwaggerSchema>(new []
+                        {
+                            SwaggerSchema.Https
+                        });
+                    }
                 };
             });
             app.UseSwaggerUi3(config => config.TransformToExternalPath = (internalUiRoute, request) =>
