@@ -1,6 +1,7 @@
-using Itinero.Transit.Journey;
+
 using Itinero.Transit.Journey.Filter;
 using Itinero.Transit.Journey.Metric;
+using Itinero.Transit.Journey;
 
 namespace Itinero.Transit.Api.Logic
 {

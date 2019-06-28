@@ -5,7 +5,6 @@ using Itinero.Transit.Data;
 using Itinero.Transit.Data.Aggregators;
 using Itinero.Transit.Data.Synchronization;
 using Itinero.Transit.IO.OSM.Data;
-using Itinero.Transit.OtherMode;
 using Serilog;
 
 namespace Itinero.Transit.Api.Logic

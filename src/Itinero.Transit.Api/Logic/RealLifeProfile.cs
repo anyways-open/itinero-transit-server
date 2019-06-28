@@ -3,8 +3,6 @@ using Itinero.Transit.Data;
 using Itinero.Transit.Journey.Filter;
 using Itinero.Transit.Journey.Metric;
 using Itinero.Transit.OtherMode;
-using Microsoft.AspNetCore.Identity.UI.Pages.Internal.Account;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Itinero.Transit.Api.Logic
 {
@@ -30,7 +28,7 @@ namespace Itinero.Transit.Api.Logic
                 internalTransferGenerator,
                 walksGenerator,
                 TransferMetric.Factory,
-                TransferMetric.ProfileTransferCompare,
+                TransferMetric.ParetoCompare,
                 allowCancelled ? null : new CancelledConnectionFilter(),
                 new ChangeableMaxNumberOfTransferFilter(uint.MaxValue))
         {

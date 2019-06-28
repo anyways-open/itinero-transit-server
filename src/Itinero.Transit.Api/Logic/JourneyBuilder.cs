@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using Itinero.Transit.Data;
 using Itinero.Transit.IO.OSM.Data;
-using Itinero.Transit.Journey;
 using Itinero.Transit.Journey.Metric;
 using Itinero.Transit.OtherMode;
+using Itinero.Transit.Journey;
 
 namespace Itinero.Transit.Api.Logic
 {
