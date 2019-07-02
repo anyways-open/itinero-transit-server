@@ -5,6 +5,7 @@ using Itinero.Transit.Api.Logic.Itinero.Transit.Journey.Metric;
 using Itinero.Transit.Api.Models;
 using Itinero.Transit.Journey.Metric;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 
 namespace Itinero.Transit.Api.Controllers
 {
@@ -42,6 +43,10 @@ namespace Itinero.Transit.Api.Controllers
             bool prune = true
         )
         {
+            from = Uri.UnescapeDataString(from);
+            to = Uri.UnescapeDataString(to);
+
+
             if (Equals(from, to))
             {
                 return BadRequest("The given from- and to- locations are the same");
