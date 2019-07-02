@@ -6,6 +6,7 @@ using Itinero.Transit.Data;
 using Itinero.Profiles.Lua.Osm;
 using Itinero.Transit.IO.OSM;
 using Itinero.Transit.OtherMode;
+using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json.Linq;
 
 namespace Itinero.Transit.Api.Logic
@@ -24,9 +25,21 @@ namespace Itinero.Transit.Api.Logic
             OsmProfiles.Bicycle
         };
 
-        public OtherModeBuilder()
+        public OtherModeBuilder(IConfiguration configuration)
         {
-            Factories.Add(
+            
+            AddFactories();
+            
+
+            // TODO Hervé: read the configuration here
+
+          //  OsmVehicleProfiles.Add(profile);
+
+        }
+
+        public void AddFactories()
+        {
+               Factories.Add(
                 new CrowsFlightTransferGenerator().FixedId(),
                 (str, __, _) =>
                 {
@@ -90,7 +103,7 @@ namespace Itinero.Transit.Api.Logic
                 }
             );
         }
-
+        
         public List<string> SupportedUrls()
         {
             var urls = new List<string>();

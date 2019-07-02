@@ -1,4 +1,5 @@
-﻿using Itinero.Transit.Api;
+﻿using System;
+using Itinero.Transit.Api;
 
 namespace Itinero.Transit.API.Tests.Functional
 {
@@ -9,14 +10,22 @@ namespace Itinero.Transit.API.Tests.Functional
         static void Main(string[] args)
         {
             Startup.ConfigureLogging();
-            
-            if (args.Length > 0)
+
+            if (args.Length <= 0)
+            {
+                Console.WriteLine("Either use --perf or specify a hostname");
+            }
+
+            ;
+            if (args[0].Equals("--perf"))
+            {
+                new PerfTest().Run(PerfTest.Sources);
+            }
+            else
             {
                 _host = args[0];
+                new ServerTest(_host).RunTests();
             }
-            
-            new PerfTest().Run(PerfTest.Sources);
-
         }
     }
 }
