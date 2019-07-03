@@ -29,11 +29,9 @@ namespace Itinero.Transit.Api.Logic
         {
             
             AddFactories();
+
             
-
             // TODO Hervé: read the configuration here
-
-          //  OsmVehicleProfiles.Add(profile);
 
         }
 
