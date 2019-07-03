@@ -58,3 +58,4 @@ Overview of other `Logic`: classes:
 - NameIndexBuilder builds such a trie
 - State contains the global state
 - TransitDbFactory reads the config, creates transitDbs for them and starts loading them
+
