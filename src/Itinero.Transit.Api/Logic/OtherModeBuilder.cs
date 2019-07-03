@@ -60,7 +60,7 @@ namespace Itinero.Transit.Api.Logic
                      dict.Value("speed", 1.4f)
                  );
              });
-
+             
             Factories.Add(
                 new OsmTransferGenerator().FixedId(),
                 (str, _, __) =>
