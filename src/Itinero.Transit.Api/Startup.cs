@@ -31,8 +31,18 @@ namespace Itinero.Transit.Api
 
         private void StartLoadingTransitDbs()
         {
-            
-            var otherModeBuilder = new OtherModeBuilder(Configuration.GetSection("OsmProfiles"));
+
+            OtherModeBuilder otherModeBuilder;
+
+            try
+            {
+                otherModeBuilder = new OtherModeBuilder(Configuration.GetSection("OsmProfiles"));
+            }
+            catch (Exception e)
+            {
+                Log.Error("Could not create all the other profiles: "+e);
+                otherModeBuilder = new OtherModeBuilder(null);
+            }
             
             var state = new State(Configuration.CreateTransitDbs(), otherModeBuilder) 
                 {FreeMessage = "Loading transitdbs"};
