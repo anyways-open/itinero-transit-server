@@ -30,37 +30,32 @@ namespace Itinero.Transit.Api.Logic
 
         public OtherModeBuilder(IConfiguration configuration = null)
         {
-
-
             AddFactories();
-            if (configuration != null)
+
+
+            if (configuration == null) return;
+
+
+            foreach (var path in configuration.GetChildren())
             {
-                foreach (var path in configuration.GetChildren())
-                {
-
-                    var profile = LuaProfile.Load(File.ReadAllText(@"ebike.lua"));
-                    //d profile.Name= "ebike";
-                    OsmVehicleProfiles.Add(profile);
-
-                }
+                var profile = LuaProfile.Load(File.ReadAllText(path.GetValue<string>("path")));
+                OsmVehicleProfiles.Add(profile);
             }
-
-
         }
 
-        public void AddFactories()
+        private void AddFactories()
         {
             Factories.Add(
-             new CrowsFlightTransferGenerator().FixedId(),
-             (str, __, _) =>
-             {
-                 var dict = Parse(str);
-                 return new CrowsFlightTransferGenerator(
-                     dict.Value("maxDistance", 500),
-                     dict.Value("speed", 1.4f)
-                 );
-             });
-             
+                new CrowsFlightTransferGenerator().FixedId(),
+                (str, __, _) =>
+                {
+                    var dict = Parse(str);
+                    return new CrowsFlightTransferGenerator(
+                        dict.Value("maxDistance", 500),
+                        dict.Value("speed", 1.4f)
+                    );
+                });
+
             Factories.Add(
                 new OsmTransferGenerator().FixedId(),
                 (str, _, __) =>
@@ -186,7 +181,7 @@ namespace Itinero.Transit.Api.Logic
             if (typeof(T).FullName == "System.String")
             {
                 // Hackety hack hack
-                return (T)(object)dict[key];
+                return (T) (object) dict[key];
             }
 
             // Yep, this is cheating ;)
