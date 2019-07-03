@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json.Linq;
 using Itinero.Profiles.Lua;
 using System.IO;
+using Serilog;
 
 
 namespace Itinero.Transit.Api.Logic
@@ -38,8 +39,15 @@ namespace Itinero.Transit.Api.Logic
 
             foreach (var path in configuration.GetChildren())
             {
-                var profile = LuaProfile.Load(File.ReadAllText(path.GetValue<string>("path")));
-                OsmVehicleProfiles.Add(profile);
+                try
+                {
+                    var profile = LuaProfile.Load(File.ReadAllText(path.GetValue<string>("path")));
+                    OsmVehicleProfiles.Add(profile);
+                }
+                catch (Exception e)
+                {
+                    Log.Error($"Could not load the OSM-Profile " + e);
+                }
             }
         }
 
