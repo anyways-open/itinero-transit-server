@@ -23,4 +23,10 @@
         <PackageReference Include="Serilog.Sinks.File" Version="4.0.0" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Update="ebike.lua">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
 </Project>
