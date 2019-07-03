@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Itinero.Transit.Data;
 using Serilog;
+// ReSharper disable CollectionNeverQueried.Global
 
 // ReSharper disable MemberCanBePrivate.Global
 

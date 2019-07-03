@@ -20,7 +20,7 @@ namespace Itinero.Transit.Api.Models
         /// <summary>
         /// When the server got online
         /// </summary>
-        public DateTime OnlineSince;
+        public readonly DateTime OnlineSince;
 
         /// <summary>
         /// The time (in seconds) that the server has been running

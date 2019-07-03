@@ -6,7 +6,11 @@ using Itinero.Transit.Data;
 using Itinero.Profiles.Lua.Osm;
 using Itinero.Transit.IO.OSM;
 using Itinero.Transit.OtherMode;
+using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json.Linq;
+using Itinero.Profiles.Lua;
+using System.IO;
+
 
 namespace Itinero.Transit.Api.Logic
 {
@@ -21,22 +25,42 @@ namespace Itinero.Transit.Api.Logic
         public readonly List<Profile> OsmVehicleProfiles = new List<Profile>()
         {
             OsmProfiles.Pedestrian,
-            OsmProfiles.Bicycle
+            OsmProfiles.Bicycle,
         };
 
-        public OtherModeBuilder()
+        public OtherModeBuilder(IConfiguration configuration = null)
+        {
+
+
+            AddFactories();
+            if (configuration != null)
+            {
+                foreach (var path in configuration.GetChildren())
+                {
+
+                    var profile = LuaProfile.Load(File.ReadAllText(@"ebike.lua"));
+                    //d profile.Name= "ebike";
+                    OsmVehicleProfiles.Add(profile);
+
+                }
+            }
+
+
+        }
+
+        public void AddFactories()
         {
             Factories.Add(
-                new CrowsFlightTransferGenerator().FixedId(),
-                (str, __, _) =>
-                {
-                    var dict = Parse(str);
-                    return new CrowsFlightTransferGenerator(
-                        dict.Value("maxDistance", 500),
-                        dict.Value("speed", 1.4f)
-                    );
-                });
-
+             new CrowsFlightTransferGenerator().FixedId(),
+             (str, __, _) =>
+             {
+                 var dict = Parse(str);
+                 return new CrowsFlightTransferGenerator(
+                     dict.Value("maxDistance", 500),
+                     dict.Value("speed", 1.4f)
+                 );
+             });
+             
             Factories.Add(
                 new OsmTransferGenerator().FixedId(),
                 (str, _, __) =>
@@ -162,7 +186,7 @@ namespace Itinero.Transit.Api.Logic
             if (typeof(T).FullName == "System.String")
             {
                 // Hackety hack hack
-                return (T) (object) dict[key];
+                return (T)(object)dict[key];
             }
 
             // Yep, this is cheating ;)

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Itinero.Profiles.Lua.Osm;
 using Itinero.Transit.Api.Logic;
 using Itinero.Transit.Logging;
 using Microsoft.AspNetCore.Builder;
@@ -30,7 +31,10 @@ namespace Itinero.Transit.Api
 
         private void StartLoadingTransitDbs()
         {
-            var state = new State(Configuration.CreateTransitDbs(), new OtherModeBuilder()) 
+            
+            var otherModeBuilder = new OtherModeBuilder(Configuration.GetSection("OsmProfiles"));
+            
+            var state = new State(Configuration.CreateTransitDbs(), otherModeBuilder) 
                 {FreeMessage = "Loading transitdbs"};
             State.GlobalState = state;
 
