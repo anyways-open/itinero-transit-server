@@ -28,34 +28,38 @@ namespace Itinero.Transit.Api.Logic
             OsmProfiles.Bicycle,
         };
 
-        public OtherModeBuilder(IConfiguration configuration)
+        public OtherModeBuilder(IConfiguration configuration = null)
         {
-            
-            
-            AddFactories();
-            foreach (var path in configuration.GetChildren())          
-            {
 
-            var profile =  LuaProfile.Load(File.ReadAllText(@"ebike.lua"));
-           //d profile.Name= "ebike";
-            OsmVehicleProfiles.Add(profile);
-          
+
+            AddFactories();
+            if (configuration != null)
+            {
+                foreach (var path in configuration.GetChildren())
+                {
+
+                    var profile = LuaProfile.Load(File.ReadAllText(@"ebike.lua"));
+                    //d profile.Name= "ebike";
+                    OsmVehicleProfiles.Add(profile);
+
+                }
             }
-          
+
+
         }
 
         public void AddFactories()
         {
-               Factories.Add(
-                new CrowsFlightTransferGenerator().FixedId(),
-                (str, __, _) =>
-                {
-                    var dict = Parse(str);
-                    return new CrowsFlightTransferGenerator(
-                        dict.Value("maxDistance", 500),
-                        dict.Value("speed", 1.4f)
-                    );
-                });
+            Factories.Add(
+             new CrowsFlightTransferGenerator().FixedId(),
+             (str, __, _) =>
+             {
+                 var dict = Parse(str);
+                 return new CrowsFlightTransferGenerator(
+                     dict.Value("maxDistance", 500),
+                     dict.Value("speed", 1.4f)
+                 );
+             });
 
             Factories.Add(
                 new OsmTransferGenerator().FixedId(),
@@ -110,7 +114,7 @@ namespace Itinero.Transit.Api.Logic
                 }
             );
         }
-        
+
         public List<string> SupportedUrls()
         {
             var urls = new List<string>();
@@ -182,7 +186,7 @@ namespace Itinero.Transit.Api.Logic
             if (typeof(T).FullName == "System.String")
             {
                 // Hackety hack hack
-                return (T) (object) dict[key];
+                return (T)(object)dict[key];
             }
 
             // Yep, this is cheating ;)

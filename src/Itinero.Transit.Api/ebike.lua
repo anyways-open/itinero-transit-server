@@ -2,27 +2,27 @@ name = "ebike"
 vehicle_types = { "vehicle", "bicycle" }
 
 speed_profile = {
-    ["primary"] = { speed = 15, access = true },
-    ["primary_link"] = { speed = 15, access = true },
-    ["secondary"] = { speed = 15, access = true },
-    ["secondary_link"] = { speed = 15, access = true },
-    ["tertiary"] = { speed = 15, access = true },
-    ["tertiary_link"] = { speed = 15, access = true },
-    ["unclassified"] = { speed = 15, access = true },
-    ["residential"] = { speed = 15, access = true },
-    ["service"] = { speed = 15, access = true },
-    ["services"] = { speed = 15, access = true },
-    ["road"] = { speed = 15, access = true },
-    ["track"] = { speed = 15, access = true },
-    ["cycleway"] = { speed = 15, access = true },
-    ["footway"] = { speed = 15, access = false },
-    ["pedestrian"] = { speed = 15, access = false },
-    ["path"] = { speed = 15, access = true },
-    ["living_street"] = { speed = 15, access = true },
-    ["ferry"] = { speed = 15, access = true },
-    ["movable"] = { speed = 15, access = true },
-    ["shuttle_train"] = { speed = 15, access = true },
-    ["default"] = { speed = 15, access = true }
+    ["primary"] = { speed = 25, access = true },
+    ["primary_link"] = { speed = 25, access = true },
+    ["secondary"] = { speed = 25, access = true },
+    ["secondary_link"] = { speed = 25, access = true },
+    ["tertiary"] = { speed = 25, access = true },
+    ["tertiary_link"] = { speed = 25, access = true },
+    ["unclassified"] = { speed = 25, access = true },
+    ["residential"] = { speed = 25, access = true },
+    ["service"] = { speed = 25, access = true },
+    ["services"] = { speed = 25, access = true },
+    ["road"] = { speed = 25, access = true },
+    ["track"] = { speed = 25, access = true },
+    ["cycleway"] = { speed = 25, access = true },
+    ["footway"] = { speed = 25, access = false },
+    ["pedestrian"] = { speed = 25, access = false },
+    ["path"] = { speed = 25, access = true },
+    ["living_street"] = { speed = 25, access = true },
+    ["ferry"] = { speed = 25, access = true },
+    ["movable"] = { speed = 25, access = true },
+    ["shuttle_train"] = { speed = 25, access = true },
+    ["default"] = { speed = 25, access = true }
 }
 
 access_values = {
