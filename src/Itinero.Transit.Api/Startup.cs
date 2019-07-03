@@ -32,7 +32,7 @@ namespace Itinero.Transit.Api
         private void StartLoadingTransitDbs()
         {
             
-            var otherModeBuilder = new OtherModeBuilder(Configuration["OsmProfiles"]);
+            var otherModeBuilder = new OtherModeBuilder(Configuration.GetSection("OsmProfiles"));
             
             var state = new State(Configuration.CreateTransitDbs(), otherModeBuilder) 
                 {FreeMessage = "Loading transitdbs"};

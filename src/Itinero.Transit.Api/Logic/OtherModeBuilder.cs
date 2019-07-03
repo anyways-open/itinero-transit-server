@@ -8,6 +8,9 @@ using Itinero.Transit.IO.OSM;
 using Itinero.Transit.OtherMode;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json.Linq;
+using Itinero.Profiles.Lua;
+using System.IO;
+
 
 namespace Itinero.Transit.Api.Logic
 {
@@ -22,19 +25,23 @@ namespace Itinero.Transit.Api.Logic
         public readonly List<Profile> OsmVehicleProfiles = new List<Profile>()
         {
             OsmProfiles.Pedestrian,
-            OsmProfiles.Bicycle
+            OsmProfiles.Bicycle,
         };
 
         public OtherModeBuilder(IConfiguration configuration)
         {
             
-            AddFactories();
             
+            AddFactories();
+            foreach (var path in configuration.GetChildren())          
+            {
 
-            // TODO Hervé: read the configuration here
-
-          //  OsmVehicleProfiles.Add(profile);
-
+            var profile =  LuaProfile.Load(File.ReadAllText(@"ebike.lua"));
+           //d profile.Name= "ebike";
+            OsmVehicleProfiles.Add(profile);
+          
+            }
+          
         }
 
         public void AddFactories()
