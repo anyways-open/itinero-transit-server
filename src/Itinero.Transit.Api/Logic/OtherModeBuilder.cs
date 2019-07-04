@@ -57,7 +57,7 @@ namespace Itinero.Transit.Api.Logic
                 new CrowsFlightTransferGenerator().FixedId(),
                 (str, __, _) =>
                 {
-                    var dict = Parse(str);
+                    var dict = ParseUriSettings(str);
                     return new CrowsFlightTransferGenerator(
                         dict.Value("maxDistance", 500),
                         dict.Value("speed", 1.4f)
@@ -68,16 +68,9 @@ namespace Itinero.Transit.Api.Logic
                 new OsmTransferGenerator().FixedId(),
                 (str, _, __) =>
                 {
-                    var dict = Parse(str);
+                    var dict = ParseUriSettings(str);
                     var profileName = dict.Value("profile", "pedestrian");
-                    var profile = OsmVehicleProfiles[0];
-                    foreach (var p in OsmVehicleProfiles)
-                    {
-                        if (p.Name == profileName)
-                        {
-                            profile = p;
-                        }
-                    }
+                    var profile = GetOsmProfile(profileName);
 
                     return new OsmTransferGenerator(
                         dict.Value("maxDistance", 500),
@@ -89,7 +82,7 @@ namespace Itinero.Transit.Api.Logic
                 new InternalTransferGenerator().FixedId(),
                 (str, _, __) =>
                 {
-                    var dict = Parse(str);
+                    var dict = ParseUriSettings(str);
                     return new InternalTransferGenerator(dict.Value<uint>("timeNeeded", 180));
                 });
 
@@ -100,7 +93,7 @@ namespace Itinero.Transit.Api.Logic
                     new DummyOtherMode(), new List<LocationId>()).FixedId(),
                 (str, departures, arrivals) =>
                 {
-                    var dict = Parse(str);
+                    var dict = ParseUriSettings(str);
                     var defaultModeString = new OsmTransferGenerator().OtherModeIdentifier();
                     var defaultMode = dict.Value("default", defaultModeString);
                     var firstMile = dict.Value("firstMile", defaultModeString);
@@ -157,7 +150,12 @@ namespace Itinero.Transit.Api.Logic
         private static readonly Regex _regex = new Regex(@"[?|&]([\w\.]+)=([^?|^&]+)");
 
 
-        public static IReadOnlyDictionary<string, string> Parse(string uri)
+        /// <summary>
+        /// Converts the URI into a dictionary of settings
+        /// </summary>
+        /// <param name="uri"></param>
+        /// <returns></returns>
+        private static IReadOnlyDictionary<string, string> ParseUriSettings(string uri)
         {
             var parameters = new Dictionary<string, string>();
             if (string.IsNullOrEmpty(uri))

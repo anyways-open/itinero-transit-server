@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Itinero.IO.Osm.Tiles;
-using Itinero.Profiles.Lua.Osm;
 using Itinero.Transit.Api.Logic;
 using Itinero.Transit.Logging;
 using Microsoft.AspNetCore.Builder;
@@ -59,7 +58,7 @@ namespace Itinero.Transit.Api
                                 .Select(kvp => kvp.Key)));
 
             state.NameIndex = new NameIndexBuilder(new List<string> {"name:nl", "name", "name:fr"})
-                .Build(state.GetStopsReader(0));
+                .Build(state.GetStopsReader());
 
 
             Log.Information("Performing initial runs");

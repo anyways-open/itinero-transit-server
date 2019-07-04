@@ -28,7 +28,7 @@ namespace Itinero.Transit.Api.Logic
                 internalTransferGenerator,
                 walksGenerator,
                 TransferMetric.Factory,
-                TransferMetric.ProfileTransferCompare,
+                TransferMetric.ParetoCompare,
                 allowCancelled ? null : new CancelledConnectionFilter(),
                 new ChangeableMaxNumberOfTransferFilter(uint.MaxValue))
         {

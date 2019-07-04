@@ -23,7 +23,7 @@ namespace Itinero.Transit.Api.Logic
             uint maxNumberOfTransfers = uint.MaxValue
         )
         {
-            var stops = State.GlobalState.GetStopsReader(0);
+            var stops = State.GlobalState.GetStopsReader();
 
             stops.MoveTo(from);
             var fromId = stops.Id;
@@ -65,7 +65,6 @@ namespace Itinero.Transit.Api.Logic
                     "At least one date should be given, either departure time or arrival time (or both)");
             }
 
-
             departure = departure?.ToUniversalTime();
             arrival = arrival?.ToUniversalTime();
 
@@ -73,7 +72,6 @@ namespace Itinero.Transit.Api.Logic
             var precalculator =
                 State.GlobalState.All()
                     .SelectProfile(p)
-                    .SetStopsReader(State.GlobalState.GetStopsReader((uint) (p.WalksGenerator?.Range() ?? 0)))
                     .UseOsmLocations()
                     .SelectStops(from, to);
             WithTime<TransferMetric> calculator;

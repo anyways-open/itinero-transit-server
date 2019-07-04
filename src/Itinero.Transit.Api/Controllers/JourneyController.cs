@@ -69,7 +69,7 @@ namespace Itinero.Transit.Api.Controllers
             // ReSharper disable once PossibleMultipleEnumeration
             if (journeys == null || !journeys.Any())
             {
-                return NotFound("No possible journeys were found for your request");
+                return BadRequest("No possible journeys were found for your request");
             }
 
 

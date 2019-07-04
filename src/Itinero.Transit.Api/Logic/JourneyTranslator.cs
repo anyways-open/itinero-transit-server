@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Itinero.Transit.Api.Models;
 using Itinero.Transit.Data;
+using Itinero.Transit.Data.Aggregators;
+using Itinero.Transit.IO.OSM.Data;
 using Itinero.Transit.Journey;
 using Itinero.Transit.Utils;
 
@@ -146,13 +149,20 @@ namespace Itinero.Transit.Api.Logic
 
         public static Location LocationOf(this State dbs, string globalId)
         {
-            var stops = dbs.GetStopsReader(0);
+            var stops = dbs.GetStopsReader();
             return !stops.MoveTo(globalId) ? null : new Location(stops);
         }
 
         private static Location LocationOf(this State dbs, LocationId localId)
         {
-            var stops = dbs.GetStopsReader(0);
+            var stops = dbs.GetStopsReader();
+
+            stops = StopsReaderAggregator.CreateFrom(
+                new List<IStopsReader>
+                {
+                    stops, new OsmLocationStopReader(stops.DatabaseIndexes().Max() + 1)
+                });
+
             if (!stops.MoveTo(localId))
             {
                 throw new NullReferenceException("Location " + localId + " not found");
@@ -166,7 +176,7 @@ namespace Itinero.Transit.Api.Logic
             string globalId, DateTime time, TimeSpan window)
         {
             if (dbs == null) throw new ArgumentNullException(nameof(dbs));
-            var stops = dbs.GetStopsReader(0);
+            var stops = dbs.GetStopsReader();
             if (!stops.MoveTo(globalId))
             {
                 return null;

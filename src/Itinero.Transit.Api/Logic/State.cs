@@ -27,7 +27,7 @@ namespace Itinero.Transit.Api.Logic
         /// A version information string - useful to see what version is in production.
         /// The first letter of the word is increased alphabetically
         /// </summary>
-        public const string Version = "Osoc Earliest Arrival Only (Itinero-transit 1.0.0-pre41)";
+        public const string Version = "Osoc Earliest Arrival Only + OSM Arrival Fix (Itinero-transit 1.0.0-pre46)";
 
         /// <summary>
         /// This dictionary contains all the loaded transitDbs, indexed on their name.
@@ -68,8 +68,6 @@ namespace Itinero.Transit.Api.Logic
         /// What kinds of walk-generators are available?
         /// </summary>
         public readonly OtherModeBuilder OtherModeBuilder;
-        
-        
 
 
         private readonly Dictionary<uint, IStopsReader> _stopsReaderCloseLocationsCached
@@ -92,60 +90,15 @@ namespace Itinero.Transit.Api.Logic
 
         /// <summary>
         /// Get a stops reader for all the loaded databases.
-        /// Note that we keep a few stopsreaders around to provide multiple levels of caching.
-        /// If searchRange == 0, that means that no caching is needed
         /// </summary>
         /// <returns></returns>
-        public IStopsReader GetStopsReader(uint searchRange)
+        public IStopsReader GetStopsReader()
         {
-            if (_stopsReaderCloseLocationsCached.ContainsKey(searchRange))
-            {
-                // TODO FIXME BUG This might not be threadsafe
-                // Two threads could possible have the same stopsreader at the same moment and move them to different stops
-                // The read them getting wrong locations...
-                return _stopsReaderCloseLocationsCached[searchRange];
-            }
-
-
-            // Create the reader for the StopDb
             var reader = StopsReaderAggregator.CreateFrom(
                 All().Select(tdb =>
                     (IStopsReader) tdb.StopsDb.GetReader()).ToList());
 
-            if (searchRange > 0)
-            {
-                // Apply caching
-                reader = reader.UseCache();
-
-                var start = DateTime.Now;
-                reader.Reset();
-                while (reader.MoveNext())
-                {
-                    var current = (IStop) reader;
-                    // For each stop, determine what locations are in range.
-                    // Although the result is thrown away here, it is cached as well
-                    reader.LocationsInRange(
-                        current.Latitude, current.Longitude,
-                        searchRange);
-                }
-
-                var end = DateTime.Now;
-                Log.Information($"Caching stops within range {searchRange} took {(end - start).TotalMilliseconds}ms");
-            }
-
-            // And throw in an extra (non-cached) OSM-reader to be able to parse floating URLS
-            reader = StopsReaderAggregator.CreateFrom(
-                new List<IStopsReader>
-                {
-                    reader,
-                    new OsmLocationStopReader(
-                        (uint) TransitDbs.Count)
-                });
-
-            // All set!
-            _stopsReaderCloseLocationsCached[searchRange] = reader;
-
-            return reader;
+            return reader.UseCache();
         }
 
         public IConnectionReader GetConnectionsReader()
@@ -176,7 +129,5 @@ namespace Itinero.Transit.Api.Logic
         {
             return TransitDbs.Select(v => v.Value.tdb.Latest);
         }
-
-      
     }
 }

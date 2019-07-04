@@ -1,9 +1,10 @@
 using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
-using Reminiscence.Collections;
 
 namespace Itinero.Transit.API.Tests.Functional
 {
@@ -33,7 +34,7 @@ namespace Itinero.Transit.API.Tests.Functional
                 {
                     AssertTrue(jobj["online"].Value<bool>(), "Not online");
                     var loadedWindows = jobj["loadedTimeWindows"].Count();
-                    AssertTrue(loadedWindows == 3 || loadedWindows == 8, "Not all operators are loaded");
+                    AssertTrue(loadedWindows == 2 || loadedWindows == 8, "Not all operators are loaded");
                 });
 
             // Do we find stops?
@@ -147,7 +148,7 @@ namespace Itinero.Transit.API.Tests.Functional
                 },
                 jobj =>
                 {
-                    AssertTrue(jobj["journeys"].Count() > 0, "No journeys found");
+                    AssertTrue(jobj["journeys"].Any(), "No journeys found");
                     foreach (var j in jobj["journeys"])
                     {
                         AssertEqual("https://www.openstreetmap.org/#map=19/51.19764/3.21847",
@@ -159,35 +160,58 @@ namespace Itinero.Transit.API.Tests.Functional
                     }
                 }
             );
+            
+            // And swap them around...
+            Challenge("Journey",
+                new Dictionary<string, string>
+                {
+                    {"from", "http://irail.be/stations/NMBS/008892007"},
+                    {"to", "https://www.openstreetmap.org/#map=19/51.19764/3.21847"},
+                    {"departure", DateTime.Now.ToString("s")}
+                },
+                jobj =>
+                {
+                    AssertTrue(jobj["journeys"].Any(), "No journeys found");
+                    foreach (var j in jobj["journeys"])
+                    {
+                        AssertEqual("https://www.openstreetmap.org/#map=19/51.19764/3.21847",
+                            j["arrival"]["location"]["id"],
+                            "Wrong arrival stations");
+
+                        AssertEqual("http://irail.be/stations/NMBS/008892007", j["departure"]["location"]["id"],
+                            "Wrong departure stations");
+                    }
+                }
+            );
 
             // Can we find journeys from one OSM location to a stop with crows flight?
             // With the osm-pedestrian profile
             // Close to Brugge station => Gent-Sint-Pieters
-          /*  Challenge("Journey",
-                new Dictionary<string, string>
-                {
-                    {"from", "https://www.openstreetmap.org/#map=19/51.19764/3.21847"},
-                    {"to", "http://irail.be/stations/NMBS/008892007"},
-                    {"departure", $"{DateTime.Now:s}Z"},
-                    {
-                        "walksGeneratorDescription",
-                        "https://openplanner.team/itinero-transit/walks/osm&maxDistance=500&profile=pedestrian"
-                    }
-                },
-                jobj =>
-                {
-                    AssertTrue(jobj["journeys"].Count() > 0, "No journeys found");
-                    foreach (var j in jobj["journeys"])
-                    {
-                        AssertEqual("https://www.openstreetmap.org/#map=1/51.19764/3.21847",
-                            j["departure"]["location"]["id"],
-                            "Wrong departure stations");
-
-                        AssertEqual("http://irail.be/stations/NMBS/008892007", j["arrival"]["location"]["id"],
-                            "Wrong arrival stations");
-                    }
-                }
-            ); //*/
+            /*  Challenge("Journey",
+                  new Dictionary<string, string>
+                  {
+                      {"from", "https://www.openstreetmap.org/#map=19/51.19764/3.21847"},
+                      {"to", "http://irail.be/stations/NMBS/008892007"},
+                      {"departure", $"{DateTime.Now:s}Z"},
+                      {
+                          "walksGeneratorDescription",
+                          "https://openplanner.team/itinero-transit/walks/osm&maxDistance=500&profile=pedestrian"
+                      }
+                  },
+                  jobj =>
+                  {
+                      AssertTrue(jobj["journeys"].Count() > 0, "No journeys found");
+                      foreach (var j in jobj["journeys"])
+                      {
+                          AssertEqual("https://www.openstreetmap.org/#map=1/51.19764/3.21847",
+                              j["departure"]["location"]["id"],
+                              "Wrong departure stations");
+  
+                          AssertEqual("http://irail.be/stations/NMBS/008892007", j["arrival"]["location"]["id"],
+                              "Wrong arrival stations");
+                      }
+                  }
+              ); //*/
 
 
             if (_failed)
@@ -222,6 +246,8 @@ namespace Itinero.Transit.API.Tests.Functional
             var url = endpoint + "?" + parameters;
 
             ChallengeAsync(url, property).ConfigureAwait(false).GetAwaiter().GetResult();
+
+            File.AppendAllLines("testURLS", new List<string> {url});
         }
 
         private static bool _failed;
