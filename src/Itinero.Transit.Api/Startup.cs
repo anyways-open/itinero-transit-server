@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Itinero.IO.Osm.Tiles;
 using Itinero.Profiles.Lua.Osm;
 using Itinero.Transit.Api.Logic;
 using Itinero.Transit.Logging;
@@ -44,7 +45,12 @@ namespace Itinero.Transit.Api
                 otherModeBuilder = new OtherModeBuilder(null);
             }
             
-            var state = new State(Configuration.CreateTransitDbs(), otherModeBuilder) 
+            var router = new RouterDb();
+            router.DataProvider = new DataProvider(router, 
+                "https://tiles.openplanner.team/planet");
+
+            
+            var state = new State(Configuration.CreateTransitDbs(), otherModeBuilder, router) 
                 {FreeMessage = "Loading transitdbs"};
             State.GlobalState = state;
 

@@ -39,7 +39,7 @@ namespace Itinero.Transit.API.Tests.Functional
             var dict = LoadTransitDbs(sources);
 
 
-            var st = new State(dict, new OtherModeBuilder());
+            var st = new State(dict, new OtherModeBuilder(), null);
             State.GlobalState = st;
 
             for (int i = 0; i < 25; i++)

@@ -5,6 +5,7 @@ using Itinero.Transit.IO.OSM.Data;
 using Itinero.Transit.Journey.Metric;
 using Itinero.Transit.OtherMode;
 using Itinero.Transit.Journey;
+using Itinero.Transit.Utils;
 
 namespace Itinero.Transit.Api.Logic
 {
@@ -82,11 +83,13 @@ namespace Itinero.Transit.Api.Logic
                 // We calculate one with a latest arrival scan search
                 calculator = precalculator.SelectTimeFrame(arrival.Value.AddDays(-1), arrival.Value);
                 // This will set the time frame correctly
-                calculator
+                var latest = calculator
                     .LatestDepartureJourney(tuple =>
                         tuple.journeyStart - p.SearchLengthCalculator(tuple.journeyStart, tuple.journeyEnd));
+                return (new List<Journey<TransferMetric>> {latest},
+                    latest.Root.Time.FromUnixTime(), latest.Time.FromUnixTime());
             }
-            else if (arrival == null)
+            else // if (arrival == null)
             {
                 calculator = precalculator.SelectTimeFrame(departure.Value, departure.Value.AddDays(1));
 
@@ -94,20 +97,23 @@ namespace Itinero.Transit.Api.Logic
                 // This will set the time frame correctly + install a filter
                 var earliestArrivalJourney = calculator.EarliestArrivalJourney(
                     tuple => tuple.journeyStart + p.SearchLengthCalculator(tuple.journeyStart, tuple.journeyEnd));
+                return (new List<Journey<TransferMetric>> {earliestArrivalJourney},
+                    earliestArrivalJourney.Root.Time.FromUnixTime(), earliestArrivalJourney.Time.FromUnixTime());
             }
-            else
-            {
-                calculator = precalculator.SelectTimeFrame(departure.Value, arrival.Value);
-                // Perform isochrone to speed up 'all journeys'
-                calculator.IsochroneFrom();
-            }
-
-
-            // We lower the max number of transfers to speed up calculations
-            p.ApplyMaxNumberOfTransfers();
-
-
-            return (calculator.AllJourneys(), calculator.Start, calculator.End);
         }
+
+/*     /* else
+      {
+          calculator = precalculator.SelectTimeFrame(departure.Value, arrival.Value);
+          // Perform isochrone to speed up 'all journeys'
+          calculator.IsochroneFrom();
+      }
+/*
+
+      // We lower the max number of transfers to speed up calculations
+     // p.ApplyMaxNumberOfTransfers();
+
+
+    //  return (calculator.AllJourneys(), calculator.Start, calculator.End);*/
     }
 }

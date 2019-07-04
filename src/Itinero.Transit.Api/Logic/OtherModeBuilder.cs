@@ -174,6 +174,19 @@ namespace Itinero.Transit.Api.Logic
 
             return parameters;
         }
+
+        public Profile GetOsmProfile(string profileName)
+        {
+            foreach (var p in OsmVehicleProfiles)
+            {
+                if (profileName.ToLower().Equals(p.Name.ToLower()))
+                {
+                    return p;
+                }
+            }
+
+            return null;
+        }
     }
 
     public static class HelperExtensions

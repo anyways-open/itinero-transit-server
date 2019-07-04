@@ -6,6 +6,7 @@ using Itinero.Transit.Api.Models;
 using Itinero.Transit.Journey.Metric;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
+using TravellingTimeMinimizer = Itinero.Transit.Api.Logic.Itinero.Transit.Journey.Metric.TravellingTimeMinimizer;
 
 namespace Itinero.Transit.Api.Controllers
 {
@@ -43,6 +44,10 @@ namespace Itinero.Transit.Api.Controllers
             bool prune = true
         )
         {
+            if (from == null || to == null)
+            {
+                return BadRequest("From or To is missing");
+            }
             from = Uri.UnescapeDataString(from);
             to = Uri.UnescapeDataString(to);
 

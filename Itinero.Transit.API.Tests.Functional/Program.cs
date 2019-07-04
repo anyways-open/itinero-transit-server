@@ -13,7 +13,8 @@ namespace Itinero.Transit.API.Tests.Functional
 
             if (args.Length <= 0)
             {
-                Console.WriteLine("Either use --perf or specify a hostname");
+                new ServerTest("http://localhost:5000").RunTests();
+                return;
             }
 
             ;

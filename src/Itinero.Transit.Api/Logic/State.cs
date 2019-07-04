@@ -20,12 +20,14 @@ namespace Itinero.Transit.Api.Logic
         /// </summary>
         public static State GlobalState;
 
+        public readonly RouterDb RouterDb;
+
 
         /// <summary>
         /// A version information string - useful to see what version is in production.
         /// The first letter of the word is increased alphabetically
         /// </summary>
-        public const string Version = "Osoc Hopper (Itinero-transit 1.0.0-pre34)";
+        public const string Version = "Osoc Earliest Arrival Only (Itinero-transit 1.0.0-pre41)";
 
         /// <summary>
         /// This dictionary contains all the loaded transitDbs, indexed on their name.
@@ -74,7 +76,7 @@ namespace Itinero.Transit.Api.Logic
             = new Dictionary<uint, IStopsReader>();
 
         public State(Dictionary<string, (TransitDb tdb, Synchronizer synchronizer)> transitDbs,
-            OtherModeBuilder otherModeBuilder)
+            OtherModeBuilder otherModeBuilder, RouterDb routerDb)
         {
             if (transitDbs.Count == 0)
             {
@@ -83,6 +85,7 @@ namespace Itinero.Transit.Api.Logic
 
             TransitDbs = transitDbs;
             OtherModeBuilder = otherModeBuilder;
+            RouterDb = routerDb;
             BootTime = DateTime.Now;
         }
 

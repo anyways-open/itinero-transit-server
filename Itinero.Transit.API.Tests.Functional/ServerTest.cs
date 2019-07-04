@@ -3,6 +3,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
+using Reminiscence.Collections;
 
 namespace Itinero.Transit.API.Tests.Functional
 {
@@ -24,7 +25,10 @@ namespace Itinero.Transit.API.Tests.Functional
         public void RunTests()
         {
             Console.WriteLine("Running integration tests");
+
+            // Is the server online?
             Challenge("status",
+                new Dictionary<string, string>(),
                 jobj =>
                 {
                     AssertTrue(jobj["online"].Value<bool>(), "Not online");
@@ -32,7 +36,12 @@ namespace Itinero.Transit.API.Tests.Functional
                     AssertTrue(loadedWindows == 3 || loadedWindows == 8, "Not all operators are loaded");
                 });
 
-            Challenge("LocationsByName?name=Brugge",
+            // Do we find stops?
+            Challenge("LocationsByName",
+                new Dictionary<string, string>
+                {
+                    {"name", "Brugge"}
+                },
                 jobj =>
                 {
                     // The first entry should respond with NMBS-station 'Brugge'
@@ -47,7 +56,12 @@ namespace Itinero.Transit.API.Tests.Functional
                 }
             );
 
-            Challenge("LocationsByName?name=Brugg",
+            // Do we find stops with spelling errors?
+            Challenge("LocationsByName",
+                new Dictionary<string, string>
+                {
+                    {"name", "Brugg"}
+                },
                 jobj =>
                 {
                     // The first entry should respond with NMBS-station 'Brugge'
@@ -63,7 +77,14 @@ namespace Itinero.Transit.API.Tests.Functional
             );
 
 
-            Challenge("LocationsAround?lat=51.1978&lon=3.2184&distance=500",
+            // Do we find locations around a stop?
+            Challenge("LocationsAround",
+                new Dictionary<string, string>()
+                {
+                    {"lat", "51.1978"},
+                    {"lon", "3.2184"},
+                    {"distance", "500"}
+                },
                 jobj =>
                 {
                     var ids = jobj.Select(location => location["id"]).ToList();
@@ -75,7 +96,12 @@ namespace Itinero.Transit.API.Tests.Functional
             );
 
 
-            Challenge("Location?id=http%3A%2F%2Firail.be%2Fstations%2FNMBS%2F008891009",
+            // Do we find information on a location
+            Challenge("Location",
+                new Dictionary<string, string>
+                {
+                    {"id", "http://irail.be/stations/NMBS/008891009"}
+                },
                 jobj =>
                 {
                     AssertEqual("51.1972295551607", jobj["lat"].Value<string>());
@@ -86,22 +112,15 @@ namespace Itinero.Transit.API.Tests.Functional
                 }
             );
 
-            Challenge("Location?id=http%3A%2F%2Firail.be%2Fstations%2FNMBS%2F008891009",
-                jobj =>
+
+            // Can we find journeys? Brugge => Gent-St-Pieters
+            Challenge("Journey",
+                new Dictionary<string, string>
                 {
-                    AssertEqual("51.1972295551607", jobj["lat"].Value<string>());
-                    AssertEqual(3.216724991798401, jobj["lon"].Value<double>());
-                    AssertEqual("http://irail.be/stations/NMBS/008891009", jobj["id"].Value<string>());
-                    AssertEqual("Brugge", jobj["name"].Value<string>());
-                    AssertEqual("Bruges", jobj["translatedNames"]["fr"].Value<string>());
-                }
-            );
-
-
-            Challenge("Journey?from=http://irail.be/stations/NMBS/008891009" +
-                      "&to=http://irail.be/stations/NMBS/008892007" +
-                      $"&departure={DateTime.Now:s}Z" +
-                      "&internalTransferTime=180&transferPenalty=300&prune=true",
+                    {"from", "http://irail.be/stations/NMBS/008891009"},
+                    {"to", "http://irail.be/stations/NMBS/008892007"},
+                    {"departure", DateTime.Now.ToString("s")}
+                },
                 jobj =>
                 {
                     AssertTrue(jobj["journeys"].Count() > 0, "No journeys found");
@@ -116,6 +135,59 @@ namespace Itinero.Transit.API.Tests.Functional
                     }
                 }
             );
+
+            // Can we find journeys from one OSM location to a stop with crows flight?
+            // Close to Brugge station => Gent-Sint-Pieters
+            Challenge("Journey",
+                new Dictionary<string, string>
+                {
+                    {"from", "https://www.openstreetmap.org/#map=19/51.19764/3.21847"},
+                    {"to", "http://irail.be/stations/NMBS/008892007"},
+                    {"departure", DateTime.Now.ToString("s")}
+                },
+                jobj =>
+                {
+                    AssertTrue(jobj["journeys"].Count() > 0, "No journeys found");
+                    foreach (var j in jobj["journeys"])
+                    {
+                        AssertEqual("https://www.openstreetmap.org/#map=19/51.19764/3.21847",
+                            j["departure"]["location"]["id"],
+                            "Wrong departure stations");
+
+                        AssertEqual("http://irail.be/stations/NMBS/008892007", j["arrival"]["location"]["id"],
+                            "Wrong arrival stations");
+                    }
+                }
+            );
+
+            // Can we find journeys from one OSM location to a stop with crows flight?
+            // With the osm-pedestrian profile
+            // Close to Brugge station => Gent-Sint-Pieters
+          /*  Challenge("Journey",
+                new Dictionary<string, string>
+                {
+                    {"from", "https://www.openstreetmap.org/#map=19/51.19764/3.21847"},
+                    {"to", "http://irail.be/stations/NMBS/008892007"},
+                    {"departure", $"{DateTime.Now:s}Z"},
+                    {
+                        "walksGeneratorDescription",
+                        "https://openplanner.team/itinero-transit/walks/osm&maxDistance=500&profile=pedestrian"
+                    }
+                },
+                jobj =>
+                {
+                    AssertTrue(jobj["journeys"].Count() > 0, "No journeys found");
+                    foreach (var j in jobj["journeys"])
+                    {
+                        AssertEqual("https://www.openstreetmap.org/#map=1/51.19764/3.21847",
+                            j["departure"]["location"]["id"],
+                            "Wrong departure stations");
+
+                        AssertEqual("http://irail.be/stations/NMBS/008892007", j["arrival"]["location"]["id"],
+                            "Wrong arrival stations");
+                    }
+                }
+            ); //*/
 
 
             if (_failed)
@@ -142,10 +214,14 @@ namespace Itinero.Transit.API.Tests.Functional
             }
         }
 
-        private void Challenge(string urlParams,
+        private void Challenge(string endpoint,
+            Dictionary<string, string> keyValues,
             Action<JToken> property)
         {
-            ChallengeAsync(urlParams, property).ConfigureAwait(false).GetAwaiter().GetResult();
+            var parameters = string.Join("&", keyValues.Select(kv => kv.Key + "=" + Uri.EscapeDataString(kv.Value)));
+            var url = endpoint + "?" + parameters;
+
+            ChallengeAsync(url, property).ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
         private static bool _failed;

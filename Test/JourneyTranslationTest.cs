@@ -49,7 +49,7 @@ namespace Test
             var state = new State(new Dictionary<string, (TransitDb tdb, Synchronizer synchronizer)>()
             {
                 {"test", (tdb, null)}
-            }, null);
+            }, null, null);
 
             var translated = state.Translate(journey1);
             Assert.Equal("https://example.org/stop0", translated.Segments[0].Departure.Location.Id);
