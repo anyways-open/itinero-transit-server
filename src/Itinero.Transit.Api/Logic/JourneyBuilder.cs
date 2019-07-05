@@ -23,7 +23,7 @@ namespace Itinero.Transit.Api.Logic
             uint maxNumberOfTransfers = uint.MaxValue
         )
         {
-            var stops = State.GlobalState.GetStopsReader();
+            var stops = State.GlobalState.GetStopsReader(true);
 
             stops.MoveTo(from);
             var fromId = stops.Id;

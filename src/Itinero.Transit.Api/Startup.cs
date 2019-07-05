@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using NJsonSchema.Infrastructure;
 using NSwag;
 using Serilog;
 using Serilog.Formatting.Json;
@@ -31,25 +32,31 @@ namespace Itinero.Transit.Api
 
         private void StartLoadingTransitDbs()
         {
-
             OtherModeBuilder otherModeBuilder;
+
+            string routableTileCache = null;
+            if (Configuration["RoutableTilesCache"] != null)
+            {
+                routableTileCache = Configuration.GetValue<string>("RoutableTilesCache");
+            }
 
             try
             {
-                otherModeBuilder = new OtherModeBuilder(Configuration.GetSection("OsmProfiles"));
+                otherModeBuilder = new OtherModeBuilder(routableTileCache,
+                    Configuration.GetSection("OsmProfiles"));
             }
             catch (Exception e)
             {
-                Log.Error("Could not create all the other profiles: "+e);
-                otherModeBuilder = new OtherModeBuilder(null);
+                Log.Error("Could not create all the other profiles: " + e);
+                otherModeBuilder = new OtherModeBuilder();
             }
-            
+
             var router = new RouterDb();
-            router.DataProvider = new DataProvider(router, 
+            router.DataProvider = new DataProvider(router,
                 "https://tiles.openplanner.team/planet");
 
-            
-            var state = new State(Configuration.CreateTransitDbs(), otherModeBuilder, router) 
+
+            var state = new State(Configuration.CreateTransitDbs(), otherModeBuilder, router)
                 {FreeMessage = "Loading transitdbs"};
             State.GlobalState = state;
 
@@ -58,7 +65,7 @@ namespace Itinero.Transit.Api
                                 .Select(kvp => kvp.Key)));
 
             state.NameIndex = new NameIndexBuilder(new List<string> {"name:nl", "name", "name:fr"})
-                .Build(state.GetStopsReader());
+                .Build(state.GetStopsReader(false));
 
 
             Log.Information("Performing initial runs");
@@ -72,7 +79,6 @@ namespace Itinero.Transit.Api
                 {
                     try
                     {
-
                         Log.Information($"Starting initial run of {name}");
                         synchronizer.InitialRun();
                         synchronizer.Start();
@@ -167,7 +173,7 @@ namespace Itinero.Transit.Api
                     };
                     document.BasePath = req.PathBase;
                     document.Host = req.Host.Value;
-                    document.Schemes = new List<SwaggerSchema>(new []
+                    document.Schemes = new List<SwaggerSchema>(new[]
                     {
                         SwaggerSchema.Https
                     });

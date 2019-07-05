@@ -4,8 +4,10 @@ using System.Linq;
 using Itinero.Transit.Api.Models;
 using Itinero.Transit.Data;
 using Itinero.Transit.Data.Aggregators;
+using Itinero.Transit.IO.OSM;
 using Itinero.Transit.IO.OSM.Data;
 using Itinero.Transit.Journey;
+using Itinero.Transit.OtherMode;
 using Itinero.Transit.Utils;
 
 namespace Itinero.Transit.Api.Logic
@@ -20,7 +22,7 @@ namespace Itinero.Transit.Api.Logic
         /// </summary>
         /// <returns></returns>
         public static Models.Journey Translate<T>(
-            this State dbs, Journey<T> journey) where T : IJourneyMetric<T>
+            this State dbs, Journey<T> journey, IOtherModeGenerator walkGenerator) where T : IJourneyMetric<T>
         {
             var parts = journey.ToList(); // Puts genesis neatly at the start
             var segments = new List<Segment>();
@@ -101,14 +103,15 @@ namespace Itinero.Transit.Api.Logic
 
                 if (j.SpecialConnection && j.Connection == Journey<T>.OTHERMODE)
                 {
-                    // This is a piece where we walk/cycle/... or some other continuous transportation mode
-
                     if (j.Location.Equals(j.PreviousLink.Location))
                     {
                         // Object represent a transfer without moving...
                         // We skip this if the next is an othermode as well
                         continue;
                     }
+
+                    // This is a piece where we walk/cycle/... or some other continuous transportation mode
+                    // Lets try to figure out what exactly we are doing
 
                     var departure = dbs.LocationOf(j.PreviousLink.Location);
                     var departureTimed = new TimedLocation(
@@ -117,10 +120,29 @@ namespace Itinero.Transit.Api.Logic
                     var arrivalTimed = new TimedLocation(
                         arrival, j.Time, 0);
 
+                    List<Coordinate> coordinates = null;
+
+                    if (walkGenerator is FirstLastMilePolicy flm)
+                    {
+                        walkGenerator = flm.GeneratorFor(j.PreviousLink.Location, j.Location);
+                    }
+
+                    if (walkGenerator is OtherModeCacher cacher)
+                    {
+                         walkGenerator = cacher.Fallback;
+                    }
+
+                    if (walkGenerator is OsmTransferGenerator osm)
+                    {
+                        coordinates = osm.CreateRoute(((float) departure.Lat, (float) departure.Lon),
+                            ((float) arrival.Lat, (float) arrival.Lon), out _).Shape.Select(
+                            coor => new Coordinate(coor.Latitude, coor.Longitude)).ToList();
+                    }
+
                     var segment = new Segment(
                         departureTimed, arrivalTimed,
-                        "WALK",
-                        "WALK"
+                        walkGenerator?.OtherModeIdentifier() ?? "?",
+                        coordinates
                     );
                     segments.Add(segment);
                     continue;
@@ -133,14 +155,14 @@ namespace Itinero.Transit.Api.Logic
             return new Models.Journey(segments, vehiclesTaken);
         }
 
-        public static List<Models.Journey> Translate<T>(
-            this State dbs, IEnumerable<Journey<T>> journeys)
+        public static List<Models.Journey> Translate<T>(this State dbs, IEnumerable<Journey<T>> journeys,
+            IOtherModeGenerator walkGenerator)
             where T : IJourneyMetric<T>
         {
             var list = new List<Models.Journey>();
             foreach (var j in journeys)
             {
-                list.Add(dbs.Translate(j));
+                list.Add(dbs.Translate(j, walkGenerator));
             }
 
             return list;
@@ -149,19 +171,13 @@ namespace Itinero.Transit.Api.Logic
 
         public static Location LocationOf(this State dbs, string globalId)
         {
-            var stops = dbs.GetStopsReader();
+            var stops = dbs.GetStopsReader(true);
             return !stops.MoveTo(globalId) ? null : new Location(stops);
         }
 
         private static Location LocationOf(this State dbs, LocationId localId)
         {
-            var stops = dbs.GetStopsReader();
-
-            stops = StopsReaderAggregator.CreateFrom(
-                new List<IStopsReader>
-                {
-                    stops, new OsmLocationStopReader(stops.DatabaseIndexes().Max() + 1)
-                });
+            var stops = dbs.GetStopsReader(true);
 
             if (!stops.MoveTo(localId))
             {
@@ -176,7 +192,7 @@ namespace Itinero.Transit.Api.Logic
             string globalId, DateTime time, TimeSpan window)
         {
             if (dbs == null) throw new ArgumentNullException(nameof(dbs));
-            var stops = dbs.GetStopsReader();
+            var stops = dbs.GetStopsReader(true);
             if (!stops.MoveTo(globalId))
             {
                 return null;

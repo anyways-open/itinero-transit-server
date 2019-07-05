@@ -28,7 +28,7 @@ namespace Itinero.Transit.Api.Controllers
         public ActionResult<List<Location>> Get(float lat, float lon, float distance=500)
         {
 
-            var reader = State.GlobalState.GetStopsReader();
+            var reader = State.GlobalState.GetStopsReader(true);
             
             var found = reader.LocationsInRange(lat, lon, distance);
             if (found == null || !found.Any())

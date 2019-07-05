@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Itinero.Transit.Api.Logic;
 using Itinero.Transit.Api.Logic.Itinero.Transit.Journey.Metric;
@@ -10,10 +11,19 @@ namespace Itinero.Transit.Api.Controllers
     [Route("[controller]")]
     [ApiController]
     [ProducesResponseType(200)]
-    public class JourneyController : ControllerBase
+    public class GeoJsonJourneyController : ControllerBase
     {
+        
+        private List<string> _colours = new List<string>
+        {
+            "#ff0000",
+            "#00ff00",
+            "#0000ff",
+            "#ff00ff"
+        };
+
         /// <summary>
-        /// Creates a journey over the public-transport network.
+        /// Creates a journey over the public-transport network. Returns GEOJSON
         /// </summary>
         /// <remarks>
         /// You do not have to provide both departure and arrival times, one of them is enough.
@@ -29,7 +39,7 @@ namespace Itinero.Transit.Api.Controllers
         /// <param name="maxNumberOfTransfers">The maximum number of transfers allowed during the earliest arrival scan</param>
         /// <param name="prune">If false, more options will be given (mostly choices in transfer station)</param>
         [HttpGet]
-        public ActionResult<QueryResult> Get(
+        public ActionResult<Geojson> Get(
             string from,
             string to,
             DateTime? departure = null,
@@ -80,9 +90,27 @@ namespace Itinero.Transit.Api.Controllers
 
             var end = DateTime.Now;
 
-            // ReSharper disable once PossibleMultipleEnumeration
-            return new QueryResult(State.GlobalState.Translate(journeys, profile.WalksGenerator), start, end,
+            var qr = new QueryResult(State.GlobalState.Translate(journeys, profile.WalksGenerator), start, end,
                 queryStart, queryEnd);
+
+            
+            var features = new List<Feature>();
+            uint i = 0;
+            foreach (var segment in qr.Journeys[0].Segments)
+            {
+                i++;
+                var coors = segment.Coordinates ??
+                            new List<Coordinate>
+                            {
+                                new Coordinate(segment.Departure.Location.Lat, segment.Departure.Location.Lon),
+                                new Coordinate(segment.Arrival.Location.Lat, segment.Arrival.Location.Lon)
+                            };
+                var geo = new Geometry(coors);
+                var f = new Feature(geo, new Properties(_colours[(int) (i % _colours.Count)]));
+                features.Add(f);
+            }
+            
+            return new Geojson(features);
         }
     }
 }

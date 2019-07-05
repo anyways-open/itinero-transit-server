@@ -12,13 +12,13 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Itinero.Transit" Version="1.0.0-pre46" />
-        <PackageReference Include="Itinero.Transit.IO.LC" Version="1.0.0-pre46" />
-        <PackageReference Include="Itinero.Transit.IO.OSM" Version="1.0.0-pre46" />
+        <PackageReference Include="Itinero.Transit" Version="1.0.0-pre52" />
+        <PackageReference Include="Itinero.Transit.IO.LC" Version="1.0.0-pre52" />
+        <PackageReference Include="Itinero.Transit.IO.OSM" Version="1.0.0-pre52" />
         <PackageReference Include="Microsoft.AspNetCore.All" />
         <PackageReference Include="NSwag.AspNetCore" Version="12.0.10" />
         <PackageReference Include="NSwag.Core" Version="12.0.10" />
-        <PackageReference Include="openplannerteam.Itinero.IO.Osm" Version="2.0.0-pre009" />
+        <PackageReference Include="openplannerteam.Itinero.IO.Osm" Version="2.0.0-pre012" />
         <PackageReference Include="Serilog.Sinks.Console" Version="3.1.1" />
         <PackageReference Include="Serilog.Sinks.File" Version="4.0.0" />
     </ItemGroup>

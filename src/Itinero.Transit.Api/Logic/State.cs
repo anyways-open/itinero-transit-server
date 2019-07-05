@@ -5,6 +5,7 @@ using Itinero.Transit.Data;
 using Itinero.Transit.Data.Aggregators;
 using Itinero.Transit.Data.Synchronization;
 using Itinero.Transit.IO.OSM.Data;
+using Reminiscence.Arrays;
 using Serilog;
 
 namespace Itinero.Transit.Api.Logic
@@ -27,7 +28,7 @@ namespace Itinero.Transit.Api.Logic
         /// A version information string - useful to see what version is in production.
         /// The first letter of the word is increased alphabetically
         /// </summary>
-        public const string Version = "Osoc Earliest Arrival Only + OSM Arrival Fix (Itinero-transit 1.0.0-pre46)";
+        public const string Version = "Osoc 'Walk off the World' (Itinero-transit 1.0.0-pre52)";
 
         /// <summary>
         /// This dictionary contains all the loaded transitDbs, indexed on their name.
@@ -92,13 +93,23 @@ namespace Itinero.Transit.Api.Logic
         /// Get a stops reader for all the loaded databases.
         /// </summary>
         /// <returns></returns>
-        public IStopsReader GetStopsReader()
+        public IStopsReader GetStopsReader(bool withOsm)
         {
             var reader = StopsReaderAggregator.CreateFrom(
                 All().Select(tdb =>
                     (IStopsReader) tdb.StopsDb.GetReader()).ToList());
+            reader = reader.UseCache();
+            if (withOsm)
+            {
+                var osm = new OsmLocationStopReader(
+                    reader.DatabaseIndexes().Max() + 1u);
+                return StopsReaderAggregator.CreateFrom(new List<IStopsReader>
+                {
+                    reader, osm
+                });
+            }
 
-            return reader.UseCache();
+            return reader;
         }
 
         public IConnectionReader GetConnectionsReader()

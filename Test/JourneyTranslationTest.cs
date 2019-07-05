@@ -51,7 +51,7 @@ namespace Test
                 {"test", (tdb, null)}
             }, null, null);
 
-            var translated = state.Translate(journey1);
+            var translated = state.Translate(journey1, null);
             Assert.Equal("https://example.org/stop0", translated.Segments[0].Departure.Location.Id);
             Assert.Equal("https://example.org/stop1", translated.Segments[0].Arrival.Location.Id);
             Assert.Equal("https://example.org/trip0", translated.Segments[0].Vehicle);

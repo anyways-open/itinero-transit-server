@@ -17,9 +17,11 @@ namespace Itinero.Transit.Api.Logic
 {
     public class OtherModeBuilder
     {
-        public readonly Dictionary<string, Func<string, List<LocationId>, List<LocationId>, IOtherModeGenerator>>
+        public readonly
+            Dictionary<string, Func<string, List<LocationId>, List<LocationId>, (IOtherModeGenerator, bool useCache)>>
             Factories =
-                new Dictionary<string, Func<string, List<LocationId>, List<LocationId>, IOtherModeGenerator>>();
+                new Dictionary<string, Func<string, List<LocationId>, List<LocationId>, (IOtherModeGenerator, bool
+                    useCache)>>();
 
 
         // First profile is the default profile
@@ -29,8 +31,15 @@ namespace Itinero.Transit.Api.Logic
             OsmProfiles.Bicycle,
         };
 
-        public OtherModeBuilder(IConfiguration configuration = null)
+        public OtherModeBuilder(
+            string osmRoutableTilesCacheDirectory = null,
+            IConfiguration configuration = null)
         {
+            if (!string.IsNullOrEmpty(osmRoutableTilesCacheDirectory))
+            {
+                OsmTransferGenerator.EnableCaching(osmRoutableTilesCacheDirectory);
+            }
+
             AddFactories();
 
 
@@ -58,10 +67,11 @@ namespace Itinero.Transit.Api.Logic
                 (str, __, _) =>
                 {
                     var dict = ParseUriSettings(str);
-                    return new CrowsFlightTransferGenerator(
+                    var gen = new CrowsFlightTransferGenerator(
                         dict.Value("maxDistance", 500),
                         dict.Value("speed", 1.4f)
                     );
+                    return (gen, false);
                 });
 
             Factories.Add(
@@ -72,10 +82,12 @@ namespace Itinero.Transit.Api.Logic
                     var profileName = dict.Value("profile", "pedestrian");
                     var profile = GetOsmProfile(profileName);
 
-                    return new OsmTransferGenerator(
+                    var gen = new OsmTransferGenerator(
                         dict.Value("maxDistance", 500),
                         profile
                     );
+
+                    return (gen, true);
                 });
 
             Factories.Add(
@@ -83,7 +95,8 @@ namespace Itinero.Transit.Api.Logic
                 (str, _, __) =>
                 {
                     var dict = ParseUriSettings(str);
-                    return new InternalTransferGenerator(dict.Value<uint>("timeNeeded", 180));
+                    var gen = new InternalTransferGenerator(dict.Value<uint>("timeNeeded", 180));
+                    return (gen, false);
                 });
 
 
@@ -94,19 +107,20 @@ namespace Itinero.Transit.Api.Logic
                 (str, departures, arrivals) =>
                 {
                     var dict = ParseUriSettings(str);
-                    var defaultModeString = new OsmTransferGenerator().OtherModeIdentifier();
-                    var defaultMode = dict.Value("default", defaultModeString);
-                    var firstMile = dict.Value("firstMile", defaultModeString);
-                    var lastMile = dict.Value("lastMile", defaultModeString);
+                    var defaultModeString = Uri.EscapeDataString(new OsmTransferGenerator().OtherModeIdentifier());
+                    var defaultMode = Uri.UnescapeDataString(dict.Value("default", defaultModeString));
+                    var firstMile = Uri.UnescapeDataString(dict.Value("firstMile", defaultModeString));
+                    var lastMile = Uri.UnescapeDataString(dict.Value("lastMile", defaultModeString));
 
 
-                    return new FirstLastMilePolicy(
+                    var gen = new FirstLastMilePolicy(
                         Create(defaultMode, departures, arrivals),
                         Create(firstMile, departures, arrivals),
                         departures,
                         Create(lastMile, departures, arrivals),
                         arrivals
                     );
+                    return (gen, false);
                 }
             );
         }
@@ -118,7 +132,7 @@ namespace Itinero.Transit.Api.Logic
             foreach (var f in Factories)
             {
                 var mode = f.Value.Invoke("", new List<LocationId>(), new List<LocationId>());
-                urls.Add(mode.OtherModeIdentifier());
+                urls.Add(mode.Item1.OtherModeIdentifier());
             }
 
             return urls;
@@ -141,8 +155,15 @@ namespace Itinero.Transit.Api.Logic
                 throw new KeyNotFoundException("The profile could not be decoded: " + description);
             }
 
-            var walkGen = Factories[fixedPart](description, starts, ends).UseCache();
-            _cachedOtherModeGenerators[description] = walkGen;
+            var (walkGen, useCache) = Factories[fixedPart](description, starts, ends);
+
+            // ReSharper disable once InvertIf
+            if (useCache)
+            {
+                walkGen = walkGen.UseCache();
+                _cachedOtherModeGenerators[description] = walkGen;
+            }
+
             return walkGen;
         }
 
