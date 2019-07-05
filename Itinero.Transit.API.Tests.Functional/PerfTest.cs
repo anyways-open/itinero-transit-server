@@ -66,7 +66,7 @@ namespace Itinero.Transit.API.Tests.Functional
                 "&firstMile=" + Uri.EscapeDataString("osm&maxDistance=5000&profile=pedestrian") +
                 "&lastMile=" + Uri.EscapeDataString("osm&maxDistance=5000&profile=pedestrian")
                 );
-            var (journeys, queryStart, queryEnd) = profile.BuildJourneys(@from, to, departure, arrival);
+            var (journeys, queryStart, queryEnd) = profile.BuildJourneys(@from, to, departure, arrival, false);
 
             // ReSharper disable once PossibleMultipleEnumeration
             if (journeys == null || !journeys.Any())

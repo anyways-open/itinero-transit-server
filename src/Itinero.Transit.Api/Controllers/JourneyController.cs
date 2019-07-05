@@ -38,6 +38,7 @@ namespace Itinero.Transit.Api.Controllers
         /// <param name="firstMileSearchDistance">Search distance for the first segment, if first mile is specified</param>
         /// <param name="lastMileOsmProfile">Use this OSM-profile for the last segment</param>
         /// <param name="lastMileSearchDistance">Search distance for the last segment mile, if first mile is specified</param>
+        /// <param name="multipleOptions">Set to true if multiple options (profile search) should be used</param>
         [HttpGet]
         public ActionResult<QueryResult> Get(
             string from,
@@ -53,7 +54,8 @@ namespace Itinero.Transit.Api.Controllers
             DateTime? arrival = null,
             uint internalTransferTime = 180,
             uint maxNumberOfTransfers = 4,
-            bool prune = true
+            bool prune = true,
+            bool multipleOptions = false
         )
         {
             if (from == null || to == null)
@@ -110,7 +112,7 @@ namespace Itinero.Transit.Api.Controllers
                     maxNumberOfTransfers: maxNumberOfTransfers);
 
                 var (journeys, queryStart, queryEnd) =
-                    profile.BuildJourneys(from, to, departure, arrival);
+                    profile.BuildJourneys(from, to, departure, arrival, multipleOptions);
 
 
                 // ReSharper disable once PossibleMultipleEnumeration

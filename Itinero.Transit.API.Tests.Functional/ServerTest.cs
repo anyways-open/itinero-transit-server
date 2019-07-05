@@ -15,6 +15,11 @@ namespace Itinero.Transit.API.Tests.Functional
         public ServerTest(string host)
         {
             _host = host;
+            if (_host.Equals("production"))
+            {
+                _host = "https://routing.anyways.eu/transitapi";
+            }
+            
             if (!_host.EndsWith('/'))
             {
                 _host += '/';
@@ -136,6 +141,29 @@ namespace Itinero.Transit.API.Tests.Functional
                     }
                 }
             );
+            
+            Challenge("Journey","PARETO NMBS -> NMBS (Friendly)",
+                new Dictionary<string, string>
+                {
+                    {"from", "http://irail.be/stations/NMBS/008891009"},
+                    {"to", "http://irail.be/stations/NMBS/008892007"},
+                    {"departure", DateTime.Now.ToString("s")},
+                    {"multipleOptions","true"}
+                },
+                jobj =>
+                {
+                    AssertTrue(jobj["journeys"].Count() > 0, "No journeys found");
+                    foreach (var j in jobj["journeys"])
+                    {
+                        AssertEqual("http://irail.be/stations/NMBS/008891009", j["departure"]["location"]["id"],
+                            "Wrong departure stations");
+                        AssertEqual("Brugge", j["departure"]["location"]["name"], "Wrong departure stations");
+
+                        AssertEqual("http://irail.be/stations/NMBS/008892007", j["arrival"]["location"]["id"],
+                            "Wrong arrival stations");
+                    }
+                }
+            );
 
             // Can we find journeys from one OSM location to a stop with crows flight?
             // Close to Brugge station => Gent-Sint-Pieters
@@ -191,6 +219,29 @@ namespace Itinero.Transit.API.Tests.Functional
                     {"from", "https://www.openstreetmap.org/#map=15/51.0359/3.7108"},
                     {"to", "https://www.openstreetmap.org/#map=19/51.19764/3.21847"}, // Close to bruges station
                     {"departure", DateTime.Now.ToString("s")}
+                },
+                jobj =>
+                {
+                    AssertTrue(jobj["journeys"].Any(), "No journeys found");
+                    foreach (var j in jobj["journeys"])
+                    {
+                        AssertEqual("https://www.openstreetmap.org/#map=19/51.0359/3.71080000000001",
+                            j["departure"]["location"]["id"],
+                            "Wrong departure stations");
+                        AssertEqual("https://www.openstreetmap.org/#map=19/51.19764/3.21847",
+                            j["arrival"]["location"]["id"],
+                            "Wrong arrival stations");
+                    }
+                }
+            );
+            
+            Challenge("Journey","Pareto OSM -> OSM",
+                new Dictionary<string, string>
+                {
+                    {"from", "https://www.openstreetmap.org/#map=15/51.0359/3.7108"},
+                    {"to", "https://www.openstreetmap.org/#map=19/51.19764/3.21847"}, // Close to bruges station
+                    {"departure", DateTime.Now.ToString("s")},
+                    {"multipleOptions","true"}
                 },
                 jobj =>
                 {
@@ -348,7 +399,6 @@ namespace Itinero.Transit.API.Tests.Functional
                 }
             );
 
-
             Challenge("Journey","Adinkerke -> Gouvy",
                 new Dictionary<string, string>
                 {
@@ -358,6 +408,43 @@ namespace Itinero.Transit.API.Tests.Functional
                     {"to", "https://www.openstreetmap.org/#map=14/50.1886/5.9543"}, // Gouvy
 
                     {"departure", $"{DateTime.Now:s}Z"},
+                    {
+                        "walksGeneratorDescription",
+                        "firstLastMile&" +
+                        "default=" +
+                        Uri.EscapeDataString(
+                            "crowsflight&maxDistance=500&speed=1.4") +
+                        "&firstMile=" +
+                        Uri.EscapeDataString(
+                            "osm&maxDistance=5000&profile=pedestrian") +
+                        "&lastMile=" +
+                        Uri.EscapeDataString(
+                            "osm&maxDistance=5000&profile=pedestrian")
+                    }
+                },
+                jobj =>
+                {
+                    AssertTrue(jobj["journeys"].Any(), "No journeys found");
+                    foreach (var j in jobj["journeys"])
+                    {
+                        AssertEqual("https://www.openstreetmap.org/#map=19/51.0858/2.60169999999999",
+                            j["departure"]["location"]["id"],
+                            "Wrong departure stations");
+
+                        AssertEqual("https://www.openstreetmap.org/#map=19/50.1886/5.95429999999999", j["arrival"]["location"]["id"],
+                            "Wrong arrival stations");
+                    }
+                }
+            );
+            
+            Challenge("Journey","PARETO - Poperinge -> Brussels",
+                new Dictionary<string, string>
+                {
+                    {"from", "https://www.openstreetmap.org/#map=14/50.8535/2.7345"}, 
+                    {"to", "https://www.openstreetmap.org/#map=11/50.8469/4.2249"}, // Gouvy
+
+                    {"departure", $"{DateTime.Now:s}Z"},
+                    {"multipleOptions","true"},
                     {
                         "walksGeneratorDescription",
                         "firstLastMile&" +
