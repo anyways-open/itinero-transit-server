@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml.Schema;
 using Itinero.Transit.Data;
 using Itinero.Transit.Data.Aggregators;
 using Itinero.Transit.Data.Synchronization;
@@ -28,7 +29,7 @@ namespace Itinero.Transit.Api.Logic
         /// A version information string - useful to see what version is in production.
         /// The first letter of the word is increased alphabetically
         /// </summary>
-        public const string Version = "Osoc 'Walk off the World' (Itinero-transit 1.0.0-pre52)";
+        public const string Version = "Osoc 'Better-Faster-Harder' (Itinero-transit 1.0.0-pre53)";
 
         /// <summary>
         /// This dictionary contains all the loaded transitDbs, indexed on their name.
@@ -88,6 +89,7 @@ namespace Itinero.Transit.Api.Logic
             BootTime = DateTime.Now;
         }
 
+        private IStopsReader cachedStopsReader, cachedStopsReaderOsm;
 
         /// <summary>
         /// Get a stops reader for all the loaded databases.
@@ -95,6 +97,16 @@ namespace Itinero.Transit.Api.Logic
         /// <returns></returns>
         public IStopsReader GetStopsReader(bool withOsm)
         {
+            if (cachedStopsReader != null && !withOsm)
+            {
+                return cachedStopsReader;
+            }
+
+            if (cachedStopsReaderOsm != null && withOsm)
+            {
+                return cachedStopsReaderOsm;
+            }
+            
             var reader = StopsReaderAggregator.CreateFrom(
                 All().Select(tdb =>
                     (IStopsReader) tdb.StopsDb.GetReader()).ToList());
@@ -103,13 +115,15 @@ namespace Itinero.Transit.Api.Logic
             {
                 var osm = new OsmLocationStopReader(
                     reader.DatabaseIndexes().Max() + 1u);
-                return StopsReaderAggregator.CreateFrom(new List<IStopsReader>
+                cachedStopsReaderOsm = StopsReaderAggregator.CreateFrom(new List<IStopsReader>
                 {
                     reader, osm
                 });
+                return cachedStopsReaderOsm;
             }
 
-            return reader;
+            cachedStopsReader = reader;
+            return cachedStopsReader;
         }
 
         public IConnectionReader GetConnectionsReader()

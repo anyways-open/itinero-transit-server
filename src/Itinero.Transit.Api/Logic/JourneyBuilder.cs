@@ -72,6 +72,7 @@ namespace Itinero.Transit.Api.Logic
             var precalculator =
                 State.GlobalState.All()
                     .SelectProfile(p)
+                    .SetStopsReader(() => State.GlobalState.GetStopsReader(false))
                     .UseOsmLocations()
                     .SelectStops(from, to);
             WithTime<TransferMetric> calculator;
@@ -95,6 +96,12 @@ namespace Itinero.Transit.Api.Logic
                 // This will set the time frame correctly + install a filter
                 var earliestArrivalJourney = calculator.EarliestArrivalJourney(
                     tuple => tuple.journeyStart + p.SearchLengthCalculator(tuple.journeyStart, tuple.journeyEnd));
+                if (earliestArrivalJourney == null)
+                {
+                    return (new List<Journey<TransferMetric>>(),
+                       DateTime.MaxValue, DateTime.MinValue);
+                }
+
                 return (new List<Journey<TransferMetric>> {earliestArrivalJourney},
                     earliestArrivalJourney.Root.Time.FromUnixTime(), earliestArrivalJourney.Time.FromUnixTime());
             }

@@ -71,7 +71,7 @@ namespace Itinero.Transit.Api.Logic
                         dict.Value("maxDistance", 500),
                         dict.Value("speed", 1.4f)
                     );
-                    return (gen, false);
+                    return (gen, true);
                 });
 
             Factories.Add(
@@ -176,18 +176,24 @@ namespace Itinero.Transit.Api.Logic
         /// </summary>
         /// <param name="uri"></param>
         /// <returns></returns>
-        private static IReadOnlyDictionary<string, string> ParseUriSettings(string uri)
+        private static IReadOnlyDictionary<string, string> ParseUriSettings(string description)
         {
             var parameters = new Dictionary<string, string>();
-            if (string.IsNullOrEmpty(uri))
+            if (string.IsNullOrEmpty(description))
             {
                 return parameters;
             }
 
-            var match = _regex.Match(new Uri(uri).PathAndQuery);
+            var match = _regex.Match(description);
             while (match.Success)
             {
-                parameters.Add(match.Groups[1].Value, match.Groups[2].Value);
+                var key = match.Groups[1].Value;
+                if (parameters.ContainsKey(key))
+                {
+                    throw new ArgumentException(
+                        $"An url parameter for a profile was specified twice: {key} in the uri \n {description}");
+                }
+                parameters.Add(key, match.Groups[2].Value);
                 match = match.NextMatch();
             }
 

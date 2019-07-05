@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Itinero.Transit.Api.Models;
 using Itinero.Transit.Data;
-using Itinero.Transit.Data.Aggregators;
 using Itinero.Transit.IO.OSM;
-using Itinero.Transit.IO.OSM.Data;
 using Itinero.Transit.Journey;
 using Itinero.Transit.OtherMode;
 using Itinero.Transit.Utils;
@@ -17,6 +15,37 @@ namespace Itinero.Transit.Api.Logic
     /// </summary>
     public static class JourneyTranslator
     {
+        private static List<string> _colours = new List<string>
+        {
+            "#002e63",
+            "#2e3f57",
+            "#5c514b",
+            "#8a623f",
+            "#b87333"
+        };
+
+
+        public static Geojson AsGeoJson(this Models.Journey j)
+        {
+            var features = new List<Feature>();
+            uint i = 0;
+            foreach (var segment in j.Segments)
+            {
+                i++;
+                var coors = segment.Coordinates ??
+                            new List<Coordinate>
+                            {
+                                new Coordinate(segment.Departure.Location.Lat, segment.Departure.Location.Lon),
+                                new Coordinate(segment.Arrival.Location.Lat, segment.Arrival.Location.Lon)
+                            };
+                var geo = new Geometry(coors);
+                var f = new Feature(geo, new Properties(_colours[(int) (i % _colours.Count)]));
+                features.Add(f);
+            }
+
+            return new Geojson(features);
+        }
+
         /// <summary>
         /// Translates a single, forward journey into the Models which can be JSONified
         /// </summary>
@@ -129,7 +158,7 @@ namespace Itinero.Transit.Api.Logic
 
                     if (walkGenerator is OtherModeCacher cacher)
                     {
-                         walkGenerator = cacher.Fallback;
+                        walkGenerator = cacher.Fallback;
                     }
 
                     if (walkGenerator is OsmTransferGenerator osm)

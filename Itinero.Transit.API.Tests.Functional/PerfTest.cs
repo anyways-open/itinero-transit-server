@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,13 +12,13 @@ namespace Itinero.Transit.API.Tests.Functional
         public static List<string> Sources = new List<string>
         {
             "testdata_2019-06-24_2019-06-31/nmbs.latest.transitdb",
-            "testdata_2019-06-24_2019-06-31/gent-P&R.latest.transitdb",
-            "testdata_2019-06-24_2019-06-31/brugge-shuttlebus.latest.transitdb",
-            "testdata_2019-06-24_2019-06-31/delijn-ant.latest.transitdb",
-            "testdata_2019-06-24_2019-06-31/delijn-lim.latest.transitdb",
-            "testdata_2019-06-24_2019-06-31/delijn-ovl.latest.transitdb",
-            "testdata_2019-06-24_2019-06-31/delijn-vlb.latest.transitdb",
-            "testdata_2019-06-24_2019-06-31/delijn-wvl.latest.transitdb"
+            /*    "testdata_2019-06-24_2019-06-31/gent-P&R.latest.transitdb",
+                "testdata_2019-06-24_2019-06-31/brugge-shuttlebus.latest.transitdb",
+                "testdata_2019-06-24_2019-06-31/delijn-ant.latest.transitdb",
+                "testdata_2019-06-24_2019-06-31/delijn-lim.latest.transitdb",
+                "testdata_2019-06-24_2019-06-31/delijn-ovl.latest.transitdb",
+                "testdata_2019-06-24_2019-06-31/delijn-vlb.latest.transitdb",
+                "testdata_2019-06-24_2019-06-31/delijn-wvl.latest.transitdb"*/
         };
 
         public const string Gent = "http://irail.be/stations/NMBS/008892007";
@@ -39,7 +38,7 @@ namespace Itinero.Transit.API.Tests.Functional
             var dict = LoadTransitDbs(sources);
 
 
-            var st = new State(dict, new OtherModeBuilder(), null);
+            var st = new State(dict, new OtherModeBuilder("rt-cache"), null);
             State.GlobalState = st;
 
             for (int i = 0; i < 25; i++)
@@ -52,17 +51,21 @@ namespace Itinero.Transit.API.Tests.Functional
         private void RunTest()
         {
             var start = DateTime.Now;
-            var from = Brugge;
-            var to = Gent;
+            var from =
+                "https://www.openstreetmap.org/#map=17/51.21577/3.21823"; //"https://www.openstreetmap.org/#map=15/51.0764/2.5990" ;// Adinkerke/De Panne
+            var to =
+                "https://www.openstreetmap.org/#map=14/51.0250/3.7129"; //"https://www.openstreetmap.org/#map=14/50.1886/5.9543"; // GOuvy
 
             var departure = new DateTime(2019, 06, 25, 9, 00, 00, DateTimeKind.Utc);
             var arrival = new DateTime(2019, 06, 25, 12, 00, 00, DateTimeKind.Utc);
 
             var profile = JourneyBuilder.CreateProfile(
                 @from, to,
-                "https://openplanner.team/itinero-transit/walks/crowsflight&maxDistance=500",
-                180,
-                maxNumberOfTransfers: 10);
+                "firstLastMile" +
+                "&default=" + Uri.EscapeDataString("crowsflight&maxDistance=500&speed=1.4") +
+                "&firstMile=" + Uri.EscapeDataString("osm&maxDistance=5000&profile=pedestrian") +
+                "&lastMile=" + Uri.EscapeDataString("osm&maxDistance=5000&profile=pedestrian")
+                );
             var (journeys, queryStart, queryEnd) = profile.BuildJourneys(@from, to, departure, arrival);
 
             // ReSharper disable once PossibleMultipleEnumeration
