@@ -160,7 +160,7 @@ namespace Itinero.Transit.API.Tests.Functional
                 }
             );
 
-            // Can we find journeys from one OSM location to a stop with crows flight?
+            // Can we find journeys from one OSM location to a stop?
             // With the osm-pedestrian profile
             // Close to Brugge station => Gent-Sint-Pieters
           /*  Challenge("Journey",
@@ -188,6 +188,32 @@ namespace Itinero.Transit.API.Tests.Functional
                     }
                 }
             ); //*/
+          
+          Challenge("Journey",
+              new Dictionary<string, string>
+              {
+                  {"from", "https://www.openstreetmap.org/#map=19/51.172357/4.143965"},
+                  {"to", "https://www.openstreetmap.org/#map=19/50.86044133229885/4.358648544749485"},
+                  {"departure", $"{DateTime.Now:s}Z"},
+                  {
+                      "walksGeneratorDescription",
+                      "https://openplanner.team/itinero-transit/walks/osm&maxDistance=500&profile=pedestrian"
+                  }
+              },
+              jobj =>
+              {
+                  AssertTrue(jobj["journeys"].Count() > 0, "No journeys found");
+                  foreach (var j in jobj["journeys"])
+                  {
+                      AssertEqual("https://www.openstreetmap.org/#map=1/51.19764/3.21847",
+                          j["departure"]["location"]["id"],
+                          "Wrong departure stations");
+
+                      AssertEqual("http://irail.be/stations/NMBS/008892007", j["arrival"]["location"]["id"],
+                          "Wrong arrival stations");
+                  }
+              }
+          );
 
 
             if (_failed)
