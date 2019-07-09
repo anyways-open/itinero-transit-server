@@ -17,9 +17,11 @@ namespace Itinero.Transit.Api.Logic
 {
     public class OtherModeBuilder
     {
-        public readonly Dictionary<string, Func<string, List<LocationId>, List<LocationId>, IOtherModeGenerator>>
+        public readonly
+            Dictionary<string, Func<string, List<LocationId>, List<LocationId>, (IOtherModeGenerator, bool useCache)>>
             Factories =
-                new Dictionary<string, Func<string, List<LocationId>, List<LocationId>, IOtherModeGenerator>>();
+                new Dictionary<string, Func<string, List<LocationId>, List<LocationId>, (IOtherModeGenerator, bool
+                    useCache)>>();
 
 
         // First profile is the default profile
@@ -29,8 +31,15 @@ namespace Itinero.Transit.Api.Logic
             OsmProfiles.Bicycle,
         };
 
-        public OtherModeBuilder(IConfiguration configuration = null)
+        public OtherModeBuilder(
+            string osmRoutableTilesCacheDirectory = null,
+            IConfiguration configuration = null)
         {
+            if (!string.IsNullOrEmpty(osmRoutableTilesCacheDirectory))
+            {
+                OsmTransferGenerator.EnableCaching(osmRoutableTilesCacheDirectory);
+            }
+
             AddFactories();
 
 
@@ -57,40 +66,37 @@ namespace Itinero.Transit.Api.Logic
                 new CrowsFlightTransferGenerator().FixedId(),
                 (str, __, _) =>
                 {
-                    var dict = Parse(str);
-                    return new CrowsFlightTransferGenerator(
+                    var dict = ParseUriSettings(str);
+                    var gen = new CrowsFlightTransferGenerator(
                         dict.Value("maxDistance", 500),
                         dict.Value("speed", 1.4f)
                     );
+                    return (gen, true);
                 });
 
             Factories.Add(
                 new OsmTransferGenerator().FixedId(),
                 (str, _, __) =>
                 {
-                    var dict = Parse(str);
+                    var dict = ParseUriSettings(str);
                     var profileName = dict.Value("profile", "pedestrian");
-                    var profile = OsmVehicleProfiles[0];
-                    foreach (var p in OsmVehicleProfiles)
-                    {
-                        if (p.Name == profileName)
-                        {
-                            profile = p;
-                        }
-                    }
+                    var profile = GetOsmProfile(profileName);
 
-                    return new OsmTransferGenerator(
+                    var gen = new OsmTransferGenerator(
                         dict.Value("maxDistance", 500),
                         profile
                     );
+
+                    return (gen, true);
                 });
 
             Factories.Add(
                 new InternalTransferGenerator().FixedId(),
                 (str, _, __) =>
                 {
-                    var dict = Parse(str);
-                    return new InternalTransferGenerator(dict.Value<uint>("timeNeeded", 180));
+                    var dict = ParseUriSettings(str);
+                    var gen = new InternalTransferGenerator(dict.Value<uint>("timeNeeded", 180));
+                    return (gen, false);
                 });
 
 
@@ -100,20 +106,21 @@ namespace Itinero.Transit.Api.Logic
                     new DummyOtherMode(), new List<LocationId>()).FixedId(),
                 (str, departures, arrivals) =>
                 {
-                    var dict = Parse(str);
-                    var defaultModeString = new OsmTransferGenerator().OtherModeIdentifier();
-                    var defaultMode = dict.Value("default", defaultModeString);
-                    var firstMile = dict.Value("firstMile", defaultModeString);
-                    var lastMile = dict.Value("lastMile", defaultModeString);
+                    var dict = ParseUriSettings(str);
+                    var defaultModeString = Uri.EscapeDataString(new OsmTransferGenerator().OtherModeIdentifier());
+                    var defaultMode = Uri.UnescapeDataString(dict.Value("default", defaultModeString));
+                    var firstMile = Uri.UnescapeDataString(dict.Value("firstMile", defaultModeString));
+                    var lastMile = Uri.UnescapeDataString(dict.Value("lastMile", defaultModeString));
 
 
-                    return new FirstLastMilePolicy(
+                    var gen = new FirstLastMilePolicy(
                         Create(defaultMode, departures, arrivals),
                         Create(firstMile, departures, arrivals),
                         departures,
                         Create(lastMile, departures, arrivals),
                         arrivals
                     );
+                    return (gen, false);
                 }
             );
         }
@@ -125,7 +132,7 @@ namespace Itinero.Transit.Api.Logic
             foreach (var f in Factories)
             {
                 var mode = f.Value.Invoke("", new List<LocationId>(), new List<LocationId>());
-                urls.Add(mode.OtherModeIdentifier());
+                urls.Add(mode.Item1.OtherModeIdentifier());
             }
 
             return urls;
@@ -148,8 +155,15 @@ namespace Itinero.Transit.Api.Logic
                 throw new KeyNotFoundException("The profile could not be decoded: " + description);
             }
 
-            var walkGen = Factories[fixedPart](description, starts, ends).UseCache();
-            _cachedOtherModeGenerators[description] = walkGen;
+            var (walkGen, useCache) = Factories[fixedPart](description, starts, ends);
+
+            // ReSharper disable once InvertIf
+            if (useCache)
+            {
+                walkGen = walkGen.UseCache();
+                _cachedOtherModeGenerators[description] = walkGen;
+            }
+
             return walkGen;
         }
 
@@ -157,18 +171,29 @@ namespace Itinero.Transit.Api.Logic
         private static readonly Regex _regex = new Regex(@"[?|&]([\w\.]+)=([^?|^&]+)");
 
 
-        public static IReadOnlyDictionary<string, string> Parse(string uri)
+        /// <summary>
+        /// Converts the URI into a dictionary of settings
+        /// </summary>
+        /// <param name="uri"></param>
+        /// <returns></returns>
+        private static IReadOnlyDictionary<string, string> ParseUriSettings(string description)
         {
             var parameters = new Dictionary<string, string>();
-            if (string.IsNullOrEmpty(uri))
+            if (string.IsNullOrEmpty(description))
             {
                 return parameters;
             }
 
-            var match = _regex.Match(new Uri(uri).PathAndQuery);
+            var match = _regex.Match(description);
             while (match.Success)
             {
-                parameters.Add(match.Groups[1].Value, match.Groups[2].Value);
+                var key = match.Groups[1].Value;
+                if (parameters.ContainsKey(key))
+                {
+                    throw new ArgumentException(
+                        $"An url parameter for a profile was specified twice: {key} in the uri \n {description}");
+                }
+                parameters.Add(key, match.Groups[2].Value);
                 match = match.NextMatch();
             }
 

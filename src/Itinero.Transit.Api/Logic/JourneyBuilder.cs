@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using Itinero.Transit.Data;
 using Itinero.Transit.IO.OSM.Data;
+using Itinero.Transit.Journey;
 using Itinero.Transit.Journey.Metric;
 using Itinero.Transit.OtherMode;
-using Itinero.Transit.Journey;
 using Itinero.Transit.Utils;
 
 namespace Itinero.Transit.Api.Logic
@@ -23,7 +23,7 @@ namespace Itinero.Transit.Api.Logic
             uint maxNumberOfTransfers = uint.MaxValue
         )
         {
-            var stops = State.GlobalState.GetStopsReader(0);
+            var stops = State.GlobalState.GetStopsReader(true);
 
             stops.MoveTo(from);
             var fromId = stops.Id;
@@ -57,14 +57,14 @@ namespace Itinero.Transit.Api.Logic
         public static (List<Journey<TransferMetric>>, DateTime start, DateTime end) BuildJourneys(
             this RealLifeProfile p,
             string from, string to, DateTime? departure,
-            DateTime? arrival)
+            DateTime? arrival,
+            bool multipleOptions)
         {
             if (departure == null && arrival == null)
             {
                 throw new ArgumentException(
                     "At least one date should be given, either departure time or arrival time (or both)");
             }
-
 
             departure = departure?.ToUniversalTime();
             arrival = arrival?.ToUniversalTime();
@@ -73,7 +73,7 @@ namespace Itinero.Transit.Api.Logic
             var precalculator =
                 State.GlobalState.All()
                     .SelectProfile(p)
-                    .SetStopsReader(State.GlobalState.GetStopsReader((uint) (p.WalksGenerator?.Range() ?? 0)))
+                    .SetStopsReader(() => State.GlobalState.GetStopsReader(false))
                     .UseOsmLocations()
                     .SelectStops(from, to);
             WithTime<TransferMetric> calculator;
@@ -86,10 +86,13 @@ namespace Itinero.Transit.Api.Logic
                 var latest = calculator
                     .LatestDepartureJourney(tuple =>
                         tuple.journeyStart - p.SearchLengthCalculator(tuple.journeyStart, tuple.journeyEnd));
-                return (new List<Journey<TransferMetric>> {latest},
-                    latest.Root.Time.FromUnixTime(), latest.Time.FromUnixTime());
+                if (!multipleOptions)
+                {
+                    return (new List<Journey<TransferMetric>> {latest},
+                        latest.Root.Time.FromUnixTime(), latest.Time.FromUnixTime());
+                }
             }
-            else // if (arrival == null)
+            else if (arrival == null || !multipleOptions)
             {
                 calculator = precalculator.SelectTimeFrame(departure.Value, departure.Value.AddDays(1));
 
@@ -97,23 +100,30 @@ namespace Itinero.Transit.Api.Logic
                 // This will set the time frame correctly + install a filter
                 var earliestArrivalJourney = calculator.EarliestArrivalJourney(
                     tuple => tuple.journeyStart + p.SearchLengthCalculator(tuple.journeyStart, tuple.journeyEnd));
-                return (new List<Journey<TransferMetric>> {earliestArrivalJourney},
-                    earliestArrivalJourney.Root.Time.FromUnixTime(), earliestArrivalJourney.Time.FromUnixTime());
+                if (earliestArrivalJourney == null)
+                {
+                    return (new List<Journey<TransferMetric>>(),
+                        DateTime.MaxValue, DateTime.MinValue);
+                }
+
+                if (!multipleOptions)
+                {
+                    return (new List<Journey<TransferMetric>> {earliestArrivalJourney},
+                        earliestArrivalJourney.Root.Time.FromUnixTime(), earliestArrivalJourney.Time.FromUnixTime());
+                }
             }
+            else
+            {
+                calculator = precalculator.SelectTimeFrame(departure.Value, arrival.Value);
+                // Perform isochrone to speed up 'all journeys'
+                calculator.IsochroneFrom();
+            }
+
+            // We lower the max number of transfers to speed up calculations
+            p.ApplyMaxNumberOfTransfers();
+
+
+            return (calculator.AllJourneys(), calculator.Start, calculator.End);
         }
-
-/*     /* else
-      {
-          calculator = precalculator.SelectTimeFrame(departure.Value, arrival.Value);
-          // Perform isochrone to speed up 'all journeys'
-          calculator.IsochroneFrom();
-      }
-/*
-
-      // We lower the max number of transfers to speed up calculations
-     // p.ApplyMaxNumberOfTransfers();
-
-
-    //  return (calculator.AllJourneys(), calculator.Start, calculator.End);*/
     }
 }

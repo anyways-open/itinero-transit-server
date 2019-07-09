@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Itinero.Transit.Api.Logic;
 using Itinero.Transit.Api.Models;
+using Itinero.Transit.Data;
+using Itinero.Transit.IO.OSM;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Itinero.Transit.Api.Controllers
@@ -17,12 +19,11 @@ namespace Itinero.Transit.Api.Controllers
             float fromLon,
             float toLat,
             float toLon,
-            string profileName
+            string profileName = "pedestrian",
+            uint maxSearch = 2500
         )
         {
-
-
-            return null;
+            return RouteBuilder.Get(fromLat, fromLon, toLat, toLon, profileName, maxSearch);
         }
     }
 }

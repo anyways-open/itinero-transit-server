@@ -2,6 +2,7 @@
 // ReSharper disable MemberCanBePrivate.Global
 
 using System;
+using System.Collections.Generic;
 
 namespace Itinero.Transit.Api.Models
 {
@@ -20,6 +21,19 @@ namespace Itinero.Transit.Api.Models
             {
                 throw new ArgumentNullException(nameof(Vehicle));
             }
+
+            Generator = null;
+            Coordinates = null;
+        }
+
+        internal Segment(TimedLocation departure, TimedLocation arrival, string generator, List<Coordinate> coordinates)
+        {
+            Departure = departure;
+            Arrival = arrival;
+            Vehicle = null;
+            Headsign = null;
+            Generator = generator;
+            Coordinates = coordinates;
         }
 
         /// <summary>
@@ -43,5 +57,8 @@ namespace Itinero.Transit.Api.Models
         /// Meant for humans
         /// </summary>
         public string Headsign { get; }
+
+        public string Generator { get; }
+        public List<Coordinate> Coordinates { get; }
     }
 }

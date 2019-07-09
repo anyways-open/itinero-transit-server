@@ -118,7 +118,7 @@ namespace Itinero.Transit.Api.Logic
                 return _comparator?.Compare(ja, jb) ?? 0;
             }
 
-            public int NumberOfDimension()
+            public override int NumberOfDimension()
             {
                 return 3;
             }
