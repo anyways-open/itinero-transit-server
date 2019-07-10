@@ -129,6 +129,8 @@ namespace Itinero.Transit.API.Tests.Functional
                 },
                 jobj =>
                 {
+                    AssertNotNull(jobj["journeys"], "Journeys are null");
+
                     AssertTrue(jobj["journeys"].Count() > 0, "No journeys found");
                     foreach (var j in jobj["journeys"])
                     {
@@ -152,6 +154,8 @@ namespace Itinero.Transit.API.Tests.Functional
                 },
                 jobj =>
                 {
+                    AssertNotNull(jobj["journeys"], "Journeys are null");
+
                     AssertTrue(jobj["journeys"].Count() > 0, "No journeys found");
                     foreach (var j in jobj["journeys"])
                     {
@@ -176,6 +180,8 @@ namespace Itinero.Transit.API.Tests.Functional
                 },
                 jobj =>
                 {
+                    AssertNotNull(jobj["journeys"], "Journeys are null");
+
                     AssertTrue(jobj["journeys"].Any(), "No journeys found");
                     foreach (var j in jobj["journeys"])
                     {
@@ -222,6 +228,8 @@ namespace Itinero.Transit.API.Tests.Functional
                 },
                 jobj =>
                 {
+                    AssertNotNull(jobj["journeys"], "Journeys are null");
+
                     AssertTrue(jobj["journeys"].Any(), "No journeys found");
                     foreach (var j in jobj["journeys"])
                     {
@@ -245,6 +253,8 @@ namespace Itinero.Transit.API.Tests.Functional
                 },
                 jobj =>
                 {
+                    AssertNotNull(jobj["journeys"], "Journeys are null");
+
                     AssertTrue(jobj["journeys"].Any(), "No journeys found");
                     foreach (var j in jobj["journeys"])
                     {
@@ -269,6 +279,8 @@ namespace Itinero.Transit.API.Tests.Functional
                 },
                 jobj =>
                 {
+                    AssertNotNull(jobj["journeys"], "Journeys are null");
+
                     AssertTrue(jobj["journeys"].Any(), "No journeys found");
                     foreach (var j in jobj["journeys"])
                     {
@@ -308,6 +320,8 @@ namespace Itinero.Transit.API.Tests.Functional
                 },
                 jobj =>
                 {
+                    AssertNotNull(jobj["journeys"], "Journeys are null");
+
                     AssertTrue(jobj["journeys"].Any(), "No journeys found");
                     foreach (var j in jobj["journeys"])
                     {
@@ -347,7 +361,10 @@ namespace Itinero.Transit.API.Tests.Functional
                 },
                 jobj =>
                 {
+                    AssertNotNull(jobj["journeys"], "Journeys are null");
+
                     AssertTrue(jobj["journeys"].Any(), "No journeys found");
+
                     foreach (var j in jobj["journeys"])
                     {
                         AssertEqual("https://www.openstreetmap.org/#map=19/51.21577/3.21823000000001",
@@ -385,6 +402,8 @@ namespace Itinero.Transit.API.Tests.Functional
                 },
                 jobj =>
                 {
+                    AssertNotNull(jobj["journeys"], "Journeys are null");
+
                     AssertTrue(jobj["journeys"].Any(), "No journeys found");
                     foreach (var j in jobj["journeys"])
                     {
@@ -424,6 +443,8 @@ namespace Itinero.Transit.API.Tests.Functional
                 },
                 jobj =>
                 {
+                    AssertNotNull(jobj["journeys"], "Journeys are null");
+
                     AssertTrue(jobj["journeys"].Any(), "No journeys found");
                     foreach (var j in jobj["journeys"])
                     {
@@ -462,6 +483,8 @@ namespace Itinero.Transit.API.Tests.Functional
                 },
                 jobj =>
                 {
+                    AssertNotNull(jobj["journeys"], "Journeys are null");
+
                     AssertTrue(jobj["journeys"].Any(), "No journeys found");
                     foreach (var j in jobj["journeys"])
                     {
@@ -502,6 +525,8 @@ namespace Itinero.Transit.API.Tests.Functional
                 },
                 jobj =>
                 {
+                    AssertNotNull(jobj["journeys"], "Journeys are null");
+
                     AssertTrue(jobj["journeys"].Any(), "No journeys found");
                     foreach (var j in jobj["journeys"])
                     {
@@ -515,8 +540,8 @@ namespace Itinero.Transit.API.Tests.Functional
                     }
                 }
             );
-            
-            
+
+
             Challenge("Journey", "Sint-Niklaas OSM -> BxlN OSM (Regr test with ebike)",
                 new Dictionary<string, string>
                 {
@@ -542,6 +567,7 @@ namespace Itinero.Transit.API.Tests.Functional
                 },
                 jobj =>
                 {
+                    AssertNotNull(jobj["journeys"], "Journeys are null");
                     AssertTrue(jobj["journeys"].Any(), "No journeys found");
                     foreach (var j in jobj["journeys"])
                     {
@@ -576,6 +602,14 @@ namespace Itinero.Transit.API.Tests.Functional
         private static void AssertTrue(bool val, string errMessage = "Expected True")
         {
             if (!val)
+            {
+                throw new Exception(errMessage);
+            }
+        }
+
+        private static void AssertNotNull(object val, string errMessage = "Value is null")
+        {
+            if (val == null)
             {
                 throw new Exception(errMessage);
             }

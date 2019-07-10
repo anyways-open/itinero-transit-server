@@ -87,6 +87,8 @@ namespace Itinero.Transit.Api.Logic
 
 
                     // Now, we walk along the journey to find the end of this segment
+                    // In the meanwhile, record intermediate stops
+                    var intermediateStops = new List<TimedLocation>();
 
                     while (true)
                     {
@@ -114,6 +116,13 @@ namespace Itinero.Transit.Api.Logic
                             i--;
                             break;
                         }
+
+                        // We pass a stop
+                        var loc = dbs.LocationOf(parts[i].Location);
+                        connection.MoveTo(parts[i].Location.DatabaseId, parts[i - 1].Connection);
+
+                        var tloc = new TimedLocation(loc, parts[i].Time, connection.ArrivalDelay);
+                        intermediateStops.Add(tloc);
                     }
                     // At this point, parts[i] is the last part of our journey
 
@@ -123,7 +132,7 @@ namespace Itinero.Transit.Api.Logic
                     var arrivalTimed = new TimedLocation(arrival,
                         connection.ArrivalTime, connection.ArrivalDelay);
 
-                    var segment = new Segment(departureTimed, arrivalTimed, vehicleId, headsign);
+                    var segment = new Segment(departureTimed, arrivalTimed, vehicleId, headsign, intermediateStops);
                     segments.Add(segment);
                     vehiclesTaken++;
                     continue;
@@ -262,7 +271,7 @@ namespace Itinero.Transit.Api.Logic
                     connection.ArrivalTime, connection.ArrivalDelay);
 
 
-                segments.Add(new Segment(departure, arrival, route, headSign));
+                segments.Add(new Segment(departure, arrival, route, headSign, null));
             }
 
             return new LocationSegmentsResult()

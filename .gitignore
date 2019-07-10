@@ -10,3 +10,4 @@
 **/*.transitdb
 **log.txt
 **perf.data**
+Itinero.Transit.API.Tests.Functional/testUrls
