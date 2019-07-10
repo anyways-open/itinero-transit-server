@@ -33,7 +33,7 @@ namespace Itinero.Transit.API.Tests.Functional
             Console.WriteLine("Running integration tests");
             File.WriteAllText("testUrls", "Testing urls are: \n");
             // Is the server online?
-            Challenge("status", "IsOnline",
+         /*   Challenge("status", "IsOnline",
                 new Dictionary<string, string>(),
                 jobj =>
                 {
@@ -296,6 +296,7 @@ namespace Itinero.Transit.API.Tests.Functional
             );
             //*/
 
+         /*
             Challenge("Journey", "FirstLastMile, crow inbetween (rijselsestraat -> GentSP NMBS)",
                 new Dictionary<string, string>
                 {
@@ -457,7 +458,7 @@ namespace Itinero.Transit.API.Tests.Functional
                             "Wrong arrival stations");
                     }
                 }
-            );
+            ); //*/
 
             /*
             Challenge("Journey", "PARETO - Poperinge -> Brussels",
@@ -583,7 +584,7 @@ namespace Itinero.Transit.API.Tests.Functional
                 }
             );
 
-            
+
             Challenge("Journey", "(Regr test 0)",
                 new Dictionary<string, string>
                 {
@@ -594,7 +595,35 @@ namespace Itinero.Transit.API.Tests.Functional
                     {
                         "walksGeneratorDescription",
                         "osm&maxDistance=500&profile=pedestrian"
-                        
+                    }
+                },
+                jobj =>
+                {
+                    AssertNotNull(jobj["journeys"], "Journeys are null");
+                    AssertTrue(jobj["journeys"].Any(), "No journeys found");
+                    foreach (var j in jobj["journeys"])
+                    {
+                        AssertEqual("https://www.openstreetmap.org/#map=19/50.86051/4.35839899999999",
+                            j["departure"]["location"]["id"],
+                            "Wrong departure stations");
+
+                        AssertEqual("https://www.openstreetmap.org/#map=19/50.860439/4.35865000000001",
+                            j["arrival"]["location"]["id"],
+                            "Wrong arrival stations");
+                    }
+                }
+            );
+
+            Challenge("Journey", "(Regr test 1)",
+                new Dictionary<string, string>
+                {
+                    {"from", "https://www.openstreetmap.org/#map=19/50.8600527/4.3556522"},
+                    {"to", "https://www.openstreetmap.org/#map=19/51.035008061030624/3.7083159894096696"},
+
+                    {"departure", $"{DateTime.Now:s}Z"},
+                    {
+                        "walksGeneratorDescription",
+                        "osm&maxDistance=500&profile=pedestrian"
                     }
                 },
                 jobj =>
@@ -621,11 +650,24 @@ namespace Itinero.Transit.API.Tests.Functional
             }
         }
 
+
+        private static List<string> _errorMessages = new List<string>();
+
+        private static void Commit()
+        {
+            if (!_errorMessages.Any()) return;
+            var e = new Exception(
+                string.Join("\n", _errorMessages));
+            _errorMessages.Clear();
+            throw e;
+        }
+
+
         private static void AssertEqual<T>(T expected, T val, string errMessage = "")
         {
             if (!expected.Equals(val))
             {
-                throw new Exception($"Values are not the same. Expected {expected} but got {val}. {errMessage}");
+                _errorMessages.Add($"Values are not the same. Expected {expected} but got {val}. {errMessage}");
             }
         }
 
@@ -635,7 +677,7 @@ namespace Itinero.Transit.API.Tests.Functional
         {
             if (!val)
             {
-                throw new Exception(errMessage);
+                _errorMessages.Add(errMessage);
             }
         }
 
@@ -643,7 +685,7 @@ namespace Itinero.Transit.API.Tests.Functional
         {
             if (val == null)
             {
-                throw new Exception(errMessage);
+                _errorMessages.Add(errMessage);
             }
         }
 
@@ -656,6 +698,7 @@ namespace Itinero.Transit.API.Tests.Functional
             var url = endpoint + "?" + parameters;
 
             ChallengeAsync(name, url, property).ConfigureAwait(false).GetAwaiter().GetResult();
+            Commit();
         }
 
         private static bool _failed;
