@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Itinero.Transit.Api.Models;
 using Itinero.Transit.IO.OSM;
+using Serilog;
 
 namespace Itinero.Transit.Api.Logic
 {
@@ -24,11 +25,13 @@ namespace Itinero.Transit.Api.Logic
             var gen = new OsmTransferGenerator(maxSearch, profile);
 
             var route = gen.CreateRoute((fromLat, fromLon), (toLat, toLon), out var isEmpty);
-            if (isEmpty)
+            if (isEmpty || route == null)
             {
+                Log.Warning($"No route found from {(fromLat, fromLon)} to {(toLat, toLon)} with profile {profileName} and maxdistance {maxSearch}m");
                 return result;
             }
 
+            
 
             foreach (var point in route.Shape)
             {
