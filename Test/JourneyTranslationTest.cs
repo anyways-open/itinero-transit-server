@@ -60,6 +60,7 @@ namespace Test
             Assert.Equal("https://example.org/stop1", translated.Segments[1].Departure.Location.Id);
             Assert.Equal("https://example.org/stop2", translated.Segments[1].Arrival.Location.Id);
             Assert.Null(translated.Segments[1].Vehicle);
+            
         }
     }
 }

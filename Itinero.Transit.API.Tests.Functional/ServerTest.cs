@@ -15,7 +15,7 @@ namespace Itinero.Transit.API.Tests.Functional
         public ServerTest(string host)
         {
             _host = host;
-            if (_host.Equals("production"))
+            if (_host.Equals("production") || _host.Equals("prod") || _host.Equals("--prod"))
             {
                 _host = "https://routing.anyways.eu/transitapi";
             }
@@ -459,6 +459,7 @@ namespace Itinero.Transit.API.Tests.Functional
                 }
             );
 
+            /*
             Challenge("Journey", "PARETO - Poperinge -> Brussels",
                 new Dictionary<string, string>
                 {
@@ -497,7 +498,7 @@ namespace Itinero.Transit.API.Tests.Functional
                             "Wrong arrival stations");
                     }
                 }
-            );
+            );//*/
 
 
             Challenge("Journey", "Sint-Niklaas OSM -> BxlN OSM (Regr test)",
@@ -582,6 +583,37 @@ namespace Itinero.Transit.API.Tests.Functional
                 }
             );
 
+            
+            Challenge("Journey", "(Regr test 0)",
+                new Dictionary<string, string>
+                {
+                    {"from", "https://www.openstreetmap.org/#map=19/50.86051035579558/4.358399302117419"},
+                    {"to", "https://www.openstreetmap.org/#map=19/50.942586962931955/4.038028645195254"},
+
+                    {"departure", $"{DateTime.Now:s}Z"},
+                    {
+                        "walksGeneratorDescription",
+                        "osm&maxDistance=500&profile=pedestrian"
+                        
+                    }
+                },
+                jobj =>
+                {
+                    AssertNotNull(jobj["journeys"], "Journeys are null");
+                    AssertTrue(jobj["journeys"].Any(), "No journeys found");
+                    foreach (var j in jobj["journeys"])
+                    {
+                        AssertEqual("https://www.openstreetmap.org/#map=19/51.17236/4.14395999999999",
+                            j["departure"]["location"]["id"],
+                            "Wrong departure stations");
+
+                        AssertEqual("https://www.openstreetmap.org/#map=19/50.860439/4.35865000000001",
+                            j["arrival"]["location"]["id"],
+                            "Wrong arrival stations");
+                    }
+                }
+            );
+
 
             if (_failed)
             {
@@ -633,8 +665,8 @@ namespace Itinero.Transit.API.Tests.Functional
             string urlParams,
             Action<JToken> property)
         {
-            Console.Write($" [....]        Running test {name} " +
-                          urlParams.Substring(0, Math.Min(80, urlParams.Length)));
+            Console.Write($"[RUNNING]  Running test {name} " +
+                          urlParams.Substring(0, Math.Min(70, urlParams.Length)));
             File.AppendAllText("testUrls", urlParams + "\n");
             var start = DateTime.Now;
             var client = new HttpClient();

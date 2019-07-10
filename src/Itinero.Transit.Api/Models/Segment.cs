@@ -24,7 +24,7 @@ namespace Itinero.Transit.Api.Models
             }
 
             Generator = null;
-            IntermediateStops = intermediateStops;
+            AllStops = intermediateStops;
             Coordinates = new List<Coordinate>();
             foreach (var intermediateStop in intermediateStops)
             {
@@ -53,10 +53,13 @@ namespace Itinero.Transit.Api.Models
         public TimedLocation Arrival { get; }
 
         /// <summary>
-        /// Intermediate stops where the traveller passes, but does not have to do anything.
-        /// Mainly used to inform.
+        /// All stops where the traveller passes in this segment.
+        /// This include the departure and arrival station of the segment,
+        /// but also every stop the traveller just passes through without getting on/off
+        /// 
+        /// This field is mainly meant to visualize the journey on maps.
         /// </summary>
-        public List<TimedLocation> IntermediateStops { get; }
+        public List<TimedLocation> AllStops { get; }
 
         /// <summary>
         /// The identifier of the vehicle (the global trip id).

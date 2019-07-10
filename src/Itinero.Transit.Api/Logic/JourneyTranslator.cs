@@ -79,7 +79,7 @@ namespace Itinero.Transit.Api.Logic
                         connection.DepartureTime.FromUnixTime(),
                         connection.DepartureDelay);
 
-                    // ... and the trip info
+                    // ... and the trip info (which is saved in the segment section below but not immediatly needed)
                     trip.MoveTo(j.TripId);
                     var vehicleId = trip.GlobalId;
                     trip.Attributes.TryGetValue("headsign", out var headsign);
@@ -88,8 +88,8 @@ namespace Itinero.Transit.Api.Logic
 
                     // Now, we walk along the journey to find the end of this segment
                     // In the meanwhile, record intermediate stops
-                    var intermediateStops = new List<TimedLocation>();
-
+                    var allStations = new List<TimedLocation> {departureTimed};
+                    
                     while (true)
                     {
                         if (i + 1 >= parts.Count)
@@ -122,17 +122,18 @@ namespace Itinero.Transit.Api.Logic
                         connection.MoveTo(parts[i].Location.DatabaseId, parts[i - 1].Connection);
 
                         var tloc = new TimedLocation(loc, parts[i].Time, connection.ArrivalDelay);
-                        intermediateStops.Add(tloc);
+                        allStations.Add(tloc);
                     }
                     // At this point, parts[i] is the last part of our journey
 
                     j = parts[i];
+                    
                     connection.MoveTo(j.Location.DatabaseId, j.Connection);
                     var arrival = dbs.LocationOf(connection.ArrivalStop);
                     var arrivalTimed = new TimedLocation(arrival,
                         connection.ArrivalTime, connection.ArrivalDelay);
 
-                    var segment = new Segment(departureTimed, arrivalTimed, vehicleId, headsign, intermediateStops);
+                    var segment = new Segment(departureTimed, arrivalTimed, vehicleId, headsign, allStations);
                     segments.Add(segment);
                     vehiclesTaken++;
                     continue;
