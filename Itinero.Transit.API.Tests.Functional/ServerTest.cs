@@ -601,7 +601,7 @@ namespace Itinero.Transit.API.Tests.Functional
                             j["departure"]["location"]["id"],
                             "Wrong departure stations");
 
-                        AssertEqual("https://www.openstreetmap.org/#map=19/50.860439/4.35865000000001",
+                        AssertEqual("https://www.openstreetmap.org/#map=19/50.942586/4.038028",
                             j["arrival"]["location"]["id"],
                             "Wrong arrival stations");
                     }
