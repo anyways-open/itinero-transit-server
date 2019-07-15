@@ -174,7 +174,7 @@ namespace Itinero.Transit.Api.Logic
                     if (walkGenerator is OsmTransferGenerator osm)
                     {
                         coordinates = osm.CreateRoute(((float) departure.Lat, (float) departure.Lon),
-                            ((float) arrival.Lat, (float) arrival.Lon), out _).Shape.Select(
+                            ((float) arrival.Lat, (float) arrival.Lon), out _, out _).Shape.Select(
                             coor => new Coordinate(coor.Latitude, coor.Longitude)).ToList();
                     }
 

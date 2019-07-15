@@ -37,8 +37,8 @@ namespace Itinero.Transit.API.Tests.Functional
             Information("Running perftest...");
             var dict = LoadTransitDbs(sources);
 
-
-            var st = new State(dict, new OtherModeBuilder("rt-cache"), null);
+            var omb = new OtherModeBuilder("rt-cache");
+            var st = new State(dict, omb, omb.RouterDb);
             State.GlobalState = st;
 
             for (int i = 0; i < 25; i++)
@@ -62,8 +62,8 @@ namespace Itinero.Transit.API.Tests.Functional
             var profile = JourneyBuilder.CreateProfile(
                 @from, to,
                 "firstLastMile" +
-                "&default=" + Uri.EscapeDataString("crowsflight&maxDistance=500&speed=1.4") +
-                "&firstMile=" + Uri.EscapeDataString("osm&maxDistance=5000&profile=pedestrian") +
+                "&default=" + Uri.EscapeDataString("osm&maxDistance=1500&profile=pedestrian") +
+                "&firstMile=" + Uri.EscapeDataString("osm&maxDistance=5000&profile=bicycle") +
                 "&lastMile=" + Uri.EscapeDataString("osm&maxDistance=5000&profile=pedestrian")
                 );
             var (journeys, queryStart, queryEnd) = profile.BuildJourneys(@from, to, departure, arrival, false);

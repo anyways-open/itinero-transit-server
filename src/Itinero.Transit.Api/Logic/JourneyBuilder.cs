@@ -1,11 +1,16 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using Itinero.Profiles;
 using Itinero.Transit.Data;
+using Itinero.Transit.Data.Aggregators;
+using Itinero.Transit.IO.OSM;
 using Itinero.Transit.IO.OSM.Data;
 using Itinero.Transit.Journey;
 using Itinero.Transit.Journey.Metric;
 using Itinero.Transit.OtherMode;
 using Itinero.Transit.Utils;
+using Microsoft.EntityFrameworkCore.Internal;
 
 namespace Itinero.Transit.Api.Logic
 {
@@ -54,6 +59,50 @@ namespace Itinero.Transit.Api.Logic
         }
 
 
+        private static void DetectFirstMileWalks<T>(
+            this Profile<T> p,
+            IStopsReader stops, IStop stop, uint osmIndex) where T : IJourneyMetric<T>
+        {
+            if (stop.Id.DatabaseId != osmIndex)
+            {
+                // The location is already on the Public Transport network
+                // We don't need to walk
+                // and thus don't need to check that a start walk exists
+                return;
+            }
+
+            var inRange = stops.LocationsInRange(stop.Latitude, stop.Longitude, p.WalksGenerator.Range()).ToList();
+            inRange.Remove(stop);
+            if (inRange == null || !inRange.Any())
+            {
+                throw new ArgumentException(
+                    $"Could not find a station that is range from {stop.GlobalId} within {p.WalksGenerator.Range()}m. This is in crows flight, try increasing the range of your walksGenerator");
+            }
+
+            var foundRoutes = p.WalksGenerator.TimesBetween(stop, inRange);
+
+            if (foundRoutes == null || !foundRoutes.Any())
+            {
+                var w = p.WalksGenerator;
+
+                var errors = new List<string>();
+                foreach (var stp in inRange)
+                {
+                    if (w is OsmTransferGenerator osm)
+                    {
+                        osm.CreateRoute((stop.Latitude, stop.Longitude), (stp.Latitude, stp.Longitude), out _,
+                            out var errMessage);
+                        errors.Add($"Could not reach {stp.GlobalId}: {errMessage}");
+                    }
+                }
+
+                var allErrs = string.Join("\n ", errors);
+
+                throw new ArgumentException(
+                    $"Could not find a route over OSM towards/from the departure or end station.\n Station is {stop.GlobalId}\n {allErrs}");
+            }
+        }
+
         public static (List<Journey<TransferMetric>>, DateTime start, DateTime end) BuildJourneys(
             this RealLifeProfile p,
             string from, string to, DateTime? departure,
@@ -69,11 +118,35 @@ namespace Itinero.Transit.Api.Logic
             departure = departure?.ToUniversalTime();
             arrival = arrival?.ToUniversalTime();
 
+            var reader = State.GlobalState.GetStopsReader(false);
+            var osmIndex = reader.DatabaseIndexes().Max() + 1u;
+
+            var stopsReader =
+                StopsReaderAggregator.CreateFrom(new List<IStopsReader>
+                {
+                    reader,
+                    new OsmLocationStopReader(osmIndex, true),
+                }).UseCache();
+
+            // Calculate the first and last miles, in order to
+            // 1) Detect impossible routes
+            // 2) cache them
+
+            stopsReader.MoveTo(from);
+            var fromStop = new Stop(stopsReader);
+
+
+            stopsReader.MoveTo(to);
+            var toStop = new Stop(stopsReader);
+
+            p.DetectFirstMileWalks(stopsReader, fromStop, osmIndex);
+            p.DetectFirstMileWalks(stopsReader, toStop, osmIndex);
+
 
             var precalculator =
                 State.GlobalState.All()
                     .SelectProfile(p)
-                    .SetStopsReader(() => State.GlobalState.GetStopsReader(false))
+                    .SetStopsReader(() => stopsReader)
                     .UseOsmLocations()
                     .SelectStops(from, to);
             WithTime<TransferMetric> calculator;

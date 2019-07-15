@@ -10,7 +10,7 @@ namespace Itinero.Transit.API.Tests.Functional
         static void Main(string[] args)
         {
             Startup.ConfigureLogging();
-
+       
             if (args.Length <= 0)
             {
                 new ServerTest("http://localhost:5000").RunTests();

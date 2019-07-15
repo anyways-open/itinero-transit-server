@@ -97,33 +97,33 @@ namespace Itinero.Transit.Api.Logic
         /// <returns></returns>
         public IStopsReader GetStopsReader(bool withOsm)
         {
-            if (cachedStopsReader != null && !withOsm)
+            if (!withOsm)
             {
+                if (cachedStopsReader == null)
+                {
+                    cachedStopsReader = StopsReaderAggregator.CreateFrom(
+                            All().Select(tdb => (IStopsReader) tdb.StopsDb.GetReader()).ToList())
+                        .UseCache();
+                }
+
                 return cachedStopsReader;
             }
-
-            if (cachedStopsReaderOsm != null && withOsm)
+            // ReSharper disable once RedundantIfElseBlock
+            else
             {
-                return cachedStopsReaderOsm;
-            }
-            
-            var reader = StopsReaderAggregator.CreateFrom(
-                All().Select(tdb =>
-                    (IStopsReader) tdb.StopsDb.GetReader()).ToList());
-            reader = reader.UseCache();
-            if (withOsm)
-            {
-                var osm = new OsmLocationStopReader(
-                    reader.DatabaseIndexes().Max() + 1u);
-                cachedStopsReaderOsm = StopsReaderAggregator.CreateFrom(new List<IStopsReader>
+                if (cachedStopsReaderOsm == null)
                 {
-                    reader, osm
-                });
+                    var reader = GetStopsReader(false);
+                    var osm = new OsmLocationStopReader(
+                        reader.DatabaseIndexes().Max() + 1u);
+                    cachedStopsReaderOsm = StopsReaderAggregator.CreateFrom(new List<IStopsReader>
+                    {
+                        reader, osm
+                    });
+                }
+
                 return cachedStopsReaderOsm;
             }
-
-            cachedStopsReader = reader;
-            return cachedStopsReader;
         }
 
         public IConnectionReader GetConnectionsReader()

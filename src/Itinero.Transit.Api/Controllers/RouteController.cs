@@ -25,7 +25,7 @@ namespace Itinero.Transit.Api.Controllers
         /// <param name="maxSearch">The maximum walking distance in meters, e.g. 2500</param>
         /// <returns></returns>
         [HttpGet]
-        public ActionResult<Geojson >Get(
+        public ActionResult<Geojson> Get(
             float fromLat,
             float fromLon,
             float toLat,
@@ -34,16 +34,23 @@ namespace Itinero.Transit.Api.Controllers
             uint maxSearch = 2500
         )
         {
-            var coordinates = RouteBuilder.Get(fromLat, fromLon, toLat, toLon, profileName, maxSearch);
-            if (coordinates == null || !coordinates.Any())
+            try
             {
-                return BadRequest(
-                    "Could not calculate a route. Check that departure and arrival points are close to a road, and that the maxSearch is not too low");
+                var coordinates = RouteBuilder.Get(fromLat, fromLon, toLat, toLon, profileName, maxSearch);
+                if (coordinates == null || !coordinates.Any())
+                {
+                    return BadRequest(
+                        "Could not calculate a route. Check that departure and arrival points are close to a road, and that the maxSearch is not too low");
+                }
+
+                var geometry = new Geometry(coordinates);
+
+                return new Geojson(new List<Feature> {new Feature(geometry, new Properties("#000000"))});
             }
-            var geometry = new Geometry(coordinates);
-
-            return new Geojson(new List<Feature>{new Feature(geometry, new Properties("#000000"))});
-
+            catch (Exception e)
+            {
+                return BadRequest(e);
+            }
         }
     }
 }

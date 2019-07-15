@@ -51,12 +51,8 @@ namespace Itinero.Transit.Api
                 otherModeBuilder = new OtherModeBuilder();
             }
 
-            var router = new RouterDb();
-            router.DataProvider = new DataProvider(router,
-                "https://tiles.openplanner.team/planet");
 
-
-            var state = new State(Configuration.CreateTransitDbs(), otherModeBuilder, router)
+            var state = new State(Configuration.CreateTransitDbs(), otherModeBuilder, otherModeBuilder.RouterDb)
                 {FreeMessage = "Loading transitdbs"};
             State.GlobalState = state;
 

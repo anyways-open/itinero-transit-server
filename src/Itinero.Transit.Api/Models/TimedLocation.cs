@@ -1,5 +1,6 @@
 using System;
 using Itinero.Transit.Utils;
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace Itinero.Transit.Api.Models
 {

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Itinero.Transit.Api.Models;
 using Itinero.Transit.IO.OSM;
@@ -22,13 +23,15 @@ namespace Itinero.Transit.Api.Logic
             var result = new List<Coordinate>();
             var profile = State.GlobalState.OtherModeBuilder.GetOsmProfile(profileName);
             // Note that the routable tile cache should already be set up
-            var gen = new OsmTransferGenerator(maxSearch, profile);
+            var gen = new OsmTransferGenerator(State.GlobalState.RouterDb, maxSearch, profile);
 
-            var route = gen.CreateRoute((fromLat, fromLon), (toLat, toLon), out var isEmpty);
+            var route = gen.CreateRoute((fromLat, fromLon), (toLat, toLon), out var isEmpty, out var errorMessage);
             if (isEmpty || route == null)
             {
-                Log.Warning($"No route found from {(fromLat, fromLon)} to {(toLat, toLon)} with profile {profileName} and maxdistance {maxSearch}m");
-                return result;
+                var err =
+                    $"No route found from {(fromLat, fromLon)} to {(toLat, toLon)} with profile {profileName} and maxdistance {maxSearch}m:\n{errorMessage}";
+                Log.Warning(err);
+                throw new ArgumentException(err);
             }
 
             

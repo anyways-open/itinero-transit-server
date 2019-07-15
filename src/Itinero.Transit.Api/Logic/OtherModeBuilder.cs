@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json.Linq;
 using Itinero.Profiles.Lua;
 using System.IO;
+using Itinero.IO.Osm.Tiles;
 using Serilog;
 
 
@@ -17,6 +18,8 @@ namespace Itinero.Transit.Api.Logic
 {
     public class OtherModeBuilder
     {
+        public readonly RouterDb RouterDb;
+
         public readonly
             Dictionary<string, Func<string, List<LocationId>, List<LocationId>, (IOtherModeGenerator, bool useCache)>>
             Factories =
@@ -39,6 +42,10 @@ namespace Itinero.Transit.Api.Logic
             {
                 OsmTransferGenerator.EnableCaching(osmRoutableTilesCacheDirectory);
             }
+
+            RouterDb = new RouterDb();
+            RouterDb.DataProvider = new DataProvider(RouterDb);
+
 
             AddFactories();
 
@@ -75,14 +82,20 @@ namespace Itinero.Transit.Api.Logic
                 });
 
             Factories.Add(
-                new OsmTransferGenerator().FixedId(),
+                // THis is only a dummy OsmTransferGenerator, used to get the identifying string
+                // So we pass in a dummy routerdb which is not loaded
+                new OsmTransferGenerator(RouterDb).FixedId(),
                 (str, _, __) =>
                 {
                     var dict = ParseUriSettings(str);
                     var profileName = dict.Value("profile", "pedestrian");
                     var profile = GetOsmProfile(profileName);
+                    if (profile == null)
+                    {
+                        throw new KeyNotFoundException($"The profile {profileName} was not found");
+                    }
 
-                    var gen = new OsmTransferGenerator(
+                    var gen = new OsmTransferGenerator(RouterDb,
                         dict.Value("maxDistance", 500),
                         profile
                     );
@@ -107,11 +120,17 @@ namespace Itinero.Transit.Api.Logic
                 (str, departures, arrivals) =>
                 {
                     var dict = ParseUriSettings(str);
-                    var defaultModeString = Uri.EscapeDataString(new OsmTransferGenerator().OtherModeIdentifier());
+                    var defaultModeString =
+                        new OsmTransferGenerator(RouterDb).OtherModeIdentifier();
                     var defaultMode = Uri.UnescapeDataString(dict.Value("default", defaultModeString));
                     var firstMile = Uri.UnescapeDataString(dict.Value("firstMile", defaultModeString));
                     var lastMile = Uri.UnescapeDataString(dict.Value("lastMile", defaultModeString));
 
+                    if (dict.ContainsKey("profile") || dict.ContainsKey("maxDistance"))
+                    {
+                        throw new ArgumentException("First-Last-Mile contains improperly formatted subgenerators: " +
+                                                    str);
+                    }
 
                     var gen = new FirstLastMilePolicy(
                         Create(defaultMode, departures, arrivals),
@@ -157,6 +176,14 @@ namespace Itinero.Transit.Api.Logic
 
             var (walkGen, useCache) = Factories[fixedPart](description, starts, ends);
 
+            if (walkGen.OtherModeIdentifier() != Uri.UnescapeDataString(description))
+            {
+                throw new Exception($"" +
+                                    $"Something went very wrong here: the description does not match the generated value:\n" +
+                                    $" expected:{description}\n" +
+                                    $" Got: {walkGen.OtherModeIdentifier()}");
+            }
+
             // ReSharper disable once InvertIf
             if (useCache)
             {
@@ -193,6 +220,7 @@ namespace Itinero.Transit.Api.Logic
                     throw new ArgumentException(
                         $"An url parameter for a profile was specified twice: {key} in the uri \n {description}");
                 }
+
                 parameters.Add(key, match.Groups[2].Value);
                 match = match.NextMatch();
             }
