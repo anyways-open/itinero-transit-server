@@ -62,7 +62,7 @@ namespace Itinero.Transit.API.Tests.Functional
             var profile = JourneyBuilder.CreateProfile(
                 @from, to,
                 "firstLastMile" +
-                "&default=" + Uri.EscapeDataString("osm&maxDistance=1500&profile=pedestrian") +
+                "&default=" + Uri.EscapeDataString("crowsflight&maxDistance=1000&speed=1.4") +
                 "&firstMile=" + Uri.EscapeDataString("osm&maxDistance=5000&profile=bicycle") +
                 "&lastMile=" + Uri.EscapeDataString("osm&maxDistance=5000&profile=pedestrian")
                 );

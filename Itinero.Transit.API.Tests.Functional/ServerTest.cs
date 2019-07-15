@@ -588,7 +588,16 @@ namespace Itinero.Transit.API.Tests.Functional
                     {"departure", $"{DateTime.Now:s}Z"},
                     {
                         "walksGeneratorDescription",
-                        "osm&maxDistance=500&profile=pedestrian"
+                        "firstLastMile&" +
+                        "default=" +
+                        Uri.EscapeDataString(
+                            "crowsflight&maxDistance=500&speed=1.4") +
+                        "&firstMile=" +
+                        Uri.EscapeDataString(
+                            "osm&maxDistance=5000&profile=ebike") +
+                        "&lastMile=" +
+                        Uri.EscapeDataString(
+                            "osm&maxDistance=5000&profile=ebike")
                     }
                 },
                 jobj =>
@@ -619,9 +628,19 @@ namespace Itinero.Transit.API.Tests.Functional
                     }, //"http://irail.be/stations/NMBS/008892007"}, //
 
                     {"departure", $"{DateTime.Now:s}Z"},
+
                     {
                         "walksGeneratorDescription",
-                        "osm&maxDistance=1500&profile=pedestrian"
+                        "firstLastMile&" +
+                        "default=" +
+                        Uri.EscapeDataString(
+                            "crowsflight&maxDistance=500&speed=1.4") +
+                        "&firstMile=" +
+                        Uri.EscapeDataString(
+                            "osm&maxDistance=5000&profile=ebike") +
+                        "&lastMile=" +
+                        Uri.EscapeDataString(
+                            "osm&maxDistance=5000&profile=ebike")
                     }
                 },
                 jobj =>
