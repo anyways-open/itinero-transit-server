@@ -178,14 +178,12 @@ namespace Itinero.Transit.Api.Logic
 
             if (walkGen.OtherModeIdentifier() != Uri.UnescapeDataString(description))
             {
-                throw new Exception($"" +
-                                    $"Something went very wrong here: the description does not match the generated value:\n" +
-                                    $" expected:{description}\n" +
-                                    $" Got: {walkGen.OtherModeIdentifier()}");
+                Log.Error($"" +
+                          $"Something went very wrong here: the description does not match the generated value:\n" +
+                          $" expected:{description}\n" +
+                          $" Got: {walkGen.OtherModeIdentifier()}");
             }
-
-            // ReSharper disable once InvertIf
-            if (useCache)
+            else if (useCache)
             {
                 walkGen = walkGen.UseCache();
                 _cachedOtherModeGenerators[description] = walkGen;
