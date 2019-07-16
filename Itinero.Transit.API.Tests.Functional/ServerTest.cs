@@ -714,8 +714,16 @@ namespace Itinero.Transit.API.Tests.Functional
             var parameters = string.Join("&", keyValues.Select(kv => kv.Key + "=" + Uri.EscapeDataString(kv.Value)));
             var url = endpoint + "?" + parameters;
 
-            ChallengeAsync(name, url, property).ConfigureAwait(false).GetAwaiter().GetResult();
-            Commit();
+            try
+            {
+                ChallengeAsync(name, url, property).ConfigureAwait(false).GetAwaiter().GetResult();
+                Commit();
+
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("DOWNLOADING FAILED: "+e.Message);
+            }
         }
 
         private static bool _failed;
