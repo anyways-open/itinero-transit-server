@@ -40,7 +40,7 @@ fi
 
 echo "Starting the docker image"
 
-if [ $1 == "-staging" ]
+if [ "$1" == "-staging" ]
 then
     echo "Using staging deploy (port 5002)"
     PORT=5002

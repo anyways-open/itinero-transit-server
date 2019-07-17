@@ -28,6 +28,10 @@ namespace Itinero.Transit.Api.Models
         /// How much milliseconds the query took to run
         /// </summary>
         public uint RunningTime { get; }
+        /// <summary>
+        /// Gives the description of how walking in between stops was interpreted
+        /// </summary>
+        public string WalksDescription { get; }
 
         /// <summary>
         /// Start of the timewindow that was searched for this query
@@ -40,13 +44,14 @@ namespace Itinero.Transit.Api.Models
         public DateTime LatestArrival { get; }
 
         internal QueryResult(List<Journey> journeys, DateTime queryStarted, DateTime queryDone,
-            DateTime earliestDeparture, DateTime latestArrival)
+            DateTime earliestDeparture, DateTime latestArrival, string walksDescription)
         {
             Journeys = journeys;
             QueryStarted = queryStarted;
             QueryDone = queryDone;
             EarliestDeparture = earliestDeparture;
             LatestArrival = latestArrival;
+            WalksDescription = walksDescription;
             RunningTime = (uint) (queryDone - queryStarted).TotalMilliseconds;
         }
     }

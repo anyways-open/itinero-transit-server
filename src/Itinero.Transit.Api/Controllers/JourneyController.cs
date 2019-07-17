@@ -117,7 +117,7 @@ namespace Itinero.Transit.Api.Controllers
                 // ReSharper disable once PossibleMultipleEnumeration
                 if (journeys == null || !journeys.Any())
                 {
-                    return new QueryResult(null, start, DateTime.Now, queryStart, queryEnd);
+                    return new QueryResult(null, start, DateTime.Now, queryStart, queryEnd, profile.WalksGenerator.OtherModeIdentifier());
                 }
 
 
@@ -133,7 +133,7 @@ namespace Itinero.Transit.Api.Controllers
                 // ReSharper disable once PossibleMultipleEnumeration
                 return new QueryResult(State.GlobalState.Translate(journeys, profile.WalksGenerator),
                     start, end,
-                    queryStart, queryEnd);
+                    queryStart, queryEnd, profile.WalksGenerator.OtherModeIdentifier());
             }
             catch (ArgumentException e)
             {
