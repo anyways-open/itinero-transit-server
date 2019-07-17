@@ -10,6 +10,7 @@ namespace Test
 {
     public class OtherModeBuilderTest
     {
+<<<<<<< HEAD
         [Fact]
         public void TestOtherModeBuilderSimple()
         {
