@@ -11,6 +11,13 @@ IMAGE="anywaysopen/itinero-transit-server$1"
 docker pull $IMAGE
 echo "Docker pull is done for $NAME"
 
+if [ "$1" == "--force-restart" ]
+then
+    docker stop $NAME
+    docker rm $NAME
+    ./update-docker
+fi
+
 if [ "$(docker ps -q -f name=$NAME$)" ] # The dollar at the end forces the "end of line" in the regex, causing not to match prefixed names
 then
     echo "Does exist"
