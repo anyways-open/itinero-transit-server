@@ -649,11 +649,11 @@ namespace Itinero.Transit.API.Tests.Functional
                     AssertTrue(jobj["journeys"].Any(), "No journeys found");
                     foreach (var j in jobj["journeys"])
                     {
-                        AssertEqual("https://www.openstreetmap.org/#map=19/51.17236/4.14395999999999",
+                        AssertEqual("https://www.openstreetmap.org/#map=19/50.86094/4.35405",
                             j["departure"]["location"]["id"],
                             "Wrong departure stations");
 
-                        AssertEqual("https://www.openstreetmap.org/#map=19/50.860439/4.35865000000001",
+                        AssertEqual("https://www.openstreetmap.org/#map=19/51.03465/3.70831999999999",
                             j["arrival"]["location"]["id"],
                             "Wrong arrival stations");
                     }

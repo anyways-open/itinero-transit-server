@@ -172,14 +172,7 @@ namespace Itinero.Transit.Api.Logic
                     $"Wrong parameter in {description}: the following key was not used {kv.Key}");
             }
 
-            if (walkGen.OtherModeIdentifier() != Uri.UnescapeDataString(description))
-            {
-                Log.Error($"" +
-                          $"Something went very wrong here: the description does not match the generated value:\n" +
-                          $" expected:{description}\n" +
-                          $" Got: {walkGen.OtherModeIdentifier()}");
-            }
-            else if (useCache)
+            if (useCache)
             {
                 walkGen = walkGen.UseCache();
                 _cachedOtherModeGenerators[description] = walkGen;
