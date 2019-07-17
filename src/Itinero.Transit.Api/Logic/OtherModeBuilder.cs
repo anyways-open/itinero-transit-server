@@ -21,10 +21,10 @@ namespace Itinero.Transit.Api.Logic
         public readonly RouterDb RouterDb;
 
         public readonly
-            Dictionary<string, Func<string, List<LocationId>, List<LocationId>, (IOtherModeGenerator, bool useCache)>>
+            Dictionary<string,
+                Func<Dictionary<string, string>, List<LocationId>, List<LocationId>, (IOtherModeGenerator, bool useCache)>>
             Factories =
-                new Dictionary<string, Func<string, List<LocationId>, List<LocationId>, (IOtherModeGenerator, bool
-                    useCache)>>();
+                new Dictionary<string, Func<Dictionary<string, string>, List<LocationId>, List<LocationId>, (IOtherModeGenerator, bool useCache)>>();
 
 
         // First profile is the default profile
@@ -71,9 +71,8 @@ namespace Itinero.Transit.Api.Logic
         {
             Factories.Add(
                 new CrowsFlightTransferGenerator().FixedId(),
-                (str, __, _) =>
+                (dict, __, _) =>
                 {
-                    var dict = ParseUriSettings(str);
                     var gen = new CrowsFlightTransferGenerator(
                         dict.Value("maxDistance", 500),
                         dict.Value("speed", 1.4f)
@@ -85,9 +84,8 @@ namespace Itinero.Transit.Api.Logic
                 // THis is only a dummy OsmTransferGenerator, used to get the identifying string
                 // So we pass in a dummy routerdb which is not loaded
                 new OsmTransferGenerator(RouterDb).FixedId(),
-                (str, _, __) =>
+                (dict, _, __) =>
                 {
-                    var dict = ParseUriSettings(str);
                     var profileName = dict.Value("profile", "pedestrian");
                     var profile = GetOsmProfile(profileName);
                     if (profile == null)
@@ -105,9 +103,8 @@ namespace Itinero.Transit.Api.Logic
 
             Factories.Add(
                 new InternalTransferGenerator().FixedId(),
-                (str, _, __) =>
+                (dict, _, __) =>
                 {
-                    var dict = ParseUriSettings(str);
                     var gen = new InternalTransferGenerator(dict.Value<uint>("timeNeeded", 180));
                     return (gen, false);
                 });
@@ -117,20 +114,13 @@ namespace Itinero.Transit.Api.Logic
                 new FirstLastMilePolicy(
                     new DummyOtherMode(), new DummyOtherMode(), new List<LocationId>(),
                     new DummyOtherMode(), new List<LocationId>()).FixedId(),
-                (str, departures, arrivals) =>
+                (dict, departures, arrivals) =>
                 {
-                    var dict = ParseUriSettings(str);
                     var defaultModeString =
                         new OsmTransferGenerator(RouterDb).OtherModeIdentifier();
                     var defaultMode = Uri.UnescapeDataString(dict.Value("default", defaultModeString));
                     var firstMile = Uri.UnescapeDataString(dict.Value("firstMile", defaultModeString));
                     var lastMile = Uri.UnescapeDataString(dict.Value("lastMile", defaultModeString));
-
-                    if (dict.ContainsKey("profile") || dict.ContainsKey("maxDistance"))
-                    {
-                        throw new ArgumentException("First-Last-Mile contains improperly formatted subgenerators: " +
-                                                    str);
-                    }
 
                     var gen = new FirstLastMilePolicy(
                         Create(defaultMode, departures, arrivals),
@@ -150,7 +140,7 @@ namespace Itinero.Transit.Api.Logic
 
             foreach (var f in Factories)
             {
-                var mode = f.Value.Invoke("", new List<LocationId>(), new List<LocationId>());
+                var mode = f.Value.Invoke(new Dictionary<string, string>(), new List<LocationId>(), new List<LocationId>());
                 urls.Add(mode.Item1.OtherModeIdentifier());
             }
 
@@ -174,7 +164,13 @@ namespace Itinero.Transit.Api.Logic
                 throw new KeyNotFoundException("The profile could not be decoded: " + description);
             }
 
-            var (walkGen, useCache) = Factories[fixedPart](description, starts, ends);
+            var dict = ParseUriSettings(description);
+            var (walkGen, useCache) = Factories[fixedPart](dict, starts, ends);
+            foreach (var kv in dict)
+            {
+                throw new ArgumentException(
+                    $"Wrong parameter in {description}: the following key was not used {kv.Key}");
+            }
 
             if (walkGen.OtherModeIdentifier() != Uri.UnescapeDataString(description))
             {
@@ -199,9 +195,8 @@ namespace Itinero.Transit.Api.Logic
         /// <summary>
         /// Converts the URI into a dictionary of settings
         /// </summary>
-        /// <param name="uri"></param>
         /// <returns></returns>
-        private static IReadOnlyDictionary<string, string> ParseUriSettings(string description)
+        private static Dictionary<string, string> ParseUriSettings(string description)
         {
             var parameters = new Dictionary<string, string>();
             if (string.IsNullOrEmpty(description))
@@ -242,7 +237,7 @@ namespace Itinero.Transit.Api.Logic
 
     public static class HelperExtensions
     {
-        public static T Value<T>(this IReadOnlyDictionary<string, string> dict, string key, T defaultValue = default(T))
+        public static T Value<T>(this Dictionary<string, string> dict, string key, T defaultValue = default(T))
         {
             if (!dict.ContainsKey(key)
                 || string.IsNullOrEmpty(dict[key]))
@@ -253,11 +248,16 @@ namespace Itinero.Transit.Api.Logic
             if (typeof(T).FullName == "System.String")
             {
                 // Hackety hack hack
-                return (T) (object) dict[key];
+                var v = (T) (object) dict[key];
+                dict.Remove(key);
+                return v ;
             }
 
+            var value = dict[key];
+            dict.Remove(key);
+
             // Yep, this is cheating ;)
-            return JToken.Parse(dict[key]).Value<T>();
+            return JToken.Parse(value).Value<T>();
         }
 
         public static string FixedId(this IOtherModeGenerator gen)
