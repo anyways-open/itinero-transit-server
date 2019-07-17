@@ -29,7 +29,7 @@ namespace Itinero.Transit.Api.Logic
         /// A version information string - useful to see what version is in production.
         /// The first letter of the word is increased alphabetically
         /// </summary>
-        public const string Version = "Osoc Pruimentaart (Itinero-transit 1.0.0-pre57)";
+        public const string Version = "Osoc Chaos Monkeys! (Itinero-transit 1.0.0-pre57)";
 
         /// <summary>
         /// This dictionary contains all the loaded transitDbs, indexed on their name.
