@@ -10,22 +10,22 @@ namespace Test
 {
     public class OtherModeBuilderTest
     {
-        [Fact]
-        public void TestOtherModeBuilderSimple()
-        {
-            var omb = new OtherModeBuilder();
-
-            var empty = new List<LocationId>();
-
-            var crow = omb.Create("crowsflight&speed=1.4&maxDistance=500", empty, empty);
-            var cf = crow as CrowsFlightTransferGenerator;
-            Assert.NotNull(cf);
-            Assert.Equal(500, cf.Range());
-            var crow0 = omb.Create("crowsflight&speed=1&maxDistance=1500", empty, empty);
-            var cf0 = crow0 as CrowsFlightTransferGenerator;
-            Assert.NotNull(cf0);
-            Assert.Equal(1500, cf0.Range());
-        }
+//        [Fact]
+//        public void TestOtherModeBuilderSimple()
+//        {
+//            var omb = new OtherModeBuilder();
+//
+//            var empty = new List<LocationId>();
+//
+//            var crow = omb.Create("crowsflight&speed=1.4&maxDistance=500", empty, empty);
+//            var cf = crow as CrowsFlightTransferGenerator;
+//            Assert.NotNull(cf);
+//            Assert.Equal(500, cf.Range());
+//            var crow0 = omb.Create("crowsflight&speed=1&maxDistance=1500", empty, empty);
+//            var cf0 = crow0 as CrowsFlightTransferGenerator;
+//            Assert.NotNull(cf0);
+//            Assert.Equal(1500, cf0.Range());
+//        }
 
         [Fact]
         public void TestOtherModeBuilderFirstLast()
