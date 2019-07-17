@@ -77,7 +77,7 @@ namespace Itinero.Transit.Api.Logic
                         dict.Value("maxDistance", 500),
                         dict.Value("speed", 1.4f)
                     );
-                    return (gen, true);
+                    return (gen, false);
                 });
 
             Factories.Add(

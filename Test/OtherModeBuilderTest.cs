@@ -18,6 +18,7 @@ namespace Test
             var empty = new List<LocationId>();
 
             var crow = omb.Create("crowsflight&speed=1.4&maxDistance=500", empty, empty);
+            
             var cf = crow as CrowsFlightTransferGenerator;
             Assert.NotNull(cf);
             Assert.Equal(500, cf.Range());

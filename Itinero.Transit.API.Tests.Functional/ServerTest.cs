@@ -735,7 +735,7 @@ namespace Itinero.Transit.API.Tests.Functional
             }
             catch (Exception e)
             {
-                Console.WriteLine("DOWNLOADING FAILED: " + e.Message);
+                Console.WriteLine("\r[FAILED] DOWNLOADING FAILED: " + e.Message);
             }
         }
 

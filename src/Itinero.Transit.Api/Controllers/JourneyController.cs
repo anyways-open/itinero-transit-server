@@ -77,8 +77,15 @@ namespace Itinero.Transit.Api.Controllers
             {
                 if (inBetweenOsmProfile != null)
                 {
-                    walksGeneratorDescription =
-                        $"osm&maxDistance={inBetweenSearchDistance}&profile={inBetweenOsmProfile}";
+                    if (inBetweenOsmProfile.ToLower() == "crowsflight")
+                    {
+                        walksGeneratorDescription = $"crowsflight&maxDistance={inBetweenSearchDistance}";
+                    }
+                    else
+                    {
+                        walksGeneratorDescription =
+                            $"osm&maxDistance={inBetweenSearchDistance}&profile={inBetweenOsmProfile}";
+                    }
                 }
 
                 if (firstMileOsmProfile != null)
@@ -110,14 +117,15 @@ namespace Itinero.Transit.Api.Controllers
                     internalTransferTime,
                     maxNumberOfTransfers: maxNumberOfTransfers);
 
-                var (journeys, queryStart, queryEnd) =
+                 var (journeys, queryStart, queryEnd) =
                     profile.BuildJourneys(from, to, departure, arrival, multipleOptions);
 
 
                 // ReSharper disable once PossibleMultipleEnumeration
                 if (journeys == null || !journeys.Any())
                 {
-                    return new QueryResult(null, start, DateTime.Now, queryStart, queryEnd, profile.WalksGenerator.OtherModeIdentifier());
+                    return new QueryResult(null, start, DateTime.Now, queryStart, queryEnd,
+                        profile.WalksGenerator.OtherModeIdentifier());
                 }
 
 

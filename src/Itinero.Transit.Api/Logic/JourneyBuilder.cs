@@ -126,7 +126,7 @@ namespace Itinero.Transit.Api.Logic
                 {
                     reader,
                     new OsmLocationStopReader(osmIndex, true),
-                }); // We don't cache here - only case cache will be missed is around the new stop locations
+                }).UseCache(); // We don't cache here - only case cache will be missed is around the new stop locations
 
             // Calculate the first and last miles, in order to
             // 1) Detect impossible routes
