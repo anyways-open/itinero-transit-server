@@ -60,7 +60,7 @@ namespace Itinero.Transit.Api.Logic
 
         private static void DetectFirstMileWalks<T>(
             this Profile<T> p,
-            IStopsReader stops, IStop stop, uint osmIndex) where T : IJourneyMetric<T>
+            IStopsReader stops, IStop stop, uint osmIndex, bool isLastMile, string name) where T : IJourneyMetric<T>
         {
             if (stop.Id.DatabaseId != osmIndex)
             {
@@ -71,34 +71,83 @@ namespace Itinero.Transit.Api.Logic
             }
 
             var inRange = stops.LocationsInRange(stop.Latitude, stop.Longitude, p.WalksGenerator.Range()).ToList();
-            inRange.Remove(stop);
-            if (inRange == null || !inRange.Any())
+            if (inRange == null || !inRange.Any() || (inRange.Count == 1 && inRange[0].Id.Equals(stop.Id)))
             {
                 throw new ArgumentException(
-                    $"Could not find a station that is range from {stop.GlobalId} within {p.WalksGenerator.Range()}m. This is in crows flight, try increasing the range of your walksGenerator");
+                    $"Could not find a station that is range from the {name}-location {stop.GlobalId} within {p.WalksGenerator.Range()}m. This range is calculated 'as the  crows fly', try increasing the range of your walksGenerator");
             }
 
-            var foundRoutes = p.WalksGenerator.TimesBetween(stop, inRange);
+            Dictionary<StopId, uint> foundRoutes;
+            if (isLastMile)
+            {
+                foundRoutes = new Dictionary<StopId, uint>();
+                foreach (var stp in inRange)
+                {
+                    var t = p.WalksGenerator.TimeBetween(stp, stop);
+                    if (t == uint.MaxValue)
+                    {
+                        continue;
+                    }
+
+                    foundRoutes.Add(stp.Id, t);
+                }
+            }
+            else
+            {
+                foundRoutes = p.WalksGenerator.TimesBetween(stop, inRange);
+            }
 
             if (foundRoutes == null || !foundRoutes.Any())
             {
                 var w = p.WalksGenerator;
 
+                if (w is OtherModeCacher c)
+                {
+                    w = c;
+                }
+
+
                 var errors = new List<string>();
                 foreach (var stp in inRange)
                 {
-                    if (w is OsmTransferGenerator osm)
+                    var gen = w;
+                    if (w is FirstLastMilePolicy flm)
                     {
+                        if (isLastMile)
+                        {
+                            gen = flm.GeneratorFor(stp.Id, stop.Id);
+                        }
+                        else
+                        {
+                            gen = flm.GeneratorFor(stop.Id, stp.Id);
+                        }
+                    }
+
+                    if (gen is OtherModeCacher c0)
+                    {
+                        gen = c0.Fallback;
+                    }
+
+                    if (gen is OsmTransferGenerator osm)
+                    {
+                        // THIS IS ONLY THE ERROR CASE
+                        // NO, this isn't cached, I know that
                         osm.CreateRoute((stop.Latitude, stop.Longitude), (stp.Latitude, stp.Longitude), out _,
                             out var errMessage);
                         errors.Add($"Could not reach {stp.GlobalId}: {errMessage}");
+                    }
+
+                    if (gen is CrowsFlightTransferGenerator crow)
+                    {
+                        errors.Add(
+                            $"From {stop.GlobalId} to {stp.GlobalId} is too far for {crow.OtherModeIdentifier()}");
                     }
                 }
 
                 var allErrs = string.Join("\n ", errors);
 
                 throw new ArgumentException(
-                    $"Could not find a route over OSM towards/from the departure or end station.\n Station is {stop.GlobalId}\n {allErrs}");
+                    $"Could not find a route over OSM towards/from the {name}-location.\n The location we couldn't reach is {stop.GlobalId}\n {allErrs}");
             }
         }
 
@@ -137,9 +186,9 @@ namespace Itinero.Transit.Api.Logic
 
             stopsReader.MoveTo(to);
             var toStop = new Stop(stopsReader);
-            
-            p.DetectFirstMileWalks(stopsReader, fromStop, osmIndex);
-            p.DetectFirstMileWalks(stopsReader, toStop, osmIndex);
+
+            p.DetectFirstMileWalks(stopsReader, fromStop, osmIndex, false, "departure");
+            p.DetectFirstMileWalks(stopsReader, toStop, osmIndex, true, "arrival");
 
 
             var precalculator =

@@ -60,7 +60,7 @@ namespace Itinero.Transit.Api.Logic
 
 
             var connectionReader = dbs.GetConnectionsReader();
-            var tripReader = dbs.GetTripsReader();
+            // TODO var tripReader = dbs.GetTripsReader();
 
             // Skip the first connection, that is the boring genesis anyway
             for (var i = 1; i < parts.Count; i++)
@@ -80,11 +80,14 @@ namespace Itinero.Transit.Api.Logic
 
                     // ... and the trip info (which is saved in the segment section below but not immediatly needed)
                     var trip = new Trip();
-                    tripReader.Get(j.TripId, trip);
-                    var vehicleId = trip.GlobalId;
-                    trip.Attributes.TryGetValue("headsign", out var headsign);
-                    headsign = headsign ?? "";
-
+                    /* TODO   tripReader.Get(j.TripId, trip);
+                       var vehicleId = trip.GlobalId;
+                     trip.Attributes.TryGetValue("headsign", out var headsign);
+                       headsign = headsign ?? "";
+                     /*/
+                    var headsign = "head";
+                    var vehicleId = "vehicleId"; 
+                    //*/
 
                     // Now, we walk along the journey to find the end of this segment
                     // In the meanwhile, record intermediate stops
@@ -257,17 +260,18 @@ namespace Itinero.Transit.Api.Logic
             var trips = dbs.GetTripsReader();
             var timeMax = time.Add(window).ToUnixTime();
             var segments = new List<Segment>();
-            do{
+            do
+            {
                 var connection = new Connection();
                 departureEnumerator.Current(connection);
-                
+
                 if (!connection.DepartureStop.Equals(stop)) continue;
                 if (connection.DepartureTime >= timeMax) break;
 
                 var trip = new Trip();
-                if (! trips.Get(connection.TripId, trip)) continue;
+                if (!trips.Get(connection.TripId, trip)) continue;
                 ;
-                
+
                 trip.Attributes.TryGetValue("headsign", out var headSign);
                 trip.Attributes.TryGetValue("route", out var route);
 
@@ -281,8 +285,7 @@ namespace Itinero.Transit.Api.Logic
 
 
                 segments.Add(new Segment(departure, arrival, route, headSign, null));
-            }
-            while (departureEnumerator.HasNext()) ;
+            } while (departureEnumerator.HasNext());
 
 
             return new LocationSegmentsResult()
