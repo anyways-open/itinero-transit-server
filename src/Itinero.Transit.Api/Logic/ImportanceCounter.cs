@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using Itinero.Transit.Data;
+using Itinero.Transit.Data.Core;
 using Itinero.Transit.Data.Synchronization;
 using Itinero.Transit.Utils;
 
@@ -20,7 +20,7 @@ namespace Itinero.Transit.Api.Logic
 
         public void Run(DateTime triggerDate, TransitDbUpdater db)
         {
-            var frequencies = new Dictionary<LocationId, uint>();
+            var frequencies = new Dictionary<StopId, uint>();
 
             // Count how many connections depart at the given station
 
@@ -28,20 +28,22 @@ namespace Itinero.Transit.Api.Logic
             var enumerator = db.TransitDb.Latest.ConnectionsDb.GetDepartureEnumerator();
             foreach (var (start, end) in db.LoadedTimeWindows)
             {
-                enumerator.MoveNext(start);
-                do
+                enumerator.MoveTo(start.ToUnixTime());
+                var connection = new Connection();
+                while (enumerator.HasNext() && enumerator.CurrentDateTime < end.ToUnixTime())
                 {
-                    _nowScanning = enumerator.DepartureTime;
-                    if (enumerator.CanGetOn())
+                    enumerator.Current(connection);
+                    _nowScanning = connection.DepartureTime;
+                    if (connection.CanGetOn())
                     {
-                        IncreaseCount(frequencies, enumerator.DepartureStop);
+                        IncreaseCount(frequencies, connection.DepartureStop);
                     }
 
-                    if (enumerator.CanGetOff())
+                    if (connection.CanGetOff())
                     {
-                        IncreaseCount(frequencies, enumerator.ArrivalStop);
+                        IncreaseCount(frequencies, connection.ArrivalStop);
                     }
-                } while (enumerator.MoveNext() && enumerator.DepartureTime < end.ToUnixTime());
+                }
             }
 
             _state = "Converting internal IDs into URIs";
@@ -56,9 +58,8 @@ namespace Itinero.Transit.Api.Logic
             }
 
             State.GlobalState.ImportancesInternal = frequencies;
-            
-            
-            
+
+
             State.GlobalState.Importances = importances;
             _state = "Done";
         }

@@ -1,4 +1,3 @@
-using Itinero.LocalGeo;
 using Itinero.Profiles;
 
 namespace Itinero.Transit.Api.Logic

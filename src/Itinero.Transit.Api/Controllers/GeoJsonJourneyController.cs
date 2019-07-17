@@ -1,7 +1,5 @@
 using System;
-using System.Linq;
 using Itinero.Transit.Api.Logic;
-using Itinero.Transit.Api.Logic.Itinero.Transit.Journey.Metric;
 using Itinero.Transit.Api.Models;
 using Microsoft.AspNetCore.Mvc;
 

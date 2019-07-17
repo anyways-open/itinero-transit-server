@@ -1,13 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Schema;
 using Itinero.Transit.Data;
 using Itinero.Transit.Data.Aggregators;
+using Itinero.Transit.Data.Core;
 using Itinero.Transit.Data.Synchronization;
 using Itinero.Transit.IO.OSM.Data;
-using Reminiscence.Arrays;
-using Serilog;
 
 namespace Itinero.Transit.Api.Logic
 {
@@ -58,7 +56,7 @@ namespace Itinero.Transit.Api.Logic
         /// How important is each station?
         /// Maps InternalID -> Number of trains stopping
         /// </summary>
-        public Dictionary<LocationId, uint> ImportancesInternal;
+        public Dictionary<StopId, uint> ImportancesInternal;
 
 
         /// <summary>
@@ -126,12 +124,11 @@ namespace Itinero.Transit.Api.Logic
             }
         }
 
-        public IConnectionReader GetConnectionsReader()
+        public IDatabaseReader<ConnectionId, Connection> GetConnectionsReader()
         {
-            var readers = All().Select(tdb =>
-                (IConnectionReader) tdb.ConnectionsDb.GetReader()).ToList();
+            var readers = All().Select(tdb => tdb.ConnectionsDb).ToList();
 
-            return ConnectionReaderAggregator.CreateFrom(readers);
+            return DatabaseEnumeratorAggregator<ConnectionId, Connection>.CreateFrom(readers);
         }
 
         public IConnectionEnumerator GetConnections()
@@ -143,11 +140,11 @@ namespace Itinero.Transit.Api.Logic
         }
 
 
-        public ITripReader GetTripsReader()
+        public IDatabaseReader<TripId, Trip> GetTripsReader()
         {
             var readers =
-                All().Select(tdb => (ITripReader) tdb.TripsDb.GetReader());
-            return TripReaderAggregator.CreateFrom(readers);
+                All().Select(tdb => tdb.TripsDb);
+            return DatabaseEnumeratorAggregator<TripId, Trip>.CreateFrom(readers);
         }
 
         public IEnumerable<TransitDb.TransitDbSnapShot> All()

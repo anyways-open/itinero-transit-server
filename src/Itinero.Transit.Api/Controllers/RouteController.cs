@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Itinero.Transit.Api.Logic;
 using Itinero.Transit.Api.Models;
-using Itinero.Transit.Data;
-using Itinero.Transit.IO.OSM;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Itinero.Transit.Api.Controllers

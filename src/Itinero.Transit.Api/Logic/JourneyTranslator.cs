@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Itinero.Transit.Api.Models;
-using Itinero.Transit.Data;
+using Itinero.Transit.Data.Core;
 using Itinero.Transit.IO.OSM;
 using Itinero.Transit.Journey;
 using Itinero.Transit.OtherMode;
@@ -59,8 +59,8 @@ namespace Itinero.Transit.Api.Logic
             var vehiclesTaken = 0;
 
 
-            var connection = dbs.GetConnectionsReader();
-            var trip = dbs.GetTripsReader();
+            var connectionReader = dbs.GetConnectionsReader();
+            var tripReader = dbs.GetTripsReader();
 
             // Skip the first connection, that is the boring genesis anyway
             for (var i = 1; i < parts.Count; i++)
@@ -69,10 +69,9 @@ namespace Itinero.Transit.Api.Logic
 
                 if (!j.SpecialConnection)
                 {
+                    var connection = new Connection();
+                    connectionReader.Get(j.Connection, connection);
                     // First, we get the departure information
-                    connection.MoveTo(
-                        j.Location.DatabaseId,
-                        j.Connection); // The connection will always be hosted by the operator owning the stop position
                     var departure = dbs.LocationOf(connection.DepartureStop);
                     var departureTimed = new TimedLocation(
                         departure,
@@ -80,7 +79,8 @@ namespace Itinero.Transit.Api.Logic
                         connection.DepartureDelay);
 
                     // ... and the trip info (which is saved in the segment section below but not immediatly needed)
-                    trip.MoveTo(j.TripId);
+                    var trip = new Trip();
+                    tripReader.Get(j.TripId, trip);
                     var vehicleId = trip.GlobalId;
                     trip.Attributes.TryGetValue("headsign", out var headsign);
                     headsign = headsign ?? "";
@@ -89,7 +89,7 @@ namespace Itinero.Transit.Api.Logic
                     // Now, we walk along the journey to find the end of this segment
                     // In the meanwhile, record intermediate stops
                     var allStations = new List<TimedLocation> {departureTimed};
-                    
+
                     while (true)
                     {
                         if (i + 1 >= parts.Count)
@@ -119,7 +119,8 @@ namespace Itinero.Transit.Api.Logic
 
                         // We pass a stop
                         var loc = dbs.LocationOf(parts[i].Location);
-                        connection.MoveTo(parts[i].Location.DatabaseId, parts[i - 1].Connection);
+
+                        connectionReader.Get(parts[i - 1].Connection, connection);
 
                         var tloc = new TimedLocation(loc, parts[i].Time, connection.ArrivalDelay);
                         allStations.Add(tloc);
@@ -127,8 +128,8 @@ namespace Itinero.Transit.Api.Logic
                     // At this point, parts[i] is the last part of our journey
 
                     j = parts[i];
-                    
-                    connection.MoveTo(j.Location.DatabaseId, j.Connection);
+
+                    connectionReader.Get(j.Connection, connection);
                     var arrival = dbs.LocationOf(connection.ArrivalStop);
                     var arrivalTimed = new TimedLocation(arrival,
                         connection.ArrivalTime, connection.ArrivalDelay);
@@ -140,7 +141,7 @@ namespace Itinero.Transit.Api.Logic
                 }
 
 
-                if (j.SpecialConnection && j.Connection == Journey<T>.OTHERMODE)
+                if (j.SpecialConnection && j.Connection.Equals(Journey<T>.OTHERMODE))
                 {
                     if (j.Location.Equals(j.PreviousLink.Location))
                     {
@@ -214,7 +215,7 @@ namespace Itinero.Transit.Api.Logic
             return !stops.MoveTo(globalId) ? null : new Location(stops);
         }
 
-        private static Location LocationOf(this State dbs, LocationId localId)
+        private static Location LocationOf(this State dbs, StopId localId)
         {
             var stops = dbs.GetStopsReader(true);
 
@@ -241,7 +242,10 @@ namespace Itinero.Transit.Api.Logic
             var stop = stops.Id;
 
             var departureEnumerator = dbs.GetConnections();
-            if (!departureEnumerator.MoveNext(time))
+            departureEnumerator.MoveTo(time.ToUnixTime());
+
+
+            if (!departureEnumerator.HasNext())
             {
                 return new LocationSegmentsResult()
                 {
@@ -253,27 +257,33 @@ namespace Itinero.Transit.Api.Logic
             var trips = dbs.GetTripsReader();
             var timeMax = time.Add(window).ToUnixTime();
             var segments = new List<Segment>();
-            while (departureEnumerator.MoveNext())
-            {
-                var connection = (IConnection) departureEnumerator;
-                if (!departureEnumerator.DepartureStop.Equals(stop)) continue;
-                if (departureEnumerator.DepartureTime >= timeMax) break;
+            do{
+                var connection = new Connection();
+                departureEnumerator.Current(connection);
+                
+                if (!connection.DepartureStop.Equals(stop)) continue;
+                if (connection.DepartureTime >= timeMax) break;
 
-                if (!trips.MoveTo(departureEnumerator.TripId)) continue;
-                trips.Attributes.TryGetValue("headsign", out var headSign);
-                trips.Attributes.TryGetValue("route", out var route);
+                var trip = new Trip();
+                if (! trips.Get(connection.TripId, trip)) continue;
+                ;
+                
+                trip.Attributes.TryGetValue("headsign", out var headSign);
+                trip.Attributes.TryGetValue("route", out var route);
 
-                if (!stops.MoveTo(departureEnumerator.DepartureStop)) continue;
+                if (!stops.MoveTo(connection.DepartureStop)) continue;
                 var departure = new TimedLocation(new Location(stops),
                     connection.DepartureTime, connection.DepartureDelay);
 
-                if (!stops.MoveTo(departureEnumerator.ArrivalStop)) continue;
+                if (!stops.MoveTo(connection.ArrivalStop)) continue;
                 var arrival = new TimedLocation(new Location(stops),
                     connection.ArrivalTime, connection.ArrivalDelay);
 
 
                 segments.Add(new Segment(departure, arrival, route, headSign, null));
             }
+            while (departureEnumerator.HasNext()) ;
+
 
             return new LocationSegmentsResult()
             {

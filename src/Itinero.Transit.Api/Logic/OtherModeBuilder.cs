@@ -11,6 +11,7 @@ using Newtonsoft.Json.Linq;
 using Itinero.Profiles.Lua;
 using System.IO;
 using Itinero.IO.Osm.Tiles;
+using Itinero.Transit.Data.Core;
 using Serilog;
 
 
@@ -22,9 +23,9 @@ namespace Itinero.Transit.Api.Logic
 
         public readonly
             Dictionary<string,
-                Func<Dictionary<string, string>, List<LocationId>, List<LocationId>, (IOtherModeGenerator, bool useCache)>>
+                Func<Dictionary<string, string>, List<StopId>, List<StopId>, (IOtherModeGenerator, bool useCache)>>
             Factories =
-                new Dictionary<string, Func<Dictionary<string, string>, List<LocationId>, List<LocationId>, (IOtherModeGenerator, bool useCache)>>();
+                new Dictionary<string, Func<Dictionary<string, string>, List<StopId>, List<StopId>, (IOtherModeGenerator, bool useCache)>>();
 
 
         // First profile is the default profile
@@ -112,8 +113,8 @@ namespace Itinero.Transit.Api.Logic
 
             Factories.Add(
                 new FirstLastMilePolicy(
-                    new DummyOtherMode(), new DummyOtherMode(), new List<LocationId>(),
-                    new DummyOtherMode(), new List<LocationId>()).FixedId(),
+                    new DummyOtherMode(), new DummyOtherMode(), new List<StopId>(),
+                    new DummyOtherMode(), new List<StopId>()).FixedId(),
                 (dict, departures, arrivals) =>
                 {
                     var defaultModeString =
@@ -140,7 +141,7 @@ namespace Itinero.Transit.Api.Logic
 
             foreach (var f in Factories)
             {
-                var mode = f.Value.Invoke(new Dictionary<string, string>(), new List<LocationId>(), new List<LocationId>());
+                var mode = f.Value.Invoke(new Dictionary<string, string>(), new List<StopId>(), new List<StopId>());
                 urls.Add(mode.Item1.OtherModeIdentifier());
             }
 
@@ -151,7 +152,7 @@ namespace Itinero.Transit.Api.Logic
             new Dictionary<string, IOtherModeGenerator>();
 
 
-        public IOtherModeGenerator Create(string description, List<LocationId> starts, List<LocationId> ends)
+        public IOtherModeGenerator Create(string description, List<StopId> starts, List<StopId> ends)
         {
             if (_cachedOtherModeGenerators.ContainsKey(description))
             {
@@ -266,7 +267,7 @@ namespace Itinero.Transit.Api.Logic
             throw new NotImplementedException();
         }
 
-        public Dictionary<LocationId, uint> TimesBetween(IStop from, IEnumerable<IStop> to)
+        public Dictionary<StopId, uint> TimesBetween(IStop from, IEnumerable<IStop> to)
         {
             throw new NotImplementedException();
         }

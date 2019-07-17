@@ -1,8 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Threading.Channels;
 using Itinero.Transit.Api.Logic;
-using Itinero.Transit.Data;
+using Itinero.Transit.Data.Core;
 using Itinero.Transit.OtherMode;
 using Xunit;
 
@@ -15,7 +14,7 @@ namespace Test
         {
             var omb = new OtherModeBuilder();
 
-            var empty = new List<LocationId>();
+            var empty = new List<StopId>();
 
             var crow = omb.Create("crowsflight&speed=1.4&maxDistance=500", empty, empty);
             
@@ -33,7 +32,7 @@ namespace Test
         {
             var omb = new OtherModeBuilder();
 
-            var empty = new List<LocationId>();
+            var empty = new List<StopId>();
 
 
             var desc = "firstLastMile" +

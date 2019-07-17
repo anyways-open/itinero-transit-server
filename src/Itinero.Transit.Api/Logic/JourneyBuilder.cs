@@ -1,16 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Itinero.Profiles;
 using Itinero.Transit.Data;
 using Itinero.Transit.Data.Aggregators;
+using Itinero.Transit.Data.Core;
 using Itinero.Transit.IO.OSM;
 using Itinero.Transit.IO.OSM.Data;
 using Itinero.Transit.Journey;
 using Itinero.Transit.Journey.Metric;
 using Itinero.Transit.OtherMode;
 using Itinero.Transit.Utils;
-using Microsoft.EntityFrameworkCore.Internal;
 
 namespace Itinero.Transit.Api.Logic
 {
@@ -38,8 +37,8 @@ namespace Itinero.Transit.Api.Logic
 
             var walksGenerator = State.GlobalState.OtherModeBuilder.Create(
                 walksGeneratorDescription,
-                new List<LocationId> {fromId},
-                new List<LocationId> {toId}
+                new List<StopId> {fromId},
+                new List<StopId> {toId}
             );
 
 

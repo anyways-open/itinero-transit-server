@@ -1,5 +1,4 @@
-﻿using System;
-using Itinero.Transit.Api;
+﻿using Itinero.Transit.Api;
 
 namespace Itinero.Transit.API.Tests.Functional
 {

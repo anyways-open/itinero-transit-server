@@ -6,7 +6,6 @@ using Itinero.Transit.Data;
 using Itinero.Transit.Data.Synchronization;
 using Itinero.Transit.IO.LC;
 using Itinero.Transit.IO.OSM.Data;
-using Itinero.Transit.Utils;
 using Microsoft.Extensions.Configuration;
 using Serilog;
 
@@ -210,30 +209,6 @@ namespace Itinero.Transit.Api.Logic
                 Log.Information($"Attempting to read a transitDB from {path}");
                 var db = TransitDb.ReadFrom(path, id);
                 Log.Information("All read! Trying to determine loaded period");
-
-                try
-                {
-                    // This is a bit of an unstable hack, only good for logging and debugging
-                    var enumerator = db.Latest.ConnectionsDb.GetDepartureEnumerator();
-                    enumerator.MoveNext(new DateTime(DateTime.Now.Year, 1, 1));
-                    enumerator.MoveNext();
-                    var startDate = enumerator.DepartureTime.FromUnixTime();
-
-                    enumerator = db.Latest.ConnectionsDb.GetDepartureEnumerator();
-
-                    enumerator.MoveNext(new DateTime(DateTime.Now.Year + 1, 1, 1));
-                    enumerator.MovePrevious();
-                    var endDate = enumerator.DepartureTime.FromUnixTime();
-
-
-                    Log.Information(
-                        $"Loaded transitdb from {path}. Estimated range {startDate} --> {endDate} ");
-                }
-                catch (Exception e)
-                {
-                    Log.Warning(e.Message);
-                }
-
 
                 return db;
             }
