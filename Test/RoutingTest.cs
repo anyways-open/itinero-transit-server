@@ -1,5 +1,6 @@
 using Itinero;
 using Itinero.IO.Osm.Tiles;
+using Itinero.Transit.Api;
 using Itinero.Transit.Api.Logic;
 using Itinero.Transit.IO.OSM;
 using Itinero.Transit.OtherMode;
@@ -9,9 +10,10 @@ namespace Test
 {
     public class RoutingTest
     {
-        // [Fact]
+        [Fact]
         public void TestRegressingRoute()
         {
+            Startup.ConfigureLogging();
             var omb = new OtherModeBuilder("rt-cache");
             var cacher = (OtherModeCacher)
                 omb.Create("osm&profile=pedestrian&maxDistance=5000", null, null);
