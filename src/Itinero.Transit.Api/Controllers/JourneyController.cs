@@ -68,16 +68,19 @@ namespace Itinero.Transit.Api.Controllers
                 return BadRequest("From or To is missing");
             }
 
-            from = Uri.UnescapeDataString(from);
-            to = Uri.UnescapeDataString(to);
-
-
-            if (Equals(from, to))
+            try
             {
-                return BadRequest("The given from- and to- locations are the same");
-            }
 
-            var start = DateTime.Now;
+                from = Uri.UnescapeDataString(from);
+                to = Uri.UnescapeDataString(to);
+
+
+                if (Equals(from, to))
+                {
+                    return BadRequest("The given from- and to- locations are the same");
+                }
+
+                var start = DateTime.Now;
 
                 if (inBetweenOsmProfile != null)
                 {
@@ -121,7 +124,7 @@ namespace Itinero.Transit.Api.Controllers
                     internalTransferTime,
                     maxNumberOfTransfers: maxNumberOfTransfers);
 
-                 var (journeys, queryStart, queryEnd) =
+                var (journeys, queryStart, queryEnd) =
                     profile.BuildJourneys(from, to, departure, arrival, multipleOptions);
 
 
@@ -146,6 +149,11 @@ namespace Itinero.Transit.Api.Controllers
                 return new QueryResult(State.GlobalState.Translate(journeys, profile.WalksGenerator),
                     start, end,
                     queryStart, queryEnd, profile.WalksGenerator.OtherModeIdentifier());
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
            
         }
     }
