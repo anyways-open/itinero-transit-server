@@ -2,11 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Itinero.Transit.Api.Models;
+using Itinero.Transit.Data;
 using Itinero.Transit.Data.Core;
 using Itinero.Transit.IO.OSM;
 using Itinero.Transit.Journey;
 using Itinero.Transit.OtherMode;
 using Itinero.Transit.Utils;
+using Serilog;
 
 namespace Itinero.Transit.Api.Logic
 {
@@ -46,6 +48,145 @@ namespace Itinero.Transit.Api.Logic
             return new Geojson(features);
         }
 
+        private static (Segment, int newIndex) TranslateSegment<T>(this State dbs, List<Journey<T>> parts, int i)
+            where T : IJourneyMetric<T>
+        {
+            var j = parts[i];
+            var connectionReader = dbs.GetConnectionsReader();
+            var connection = connectionReader.Get(j.Connection);
+
+
+            // Get all the trip info for this segment
+            var tripReader = dbs.GetTripsReader();
+            var trip = new Trip();
+            tripReader.Get(j.TripId, trip);
+            var vehicleId = trip?.GlobalId ?? "";
+            if (!trip.Attributes.TryGetValue("headsign", out var headsign))
+            {
+                headsign = "";
+            }
+
+
+            // Get the departure information
+            var departure = dbs.LocationOf(connection.DepartureStop);
+            var departureTimed = new TimedLocation(
+                departure,
+                connection.DepartureTime.FromUnixTime(),
+                connection.DepartureDelay);
+
+
+            // Now, we walk along the journey to find the end of this segment
+            // In the meanwhile, record intermediate stops
+            var allStations = new List<TimedLocation> {departureTimed};
+
+            // This loops walks further down the journey
+            // It will let 'i' point to the latest element of this segment
+            while (true)
+            {
+                i++;
+                if (i >= parts.Count)
+                {
+                    // Oops, reached the last element
+                    i--;
+                    break;
+                }
+
+                var p = parts[i];
+                if (p.SpecialConnection)
+                {
+                    // We are too far!
+                    // This part is a transfer/walk/...
+                    i--;
+                    break;
+                }
+
+                // ReSharper disable once InvertIf
+                if (!p.TripId.Equals(j.TripId))
+                {
+                    // We are too far!
+                    // This part has a different trip id
+                    i--;
+                    break;
+                }
+
+                // We pass a stop
+                // We should add this to the intermediate stops
+                var loc = dbs.LocationOf(parts[i].Location);
+                var c = connectionReader.Get(parts[i - 1].Connection);
+                
+                var tloc = new TimedLocation(loc, parts[i].Time, connection.ArrivalDelay);
+                allStations.Add(tloc);
+            }
+            // At this point, parts[i] is the last part of our journey
+
+            j = parts[i];
+
+            connectionReader.Get(j.Connection, connection);
+            var arrival = dbs.LocationOf(connection.ArrivalStop);
+            var arrivalTimed = new TimedLocation(arrival,
+                connection.ArrivalTime, connection.ArrivalDelay);
+
+            if (!allStations.Last().Location.Id.Equals(arrival.Id))
+            {
+                allStations.Add(arrivalTimed);
+            }
+
+            return (new Segment(departureTimed, arrivalTimed, vehicleId, headsign, allStations), i);
+        }
+
+        /// <summary>
+        /// Extract a single segment which has a special status
+        /// Can be null if unneeded
+        /// </summary>
+        /// <returns></returns>
+        private static Segment TranslateWalkSegment<T>(this State dbs,
+            Journey<T> j, IOtherModeGenerator walkgenerator) where T : IJourneyMetric<T>
+        {
+            if (j.Location.Equals(j.PreviousLink.Location))
+            {
+                // Object represent a transfer without moving...
+                // We skip this if the next is an othermode as well
+                return null;
+            }
+
+            // This is a piece where we walk/cycle/... or some other continuous transportation mode
+            // Lets try to figure out what exactly we are doing
+
+            var departure = dbs.LocationOf(j.PreviousLink.Location);
+            var departureTimed = new TimedLocation(
+                departure, j.PreviousLink.Time, 0);
+            var arrival = dbs.LocationOf(j.Location);
+            var arrivalTimed = new TimedLocation(
+                arrival, j.Time, 0);
+
+            List<Coordinate> coordinates = null;
+
+            var walkGenerator = walkgenerator.GetSource(j.PreviousLink.Location, j.Location);
+
+            if (walkGenerator is OsmTransferGenerator osm)
+            {
+                var route = osm.CreateRoute(
+                    ((float) departure.Lat, (float) departure.Lon),
+                    ((float) arrival.Lat, (float) arrival.Lon), out _, out var errorMessage);
+                if (route == null)
+                {
+                    Log.Error(
+                        $"Weird: got a journey with an OSM-route from {departure.Id} to {arrival.Id}, with a timing of apparently {j.Time - j.PreviousLink.Time}, but now we can't calculate a route anymore...");
+                }
+                else
+                {
+                    coordinates = route.Shape.Select(
+                        coor => new Coordinate(coor.Latitude, coor.Longitude)).ToList();
+                }
+            }
+
+            return new Segment(
+                departureTimed, arrivalTimed,
+                walkGenerator?.OtherModeIdentifier() ?? "?",
+                coordinates
+            );
+        }
+
         /// <summary>
         /// Translates a single, forward journey into the Models which can be JSONified
         /// </summary>
@@ -53,14 +194,12 @@ namespace Itinero.Transit.Api.Logic
         public static Models.Journey Translate<T>(
             this State dbs, Journey<T> journey, IOtherModeGenerator walkGenerator) where T : IJourneyMetric<T>
         {
-            var parts = journey.ToList(); // Puts genesis neatly at the start
-            var segments = new List<Segment>();
+            var parts = journey.ToList(); //Creates a list of the journey
 
+
+            var segments = new List<Segment>();
             var vehiclesTaken = 0;
 
-
-            var connectionReader = dbs.GetConnectionsReader();
-            // TODO var tripReader = dbs.GetTripsReader();
 
             // Skip the first connection, that is the boring genesis anyway
             for (var i = 1; i < parts.Count; i++)
@@ -69,129 +208,23 @@ namespace Itinero.Transit.Api.Logic
 
                 if (!j.SpecialConnection)
                 {
-                    var connection = new Connection();
-                    connectionReader.Get(j.Connection, connection);
-                    // First, we get the departure information
-                    var departure = dbs.LocationOf(connection.DepartureStop);
-                    var departureTimed = new TimedLocation(
-                        departure,
-                        connection.DepartureTime.FromUnixTime(),
-                        connection.DepartureDelay);
-
-                    // ... and the trip info (which is saved in the segment section below but not immediatly needed)
-                    var trip = new Trip();
-                    /* TODO   tripReader.Get(j.TripId, trip);
-                       var vehicleId = trip.GlobalId;
-                     trip.Attributes.TryGetValue("headsign", out var headsign);
-                       headsign = headsign ?? "";
-                     /*/
-                    var headsign = "head";
-                    var vehicleId = "vehicleId"; 
-                    //*/
-
-                    // Now, we walk along the journey to find the end of this segment
-                    // In the meanwhile, record intermediate stops
-                    var allStations = new List<TimedLocation> {departureTimed};
-
-                    while (true)
-                    {
-                        if (i + 1 >= parts.Count)
-                        {
-                            // We have reached the last journey part and thus found the last piece of our journey
-                            break;
-                        }
-
-                        i++;
-                        var p = parts[i];
-                        if (p.SpecialConnection)
-                        {
-                            // We are too far!
-                            // This part is a transfer/walk/...
-                            i--;
-                            break;
-                        }
-
-                        // ReSharper disable once InvertIf
-                        if (!p.TripId.Equals(j.TripId))
-                        {
-                            // We are too far!
-                            // This part has a different trip id
-                            i--;
-                            break;
-                        }
-
-                        // We pass a stop
-                        var loc = dbs.LocationOf(parts[i].Location);
-
-                        connectionReader.Get(parts[i - 1].Connection, connection);
-
-                        var tloc = new TimedLocation(loc, parts[i].Time, connection.ArrivalDelay);
-                        allStations.Add(tloc);
-                    }
-                    // At this point, parts[i] is the last part of our journey
-
-                    j = parts[i];
-
-                    connectionReader.Get(j.Connection, connection);
-                    var arrival = dbs.LocationOf(connection.ArrivalStop);
-                    var arrivalTimed = new TimedLocation(arrival,
-                        connection.ArrivalTime, connection.ArrivalDelay);
-
-                    var segment = new Segment(departureTimed, arrivalTimed, vehicleId, headsign, allStations);
+                    Segment segment;
+                    (segment, i) = dbs.TranslateSegment(parts, i);
                     segments.Add(segment);
                     vehiclesTaken++;
-                    continue;
                 }
-
-
-                if (j.SpecialConnection && j.Connection.Equals(Journey<T>.OTHERMODE))
+                else if (j.Connection.Equals(Journey<T>.OTHERMODE))
                 {
-                    if (j.Location.Equals(j.PreviousLink.Location))
+                    var segment = dbs.TranslateWalkSegment(j, walkGenerator);
+                    if (segment != null)
                     {
-                        // Object represent a transfer without moving...
-                        // We skip this if the next is an othermode as well
-                        continue;
+                        segments.Add(segment);
                     }
-
-                    // This is a piece where we walk/cycle/... or some other continuous transportation mode
-                    // Lets try to figure out what exactly we are doing
-
-                    var departure = dbs.LocationOf(j.PreviousLink.Location);
-                    var departureTimed = new TimedLocation(
-                        departure, j.PreviousLink.Time, 0);
-                    var arrival = dbs.LocationOf(j.Location);
-                    var arrivalTimed = new TimedLocation(
-                        arrival, j.Time, 0);
-
-                    List<Coordinate> coordinates = null;
-
-                    if (walkGenerator is FirstLastMilePolicy flm)
-                    {
-                        walkGenerator = flm.GeneratorFor(j.PreviousLink.Location, j.Location);
-                    }
-
-                    if (walkGenerator is OtherModeCacher cacher)
-                    {
-                        walkGenerator = cacher.Fallback;
-                    }
-
-                    if (walkGenerator is OsmTransferGenerator osm)
-                    {
-                        coordinates = osm.CreateRoute(((float) departure.Lat, (float) departure.Lon),
-                            ((float) arrival.Lat, (float) arrival.Lon), out _, out _).Shape.Select(
-                            coor => new Coordinate(coor.Latitude, coor.Longitude)).ToList();
-                    }
-
-                    var segment = new Segment(
-                        departureTimed, arrivalTimed,
-                        walkGenerator?.OtherModeIdentifier() ?? "?",
-                        coordinates
-                    );
-                    segments.Add(segment);
-                    continue;
                 }
-
-                throw new Exception("Case fallthrough");
+                else
+                {
+                    throw new Exception("Case fallthrough: j is special but has an unrecognized special mode");
+                }
             }
 
 

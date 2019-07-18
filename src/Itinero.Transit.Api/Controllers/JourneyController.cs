@@ -57,6 +57,12 @@ namespace Itinero.Transit.Api.Controllers
             bool multipleOptions = false
         )
         {
+
+            if (State.GlobalState == null)
+            {
+                return BadRequest(
+                    "The server is still booting and not able to handle your request at this time. Please come back later. Be aware that queries are already answered even if the data is still loading.");
+            }
             if (from == null || to == null)
             {
                 return BadRequest("From or To is missing");
@@ -73,8 +79,6 @@ namespace Itinero.Transit.Api.Controllers
 
             var start = DateTime.Now;
 
-            try
-            {
                 if (inBetweenOsmProfile != null)
                 {
                     if (inBetweenOsmProfile.ToLower() == "crowsflight")
@@ -142,11 +146,7 @@ namespace Itinero.Transit.Api.Controllers
                 return new QueryResult(State.GlobalState.Translate(journeys, profile.WalksGenerator),
                     start, end,
                     queryStart, queryEnd, profile.WalksGenerator.OtherModeIdentifier());
-            }
-            catch (ArgumentException e)
-            {
-                return BadRequest(e.Message);
-            }
+           
         }
     }
 }

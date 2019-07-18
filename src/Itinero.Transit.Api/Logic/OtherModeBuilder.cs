@@ -272,6 +272,11 @@ namespace Itinero.Transit.Api.Logic
             throw new NotImplementedException();
         }
 
+        public Dictionary<StopId, uint> TimesBetween(IEnumerable<IStop> @from, IStop to)
+        {
+            throw new NotImplementedException();
+        }
+
         public float Range()
         {
             return 0.0f;
@@ -280,6 +285,11 @@ namespace Itinero.Transit.Api.Logic
         public string OtherModeIdentifier()
         {
             return "<some other mode identifier>";
+        }
+
+        public IOtherModeGenerator GetSource(StopId @from, StopId to)
+        {
+            throw new NotImplementedException();
         }
     }
 }

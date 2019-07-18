@@ -12,8 +12,6 @@ namespace Test
             var builder = new OtherModeBuilder();
             builder.SupportedUrls();
 
-
-
         }
         
     }

@@ -10,6 +10,7 @@ using Itinero.Transit.Journey;
 using Itinero.Transit.Journey.Metric;
 using Itinero.Transit.OtherMode;
 using Itinero.Transit.Utils;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 
 namespace Itinero.Transit.Api.Logic
 {
@@ -101,53 +102,39 @@ namespace Itinero.Transit.Api.Logic
             {
                 var w = p.WalksGenerator;
 
-                if (w is OtherModeCacher c)
-                {
-                    w = c;
-                }
-
 
                 var errors = new List<string>();
                 foreach (var stp in inRange)
                 {
-                    var gen = w;
-                    if (w is FirstLastMilePolicy flm)
+                    // TODO Remove this
+                    var gen = w.GetSource(stop.Id, stp.Id).GetSource(stop.Id, stp.Id).GetSource(stop.Id, stp.Id);
+                    if (isLastMile)
                     {
-                        if (isLastMile)
-                        {
-                            gen = flm.GeneratorFor(stp.Id, stop.Id);
-                        }
-                        else
-                        {
-                            gen = flm.GeneratorFor(stop.Id, stp.Id);
-                        }
+                        gen = w.GetSource(stp.Id, stop.Id).GetSource(stp.Id, stop.Id).GetSource(stp.Id, stop.Id);
                     }
 
-                    if (gen is OtherModeCacher c0)
-                    {
-                        gen = c0.Fallback;
-                    }
+                    var errorMessage = $"A route from/to {stp} should have been calculated with {gen.OtherModeIdentifier()}";
 
                     if (gen is OsmTransferGenerator osm)
                     {
                         // THIS IS ONLY THE ERROR CASE
-                        // NO, this isn't cached, I know that
+                        // NO, this isn't cached, I know that - it doesn't matter
                         osm.CreateRoute((stop.Latitude, stop.Longitude), (stp.Latitude, stp.Longitude), out _,
                             out var errMessage);
-                        errors.Add($"Could not reach {stp.GlobalId}: {errMessage}");
+                        errorMessage += " but it said " + errMessage;
                     }
 
                     if (gen is CrowsFlightTransferGenerator crow)
                     {
-                        errors.Add(
-                            $"From {stop.GlobalId} to {stp.GlobalId} is too far for {crow.OtherModeIdentifier()}");
+                        errorMessage += " 'Too Far'";
                     }
+                    errors.Add(errorMessage);
                 }
 
                 var allErrs = string.Join("\n ", errors);
 
                 throw new ArgumentException(
-                    $"Could not find a route over OSM towards/from the {name}-location.\n The location we couldn't reach is {stop.GlobalId}\n {allErrs}");
+                    $"Could not find a route towards/from the {name}-location.\nThe used generator is {w.OtherModeIdentifier()}\n{inRange.Count} stations in range are known\n The location we couldn't reach is {stop.GlobalId}\n {allErrs}");
             }
         }
 
