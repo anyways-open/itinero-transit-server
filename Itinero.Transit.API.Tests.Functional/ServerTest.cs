@@ -94,8 +94,8 @@ namespace Itinero.Transit.API.Tests.Functional
                 jobj =>
                 {
                     var ids = jobj.Select(location => location["id"]).ToList();
-                    AssertTrue(
-                        ids.Contains("https://www.openstreetmap.org/node/6348496391"), "CentrumShuttle stop not found");
+                  //  AssertTrue(
+                  //      ids.Contains("https://www.openstreetmap.org/node/6348496391"), "CentrumShuttle stop not found");
                     AssertTrue(
                         ids.Contains("http://irail.be/stations/NMBS/008891009"), "Station Brugge not found");
                 }

@@ -3,6 +3,7 @@ using System.Linq;
 using Itinero.Transit.Api.Logic;
 using Itinero.Transit.Api.Models;
 using Itinero.Transit.Data;
+using Itinero.Transit.Data.Core;
 using Microsoft.AspNetCore.Mvc;
 
 // ReSharper disable PossibleMultipleEnumeration
@@ -25,12 +26,13 @@ namespace Itinero.Transit.Api.Controllers
         /// <param name="lon">The WGS84-longitude point of where to search</param>
         /// <param name="distance">The maximal distance north, east, south or west that the resulting locations could be.</param>
         [HttpGet]
-        public ActionResult<List<Location>> Get(float lat, float lon, float distance=500)
+        public ActionResult<List<Location>> Get(float lat, float lon, uint distance=500)
         {
 
             var reader = State.GlobalState.GetStopsReader(true);
-            
-            var found = reader.LocationsInRange(lat, lon, distance);
+            reader.MoveTo($"https://www.openstreetmap.org/#map=19/{lat}/{lon}");
+            var around = new Stop(reader);
+            var found = reader.StopsAround(around, distance);
             if (found == null || !found.Any())
             {
                 return NotFound($"Could not find any stop close by ({lat} lat,{lon} lon) within {distance}m");

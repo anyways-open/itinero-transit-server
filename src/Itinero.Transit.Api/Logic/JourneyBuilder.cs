@@ -71,7 +71,7 @@ namespace Itinero.Transit.Api.Logic
                 return;
             }
 
-            var inRange = stops.LocationsInRange(stop.Latitude, stop.Longitude, p.WalksGenerator.Range()).ToList();
+            var inRange = stops.StopsAround(new Stop(stop), p.WalksGenerator.Range()).ToList();
             if (inRange == null || !inRange.Any() || (inRange.Count == 1 && inRange[0].Id.Equals(stop.Id)))
             {
                 throw new ArgumentException(

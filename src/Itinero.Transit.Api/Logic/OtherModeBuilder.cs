@@ -25,7 +25,8 @@ namespace Itinero.Transit.Api.Logic
             Dictionary<string,
                 Func<Dictionary<string, string>, List<StopId>, List<StopId>, (IOtherModeGenerator, bool useCache)>>
             Factories =
-                new Dictionary<string, Func<Dictionary<string, string>, List<StopId>, List<StopId>, (IOtherModeGenerator, bool useCache)>>();
+                new Dictionary<string, Func<Dictionary<string, string>, List<StopId>, List<StopId>, (IOtherModeGenerator
+                    , bool useCache)>>();
 
 
         // First profile is the default profile
@@ -75,7 +76,7 @@ namespace Itinero.Transit.Api.Logic
                 (dict, __, _) =>
                 {
                     var gen = new CrowsFlightTransferGenerator(
-                        dict.Value("maxDistance", 500),
+                        (uint) dict.Value("maxDistance", 500),
                         dict.Value("speed", 1.4f)
                     );
                     return (gen, false);
@@ -95,7 +96,7 @@ namespace Itinero.Transit.Api.Logic
                     }
 
                     var gen = new OsmTransferGenerator(RouterDb,
-                        dict.Value("maxDistance", 500),
+                        (uint) dict.Value("maxDistance", 500),
                         profile
                     );
 
@@ -244,7 +245,7 @@ namespace Itinero.Transit.Api.Logic
                 // Hackety hack hack
                 var v = (T) (object) dict[key];
                 dict.Remove(key);
-                return v ;
+                return v;
             }
 
             var value = dict[key];
@@ -277,9 +278,9 @@ namespace Itinero.Transit.Api.Logic
             throw new NotImplementedException();
         }
 
-        public float Range()
+        public uint Range()
         {
-            return 0.0f;
+            return 0;
         }
 
         public string OtherModeIdentifier()
