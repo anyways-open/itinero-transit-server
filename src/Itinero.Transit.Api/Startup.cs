@@ -65,28 +65,31 @@ namespace Itinero.Transit.Api
             Log.Information("Performing initial runs");
             state.FreeMessage = "Running initial data syncs";
 
-
-            var tasks = new List<Task>();
             foreach (var (name, (_, synchronizer)) in state.TransitDbs)
             {
-                var t = Task.Run(() =>
+                try
                 {
-                    try
-                    {
-                        Log.Information($"Starting initial run of {name}");
-                        synchronizer.InitialRun();
-                        synchronizer.Start();
-                    }
-                    catch (Exception e)
-                    {
-                        Log.Error($"Caught exception while running initial data sync: {e.Message}\n{e}");
-                    }
-                });
-                tasks.Add(t);
+                    Log.Information($"Starting initial run of {name}");
+                    synchronizer.InitialRun();
+                }
+                catch (Exception e)
+                {
+                    Log.Error($"Caught exception while running initial data sync: {e.Message}\n{e}");
+                }
             }
 
-            Task.WaitAll(tasks.ToArray());
-
+            foreach (var (name, (_, synchronizer)) in state.TransitDbs)
+            {
+                try
+                {
+                    Log.Information($"Starting synchronizer for {name}");
+                    synchronizer.Start();
+                }
+                catch (Exception e)
+                {
+                    Log.Error($"Caught exception while running initial data sync: {e.Message}\n{e}");
+                }
+            }
 
             state.FreeMessage = "Fully operational";
         }
