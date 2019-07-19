@@ -113,7 +113,9 @@ namespace Itinero.Transit.Api.Logic
                 {
                     var reader = GetStopsReader(false);
                     var osm = new OsmLocationStopReader(
-                        reader.DatabaseIndexes().Max() + 1u);
+                        // ReSharper disable once RedundantArgumentDefaultValue
+                        // ReSharper disable once ArgumentsStyleLiteral
+                        reader.DatabaseIndexes().Max() + 1u, hoard:false);
                     cachedStopsReaderOsm = StopsReaderAggregator.CreateFrom(new List<IStopsReader>
                     {
                         reader, osm
