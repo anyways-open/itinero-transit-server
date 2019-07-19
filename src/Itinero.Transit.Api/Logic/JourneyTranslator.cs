@@ -161,7 +161,7 @@ namespace Itinero.Transit.Api.Logic
 
             List<Coordinate> coordinates = null;
 
-            var walkGenerator = walkgenerator.GetSource(j.PreviousLink.Location, j.Location);
+            var walkGenerator = walkgenerator?.GetSource(j.PreviousLink.Location, j.Location);
 
             if (walkGenerator is OsmTransferGenerator osm)
             {
