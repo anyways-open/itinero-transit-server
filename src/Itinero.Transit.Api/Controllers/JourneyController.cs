@@ -137,7 +137,7 @@ namespace Itinero.Transit.Api.Controllers
                 }
 
 
-                if (prune)
+                if (prune && State.GlobalState.ImportancesInternal != null)
                 {
                     journeys = journeys.PruneInAlternatives
                     (TravellingTimeMinimizer.Factory,
