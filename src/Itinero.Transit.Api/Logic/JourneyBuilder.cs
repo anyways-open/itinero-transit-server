@@ -106,14 +106,14 @@ namespace Itinero.Transit.Api.Logic
                 var errors = new List<string>();
                 foreach (var stp in inRange)
                 {
-                    // TODO Remove this
-                    var gen = w.GetSource(stop.Id, stp.Id).GetSource(stop.Id, stp.Id).GetSource(stop.Id, stp.Id);
+                    var gen = w.GetSource(stop.Id, stp.Id);
                     if (isLastMile)
                     {
-                        gen = w.GetSource(stp.Id, stop.Id).GetSource(stp.Id, stop.Id).GetSource(stp.Id, stop.Id);
+                        gen = w.GetSource(stp.Id, stop.Id);
                     }
 
-                    var errorMessage = $"A route from/to {stp} should have been calculated with {gen.OtherModeIdentifier()}";
+                    var errorMessage =
+                        $"A route from/to {stp} should have been calculated with {gen.OtherModeIdentifier()}";
 
                     if (gen is OsmTransferGenerator osm)
                     {
@@ -128,6 +128,7 @@ namespace Itinero.Transit.Api.Logic
                     {
                         errorMessage += " 'Too Far'";
                     }
+
                     errors.Add(errorMessage);
                 }
 
@@ -156,12 +157,12 @@ namespace Itinero.Transit.Api.Logic
             var reader = State.GlobalState.GetStopsReader(false);
             var osmIndex = reader.DatabaseIndexes().Max() + 1u;
 
-            var stopsReader =
+            var stopsReader = (StopSearchCaching)
                 StopsReaderAggregator.CreateFrom(new List<IStopsReader>
                 {
                     reader,
                     new OsmLocationStopReader(osmIndex, true),
-                }).UseCache(); // We don't cache here - only case cache will be missed is around the new stop locations
+                }).UseCache(); // We cache here only for this request- only case cache will be missed is around the new stop locations
 
             // Calculate the first and last miles, in order to
             // 1) Detect impossible routes
@@ -175,11 +176,15 @@ namespace Itinero.Transit.Api.Logic
             var toStop = new Stop(stopsReader);
             if (p.WalksGenerator.Range() > 10000)
             {
-                throw new ArgumentException("Max range is capped on 10km for now "+p.WalksGenerator.OtherModeIdentifier());
+                throw new ArgumentException("Max range is capped on 10km for now " +
+                                            p.WalksGenerator.OtherModeIdentifier());
             }
-            
+
             p.DetectFirstMileWalks(stopsReader, fromStop, osmIndex, false, "departure");
             p.DetectFirstMileWalks(stopsReader, toStop, osmIndex, true, "arrival");
+
+            // Close the cache, cross-calculate everything
+            // Then, the 'SearchAround'-queries will not be run anymore.
 
 
             var precalculator =
