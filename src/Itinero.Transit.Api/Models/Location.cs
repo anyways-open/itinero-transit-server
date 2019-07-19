@@ -19,18 +19,16 @@ namespace Itinero.Transit.Api.Models
         {
             try
             {
-                source.Attributes.TryGetValue("name", out var name);
+                var name = string.Empty;
+                if (source.Attributes == null ||
+                    !source.Attributes.TryGetValue("name", out name))
+                {
+                    Log.Verbose($"Name not found on stop {source.Id}");
+                }
+
                 Name = name;
-            }
-            catch(Exception e)
-            {
-                Log.Information($"No name found for {source.GlobalId}\n{e}");
-            }
 
-
-            try
-            {
-
+                if (source.Attributes == null) return;
                 foreach (var attr in source.Attributes)
                 {
                     if (attr.Key.StartsWith("name:"))
@@ -41,7 +39,7 @@ namespace Itinero.Transit.Api.Models
             }
             catch (Exception e)
             {
-                Log.Information($"Something went wrong getting the translated names of a stop {source.GlobalId}\n{e}");
+                Log.Error(e, $"Something went wrong getting the names of a stop {source.GlobalId}.");
             }
         }
 
