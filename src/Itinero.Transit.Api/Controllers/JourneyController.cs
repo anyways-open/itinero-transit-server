@@ -4,6 +4,7 @@ using Itinero.Transit.Api.Logic;
 using Itinero.Transit.Api.Logic.Itinero.Transit.Journey.Metric;
 using Itinero.Transit.Api.Models;
 using Microsoft.AspNetCore.Mvc;
+using Serilog;
 
 namespace Itinero.Transit.Api.Controllers
 {
@@ -152,9 +153,9 @@ namespace Itinero.Transit.Api.Controllers
             }
             catch (Exception e)
             {
+                Log.Error(e, $"Unhandled exception in {nameof(JourneyController)}.{nameof(Get)}");
                 return BadRequest(e.Message);
             }
-           
         }
     }
 }
