@@ -173,7 +173,11 @@ namespace Itinero.Transit.Api.Logic
 
             stopsReader.MoveTo(to);
             var toStop = new Stop(stopsReader);
-
+            if (p.WalksGenerator.Range() > 10000)
+            {
+                throw new ArgumentException("Max range is capped on 10km for now "+p.WalksGenerator.OtherModeIdentifier());
+            }
+            
             p.DetectFirstMileWalks(stopsReader, fromStop, osmIndex, false, "departure");
             p.DetectFirstMileWalks(stopsReader, toStop, osmIndex, true, "arrival");
 
