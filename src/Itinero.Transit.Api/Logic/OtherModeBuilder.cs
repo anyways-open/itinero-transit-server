@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json.Linq;
 using Itinero.Profiles.Lua;
 using System.IO;
+using Itinero.Data.Graphs.Coders;
 using Itinero.IO.Osm.Tiles;
 using Itinero.Transit.Data.Core;
 using Serilog;
@@ -45,15 +46,36 @@ namespace Itinero.Transit.Api.Logic
                 OsmTransferGenerator.EnableCaching(osmRoutableTilesCacheDirectory);
             }
 
-            RouterDb = new RouterDb();
-            RouterDb.DataProvider = new DataProvider(RouterDb);
+            var edgeDataLayouts = new List<(string key, EdgeDataType dataType)>();
+            if (configuration != null)
+            {
+                foreach (var path in configuration.GetChildren())
+                {
+                    try
+                    {
+                        var profile = LuaProfile.Load(File.ReadAllText(path.GetValue<string>("path")));
+                        edgeDataLayouts.Add((profile.Name + ".weight", EdgeDataType.UInt32));
+                        OsmVehicleProfiles.Add(profile);
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Error($"Could not load the OSM-Profile " + e);
+                    }
+                }
+            }
 
+            // initialize the routerdb with a configuration to cache profile weights.
+            // REMARK: this explicit router db layouting will be removed later.
+            RouterDb = new RouterDb(new RouterDbConfiguration()
+            {
+                Zoom = 14,
+                EdgeDataLayout = new EdgeDataLayout(edgeDataLayouts)
+            });
+            RouterDb.DataProvider = new DataProvider(RouterDb);
 
             AddFactories();
 
-
             if (configuration == null) return;
-
 
             foreach (var path in configuration.GetChildren())
             {
