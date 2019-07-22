@@ -39,7 +39,7 @@ namespace Itinero.Transit.API.Tests.Functional
                 {
                     AssertTrue(jobj["online"].Value<bool>(), "Not online");
                     var loadedWindows = jobj["loadedTimeWindows"].Count();
-                    AssertTrue(loadedWindows == 2 || loadedWindows == 8, "Not all operators are loaded");
+                    AssertTrue(loadedWindows > 0, "Not all operators are loaded");
                 });
 
             // Do we find stops?
@@ -94,8 +94,8 @@ namespace Itinero.Transit.API.Tests.Functional
                 jobj =>
                 {
                     var ids = jobj.Select(location => location["id"]).ToList();
-                  //  AssertTrue(
-                  //      ids.Contains("https://www.openstreetmap.org/node/6348496391"), "CentrumShuttle stop not found");
+                    //  AssertTrue(
+                    //      ids.Contains("https://www.openstreetmap.org/node/6348496391"), "CentrumShuttle stop not found");
                     AssertTrue(
                         ids.Contains("http://irail.be/stations/NMBS/008891009"), "Station Brugge not found");
                 }
@@ -662,17 +662,44 @@ namespace Itinero.Transit.API.Tests.Functional
 
 
             Challenge(
-                "journey?from=https%3A%2F%2Fwww.openstreetmap.org%2F%23map%3D19%2F51.1951297895458%2F3.214899786053735&to=https%3A%2F%2Fwww.openstreetmap.org%2F%23map%3D19%2F50.84388967236137%2F4.354740038815095&departure=2019-07-17T08%3A35%3A00.000Z&inBetweenOsmProfile=pedestrian&inBetweenSearchDistance=500&firstMileOsmProfile=speedPedelec&firstMileSearchDistance=50000&lastMileOsmProfile=pedestrian&lastMileSearchDistance=10000",
+                "journey",
                 "(Regr test Real URL)",
-                new Dictionary<string, string>(),
-                jobj =>
+                new Dictionary<string, string>
                 {
-                    AssertNotNull(jobj["journeys"], "Journeys are null");
-                    
-                }
+                    {"from", "https://www.openstreetmap.org/#map=19/51.1951297895458/3.214899786053735"},
+                    {"to", "https://www.openstreetmap.org/#map=19/50.84388967236137/4.354740038815095"},
+                    {"departure", "2019-07-17T08:35:00.000Z"},
+                    {"inBetweenOsmProfile", "pedestrian"},
+                    {"inBetweenSearchDistance", "500"},
+                    {"firstMileOsmProfile", "speedPedelec"},
+                    {"firstMileSearchDistance", "50000"},
+                    {"lastMileOsmProfile", "pedestrian"},
+                    {"lastMileSearchDistance", "10000"}
+                },
+                jobj => { AssertNotNull(jobj["journeys"], "Journeys are null"); }
             );
 
 
+            Challenge("journey", "Regr Test Real URL2",
+                new Dictionary<string, string>
+                {
+                    {"from","https://www.openstreetmap.org/#map=19/51.21523909670509/4.268520576417103"},
+                    {"to","https://www.openstreetmap.org/#map=19/51.16509172615645/4.135866853010015"},
+                    {"departure","2019-07-22T15:23:00.000Z"},
+                    {"inBetweenOsmProfile","crowsflight"},
+                    {"inBetweenSearchDistance","500"},
+                    {"firstMileOsmProfile","bicycle"},
+                    {"firstMileSearchDistance","10000"},
+                    {"lastMileOsmProfile","pedestrian"},
+                    {"lastMileSearchDistance","10000"},
+                    {"multipleOptions","true"}
+                    
+                }, jobj =>
+                {
+                    
+                });
+            
+            
             if (_failed)
             {
                 throw new Exception("Some tests failed");
@@ -724,7 +751,11 @@ namespace Itinero.Transit.API.Tests.Functional
             Action<JToken> property)
         {
             var parameters = string.Join("&", keyValues.Select(kv => kv.Key + "=" + Uri.EscapeDataString(kv.Value)));
-            var url = endpoint + "?" + parameters;
+            var url = endpoint;
+            if (parameters.Any())
+            {
+                url = endpoint + "?" + parameters;
+            }
 
             try
             {
@@ -733,7 +764,8 @@ namespace Itinero.Transit.API.Tests.Functional
             }
             catch (Exception e)
             {
-                Console.WriteLine("\r[FAILED] DOWNLOADING FAILED: " + e.Message);
+                Console.WriteLine("\r[FAILED]");
+                Console.WriteLine("     DOWNLOADING FAILED: " + e.Message);
             }
         }
 
@@ -746,7 +778,7 @@ namespace Itinero.Transit.API.Tests.Functional
         {
             Console.Write($"[.....]    Running test {name} " +
                           urlParams.Substring(0, Math.Min(70, urlParams.Length)));
-            File.AppendAllText("testUrls", urlParams + "\n");
+            File.AppendAllText("testUrls", name+","+urlParams + "\n");
             var start = DateTime.Now;
             var client = new HttpClient();
             var uri = _host + urlParams;

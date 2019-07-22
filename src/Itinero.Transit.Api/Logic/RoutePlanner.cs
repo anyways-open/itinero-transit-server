@@ -21,7 +21,13 @@ namespace Itinero.Transit.Api.Logic
                 return null;
             }
 
-            var route = routerDb.Calculate(p, startPoint.Value, endPoint.Value);
+            var config = new RoutingSettings()
+            {
+                Profile =  p,
+                MaxDistance =  100000
+            };
+            
+            var route = routerDb.Calculate(config, startPoint.Value, endPoint.Value);
 
             if (route.IsError)
             {
