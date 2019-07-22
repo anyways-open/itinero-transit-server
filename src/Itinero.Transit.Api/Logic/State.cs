@@ -27,7 +27,7 @@ namespace Itinero.Transit.Api.Logic
         /// A version information string - useful to see what version is in production.
         /// The first letter of the word is increased alphabetically
         /// </summary>
-        public const string Version = "Osoc Not yet there... (Itinero-transit 1.0.0-pre70)";
+        public const string Version = "Osoc Not yet there... (Itinero-transit 1.0.0-pre71)";
 
         /// <summary>
         /// This dictionary contains all the loaded transitDbs, indexed on their name.
@@ -70,9 +70,6 @@ namespace Itinero.Transit.Api.Logic
         public readonly OtherModeBuilder OtherModeBuilder;
 
 
-        private readonly Dictionary<uint, IStopsReader> _stopsReaderCloseLocationsCached
-            = new Dictionary<uint, IStopsReader>();
-
         public State(Dictionary<string, (TransitDb tdb, Synchronizer synchronizer)> transitDbs,
             OtherModeBuilder otherModeBuilder, RouterDb routerDb)
         {
@@ -87,7 +84,7 @@ namespace Itinero.Transit.Api.Logic
             BootTime = DateTime.Now;
         }
 
-        private IStopsReader cachedStopsReader, cachedStopsReaderOsm;
+        private IStopsReader _cachedStopsReader, _cachedStopsReaderOsm;
 
         /// <summary>
         /// Get a stops reader for all the loaded databases.
@@ -97,32 +94,32 @@ namespace Itinero.Transit.Api.Logic
         {
             if (!withOsm)
             {
-                if (cachedStopsReader == null)
+                if (_cachedStopsReader == null)
                 {
-                    cachedStopsReader = StopsReaderAggregator.CreateFrom(
+                    _cachedStopsReader = StopsReaderAggregator.CreateFrom(
                             All().Select(tdb => (IStopsReader) tdb.StopsDb.GetReader()).ToList())
                         .UseCache();
                 }
 
-                return cachedStopsReader;
+                return _cachedStopsReader;
             }
             // ReSharper disable once RedundantIfElseBlock
             else
             {
-                if (cachedStopsReaderOsm == null)
+                if (_cachedStopsReaderOsm == null)
                 {
                     var reader = GetStopsReader(false);
                     var osm = new OsmLocationStopReader(
                         // ReSharper disable once RedundantArgumentDefaultValue
                         // ReSharper disable once ArgumentsStyleLiteral
                         reader.DatabaseIndexes().Max() + 1u, hoard:false);
-                    cachedStopsReaderOsm = StopsReaderAggregator.CreateFrom(new List<IStopsReader>
+                    _cachedStopsReaderOsm = StopsReaderAggregator.CreateFrom(new List<IStopsReader>
                     {
                         reader, osm
                     });
                 }
 
-                return cachedStopsReaderOsm;
+                return _cachedStopsReaderOsm;
             }
         }
 

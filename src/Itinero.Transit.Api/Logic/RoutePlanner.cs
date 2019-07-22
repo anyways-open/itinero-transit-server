@@ -11,17 +11,17 @@ namespace Itinero.Transit.Api.Logic
             float toLat,
             float toLon)
         {
-            var _routerDb = State.GlobalState.RouterDb;
+            var routerDb = State.GlobalState.RouterDb;
 
-            var startPoint = _routerDb.Snap((float) fromLon, (float) fromLat);
-            var endPoint = _routerDb.Snap((float) toLon, (float) toLat);
+            var startPoint = routerDb.Snap(fromLon, fromLat);
+            var endPoint = routerDb.Snap(toLon, toLat);
 
             if (startPoint.IsError || endPoint.IsError)
             {
                 return null;
             }
 
-            var route = _routerDb.Calculate(p, startPoint.Value, endPoint.Value);
+            var route = routerDb.Calculate(p, startPoint.Value, endPoint.Value);
 
             if (route.IsError)
             {

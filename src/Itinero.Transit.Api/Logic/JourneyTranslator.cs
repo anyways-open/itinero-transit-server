@@ -112,7 +112,6 @@ namespace Itinero.Transit.Api.Logic
                 // We pass a stop
                 // We should add this to the intermediate stops
                 var loc = dbs.LocationOf(parts[i].Location);
-                var c = connectionReader.Get(parts[i - 1].Connection);
                 
                 var tloc = new TimedLocation(loc, parts[i].Time, connection.ArrivalDelay);
                 allStations.Add(tloc);
@@ -171,7 +170,7 @@ namespace Itinero.Transit.Api.Logic
                 if (route == null)
                 {
                     Log.Error(
-                        $"Weird: got a journey with an OSM-route from {departure.Id} to {arrival.Id}, with a timing of apparently {j.Time - j.PreviousLink.Time}, but now we can't calculate a route anymore...");
+                        $"Weird: got a journey with an OSM-route from {departure.Id} to {arrival.Id}, with a timing of apparently {j.Time - j.PreviousLink.Time}, but now we can't calculate a route anymore... Error given is {errorMessage}");
                 }
                 else
                 {
@@ -303,7 +302,6 @@ namespace Itinero.Transit.Api.Logic
 
                 var trip = new Trip();
                 if (!trips.Get(connection.TripId, trip)) continue;
-                ;
 
                 trip.Attributes.TryGetValue("headsign", out var headSign);
                 trip.Attributes.TryGetValue("route", out var route);

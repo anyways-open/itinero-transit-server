@@ -10,7 +10,6 @@ using Itinero.Transit.Journey;
 using Itinero.Transit.Journey.Metric;
 using Itinero.Transit.OtherMode;
 using Itinero.Transit.Utils;
-using Microsoft.AspNetCore.Mvc.ViewFeatures;
 
 namespace Itinero.Transit.Api.Logic
 {
@@ -81,17 +80,7 @@ namespace Itinero.Transit.Api.Logic
             Dictionary<StopId, uint> foundRoutes;
             if (isLastMile)
             {
-                foundRoutes = new Dictionary<StopId, uint>();
-                foreach (var stp in inRange)
-                {
-                    var t = p.WalksGenerator.TimeBetween(stp, stop);
-                    if (t == uint.MaxValue)
-                    {
-                        continue;
-                    }
-
-                    foundRoutes.Add(stp.Id, t);
-                }
+                foundRoutes = p.WalksGenerator.TimesBetween(inRange, stop);
             }
             else
             {
@@ -124,7 +113,7 @@ namespace Itinero.Transit.Api.Logic
                         errorMessage += " but it said " + errMessage;
                     }
 
-                    if (gen is CrowsFlightTransferGenerator crow)
+                    if (gen is CrowsFlightTransferGenerator)
                     {
                         errorMessage += " 'Too Far'";
                     }
@@ -157,12 +146,11 @@ namespace Itinero.Transit.Api.Logic
             var reader = State.GlobalState.GetStopsReader(false);
             var osmIndex = reader.DatabaseIndexes().Max() + 1u;
 
-            var stopsReader = (StopSearchCaching)
-                StopsReaderAggregator.CreateFrom(new List<IStopsReader>
-                {
-                    reader,
-                    new OsmLocationStopReader(osmIndex, true),
-                }).UseCache(); // We cache here only for this request- only case cache will be missed is around the new stop locations
+            var stopsReader = StopsReaderAggregator.CreateFrom(new List<IStopsReader>
+            {
+                reader,
+                new OsmLocationStopReader(osmIndex, true),
+            }).UseCache(); // We cache here only for this request- only case cache will be missed is around the new stop locations
 
             // Calculate the first and last miles, in order to
             // 1) Detect impossible routes
@@ -178,6 +166,8 @@ namespace Itinero.Transit.Api.Logic
             p.DetectFirstMileWalks(stopsReader, fromStop, osmIndex, false, "departure");
             p.DetectFirstMileWalks(stopsReader, toStop, osmIndex, true, "arrival");
 
+            stopsReader.MakeComplete();
+            
             // Close the cache, cross-calculate everything
             // Then, the 'SearchAround'-queries will not be run anymore.
 
