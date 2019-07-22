@@ -664,9 +664,7 @@ namespace Itinero.Transit.API.Tests.Functional
             Challenge(
                 "journey?from=https%3A%2F%2Fwww.openstreetmap.org%2F%23map%3D19%2F51.1951297895458%2F3.214899786053735&to=https%3A%2F%2Fwww.openstreetmap.org%2F%23map%3D19%2F50.84388967236137%2F4.354740038815095&departure=2019-07-17T08%3A35%3A00.000Z&inBetweenOsmProfile=pedestrian&inBetweenSearchDistance=500&firstMileOsmProfile=speedPedelec&firstMileSearchDistance=50000&lastMileOsmProfile=pedestrian&lastMileSearchDistance=10000",
                 "(Regr test Real URL)",
-                new Dictionary<string, string>
-                {
-                },
+                new Dictionary<string, string>(),
                 jobj =>
                 {
                     AssertNotNull(jobj["journeys"], "Journeys are null");

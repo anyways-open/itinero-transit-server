@@ -65,7 +65,7 @@ namespace Test
                 gen = omb.Create(desc, empty, empty);
                 Assert.True(false);
             }
-            catch (ArgumentException e)
+            catch (ArgumentException)
             {
                 // Expected behaviour       
             }

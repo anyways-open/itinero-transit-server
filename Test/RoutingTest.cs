@@ -1,5 +1,3 @@
-using Itinero;
-using Itinero.IO.Osm.Tiles;
 using Itinero.Transit.Api;
 using Itinero.Transit.Api.Logic;
 using Itinero.Transit.IO.OSM;
@@ -21,7 +19,7 @@ namespace Test
             var route = osm.CreateRoute(
                 (50.865205, 4.35096799999999), // Herman teirlinck
                 (50.86034, 4.36170), // Brussel Noord...
-                out var isEmpty, out var errMssg);
+                out var isEmpty, out _);
             Assert.NotNull(route);
             Assert.False(isEmpty);
         }

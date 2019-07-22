@@ -16,7 +16,6 @@ namespace Itinero.Transit.API.Tests.Functional
                 return;
             }
 
-            ;
             if (args[0].Equals("--perf"))
             {
                 new PerfTest().Run(PerfTest.Sources);

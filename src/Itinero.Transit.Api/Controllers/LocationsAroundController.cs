@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Itinero.Transit.Api.Logic;
 using Itinero.Transit.Api.Models;
-using Itinero.Transit.Data;
 using Itinero.Transit.Data.Core;
 using Microsoft.AspNetCore.Mvc;
 
