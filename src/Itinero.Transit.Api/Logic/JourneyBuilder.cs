@@ -70,6 +70,12 @@ namespace Itinero.Transit.Api.Logic
                 return;
             }
 
+            if (p.WalksGenerator.Range() == 0)
+            {
+                // We can't walk with the current settings
+                return;
+            }
+
             var inRange = stops.StopsAround(new Stop(stop), p.WalksGenerator.Range()).ToList();
             if (inRange == null || !inRange.Any() || (inRange.Count == 1 && inRange[0].Id.Equals(stop.Id)))
             {

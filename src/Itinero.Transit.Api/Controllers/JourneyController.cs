@@ -45,7 +45,7 @@ namespace Itinero.Transit.Api.Controllers
             string to,
             string walksGeneratorDescription = DefaultWalkGenerator,
             string inBetweenOsmProfile = null,
-            uint inBetweenSearchDistance = 1500,
+            uint inBetweenSearchDistance = 0,
             string firstMileOsmProfile = null,
             uint firstMileSearchDistance = 1500,
             string lastMileOsmProfile = null,
