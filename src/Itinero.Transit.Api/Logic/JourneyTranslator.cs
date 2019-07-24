@@ -6,6 +6,7 @@ using Itinero.Transit.Data;
 using Itinero.Transit.Data.Aggregators;
 using Itinero.Transit.Data.Core;
 using Itinero.Transit.IO.OSM;
+using Itinero.Transit.IO.OSM.Data;
 using Itinero.Transit.Journey;
 using Itinero.Transit.OtherMode;
 using Itinero.Transit.Utils;
@@ -144,7 +145,7 @@ namespace Itinero.Transit.Api.Logic
         private static Segment TranslateWalkSegment<T>(this State dbs,
             Journey<T> j, IOtherModeGenerator walkgenerator) where T : IJourneyMetric<T>
         {
-            var stops = StopsReaderAggregator.CreateFrom(dbs.All());
+            var stops = StopsReaderAggregator.CreateFrom(dbs.All()).AddOsmReader();
             if (j.Location.Equals(j.PreviousLink.Location))
             {
                 // Object represent a transfer without moving...
