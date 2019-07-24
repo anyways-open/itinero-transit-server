@@ -13,7 +13,7 @@ namespace Test
         {
             Startup.ConfigureLogging();
             var omb = new OtherModeBuilder("rt-cache");
-            var cacher = (OtherModeCacher)
+            var cacher = (OtherModeCache)
                 omb.Create("osm&profile=pedestrian&maxDistance=5000", null, null);
             var osm = (OsmTransferGenerator) cacher.Fallback;
             var route = osm.CreateRoute(

@@ -119,6 +119,18 @@ namespace Itinero.Transit.API.Tests.Functional
             );
 
 
+            Challenge("Location/Connections", "Test connections of station (regr)",
+                new Dictionary<string, string>
+                {
+                    {"id", "http://irail.be/stations/NMBS/008891009"}
+                },
+                jobj =>
+                {
+                    AssertEqual("http://irail.be/stations/NMBS/008891009", jobj["location"]["id"]);
+                    AssertTrue(jobj["segments"].Any());
+                });
+
+
             // Can we find journeys? Brugge => Gent-St-Pieters
             Challenge("Journey", "NMBS -> NMBS",
                 new Dictionary<string, string>
@@ -144,7 +156,7 @@ namespace Itinero.Transit.API.Tests.Functional
                 }
             );
 
-            Challenge("Journey", "PARETO NMBS -> NMBS (Friendly)",
+            Challenge("Journey", "PARETO Brugge NMBS -> NMBS (Friendly)",
                 new Dictionary<string, string>
                 {
                     {"from", "http://irail.be/stations/NMBS/008891009"},
@@ -457,11 +469,14 @@ namespace Itinero.Transit.API.Tests.Functional
                     }
                 }
             );
-            /*Challenge("Journey", "PARETO - Poperinge -> Brussels",
+            
+            
+            
+            Challenge("Journey", "PARETO - Poperinge -> Brussels",
                 new Dictionary<string, string>
                 {
-                    {"from", "https://www.openstreetmap.org/#map=14/50.8535/2.7345"},
-                    {"to", "https://www.openstreetmap.org/#map=11/50.8469/4.2249"}, // Gouvy
+                    {"from", "http://irail.be/stations/NMBS/008896735"}, //"https://www.openstreetmap.org/#map=14/50.8535/2.7345"},
+                    {"to", "https://www.openstreetmap.org/#map=11/50.8469/4.2249"},
 
                     {"departure", $"{DateTime.Now:s}Z"},
                     {"multipleOptions", "true"},
@@ -470,7 +485,7 @@ namespace Itinero.Transit.API.Tests.Functional
                         "firstLastMile&" +
                         "default=" +
                         Uri.EscapeDataString(
-                            "crowsflight&maxDistance=500&speed=1.4") +
+                            "crowsflight&maxDistance=1500&speed=1.4") +
                         "&firstMile=" +
                         Uri.EscapeDataString(
                             "osm&maxDistance=5000&profile=pedestrian") +
@@ -486,16 +501,16 @@ namespace Itinero.Transit.API.Tests.Functional
                     AssertTrue(jobj["journeys"].Any(), "No journeys found");
                     foreach (var j in jobj["journeys"])
                     {
-                        AssertEqual("https://www.openstreetmap.org/#map=19/51.0858/2.60169999999999",
+                        AssertEqual("http://irail.be/stations/NMBS/008896735",
                             j["departure"]["location"]["id"],
                             "Wrong departure stations");
 
-                        AssertEqual("https://www.openstreetmap.org/#map=19/50.1886/5.95429999999999",
+                        AssertEqual("https://www.openstreetmap.org/#map=19/50.8469/4.22489999999999",
                             j["arrival"]["location"]["id"],
                             "Wrong arrival stations");
                     }
                 }
-            );*/
+            );
             Challenge("Journey", "Sint-Niklaas OSM -> BxlN OSM (Regr test)",
                 new Dictionary<string, string>
                 {
@@ -676,30 +691,69 @@ namespace Itinero.Transit.API.Tests.Functional
                     {"lastMileOsmProfile", "pedestrian"},
                     {"lastMileSearchDistance", "10000"}
                 },
-                jobj => { AssertNotNull(jobj["journeys"], "Journeys are null"); }
+                jobj =>
+                {
+                    AssertNotNull(jobj["journeys"], "Journeys are null");
+                    // TODO check properties    
+                }
             );
 
 
             Challenge("journey", "Regr Test Real URL2",
                 new Dictionary<string, string>
                 {
-                    {"from","https://www.openstreetmap.org/#map=19/51.21523909670509/4.268520576417103"},
-                    {"to","https://www.openstreetmap.org/#map=19/51.16509172615645/4.135866853010015"},
-                    {"departure","2019-07-22T15:23:00.000Z"},
-                    {"inBetweenOsmProfile","crowsflight"},
-                    {"inBetweenSearchDistance","500"},
-                    {"firstMileOsmProfile","bicycle"},
-                    {"firstMileSearchDistance","10000"},
-                    {"lastMileOsmProfile","pedestrian"},
-                    {"lastMileSearchDistance","10000"},
-                    {"multipleOptions","true"}
-                    
+                    {"from", "https://www.openstreetmap.org/#map=19/51.21523909670509/4.268520576417103"},
+                    {"to", "https://www.openstreetmap.org/#map=19/51.16509172615645/4.135866853010015"},
+                    {"departure", "2019-07-22T15:23:00.000Z"},
+                    {"inBetweenOsmProfile", "crowsflight"},
+                    {"inBetweenSearchDistance", "500"},
+                    {"firstMileOsmProfile", "bicycle"},
+                    {"firstMileSearchDistance", "10000"},
+                    {"lastMileOsmProfile", "pedestrian"},
+                    {"lastMileSearchDistance", "10000"},
+                    {"multipleOptions", "true"}
                 }, jobj =>
                 {
-                    
+                    // TODO check properties
                 });
-            
-            
+
+
+            Challenge("Journey", "Regr 3",
+                new Dictionary<string, string>
+                {
+                    {"from", "https://www.openstreetmap.org/#map=19/51.199993/4.431101"},
+                    {"to", "https://www.openstreetmap.org/#map=19/50.843183/4.371755"},
+                    {"departure", "2019-07-24T10:05:00.000Z"},
+                    {"inBetweenOsmProfile", "crowsflight"},
+                    {"inBetweenSearchDistance", "500"},
+                    {"firstMileOsmProfile", "bicycle"},
+                    {"firstMileSearchDistance", "10000"},
+                    {"lastMileOsmProfile", "pedestrian"},
+                    {"lastMileSearchDistance ", "10000"},
+                    {"multipleOptions", "true"}
+                },
+                jobj =>
+                {
+                    // TODO check properties
+                }
+            );
+
+            Challenge("journey", "Regr 4 with direct cycling path",
+                new Dictionary<string, string>
+                {
+                    {"from", "https://www.openstreetmap.org/#map=19/51.270256567260844/3.0617134555123755"},
+                    {"to", "https://www.openstreetmap.org/#map=19/51.15411507271051/2.9583424054475813"},
+                    {"departure", "2019-07-24T10:50:00.000Z"},
+                    {"inBetweenOsmProfile", "crowsflight"},
+                    {"inBetweenSearchDistance", "0"}, {"firstMileOsmProfile", "bicycle"},
+                    {"firstMileSearchDistance", "10000"}, {"lastMileOsmProfile", "pedestrian"},
+                    {"lastMileSearchDistance", "10000"}
+                },
+                jobj =>
+                {
+                    // TODO CHECK PROPERTIES
+                });
+
             if (_failed)
             {
                 throw new Exception("Some tests failed");
@@ -778,7 +832,7 @@ namespace Itinero.Transit.API.Tests.Functional
         {
             Console.Write($"[.....]    Running test {name} " +
                           urlParams.Substring(0, Math.Min(70, urlParams.Length)));
-            File.AppendAllText("testUrls", name+","+urlParams + "\n");
+            File.AppendAllText("testUrls", name + "," + urlParams + "\n");
             var start = DateTime.Now;
             var client = new HttpClient();
             var uri = _host + urlParams;
