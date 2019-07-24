@@ -32,7 +32,8 @@ namespace Itinero.Transit.Api.Controllers
         [HttpGet("connections")]
         public ActionResult<LocationSegmentsResult> GetConnections(string id)
         {
-            var found = State.GlobalState.SegmentsForLocation(id, DateTime.Now, TimeSpan.FromHours(1));
+            var time = DateTime.Now.ToUniversalTime();
+            var found = State.GlobalState.SegmentsForLocation(id, time, TimeSpan.FromHours(1));
             if (found == null)
             {
                 return NotFound("No location with this id found");

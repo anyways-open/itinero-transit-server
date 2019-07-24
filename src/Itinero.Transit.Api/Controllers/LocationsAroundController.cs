@@ -3,6 +3,7 @@ using System.Linq;
 using Itinero.Transit.Api.Logic;
 using Itinero.Transit.Api.Models;
 using Itinero.Transit.Data.Core;
+using Itinero.Transit.IO.OSM.Data;
 using Microsoft.AspNetCore.Mvc;
 
 // ReSharper disable PossibleMultipleEnumeration
@@ -28,7 +29,7 @@ namespace Itinero.Transit.Api.Controllers
         public ActionResult<List<Location>> Get(float lat, float lon, uint distance=500)
         {
 
-            var reader = State.GlobalState.GetStopsReader(true);
+            var reader = State.GlobalState.GetStopsReader().AddOsmReader();
             reader.MoveTo($"https://www.openstreetmap.org/#map=19/{lat}/{lon}");
             var around = new Stop(reader);
             var found = reader.StopsAround(around, distance);

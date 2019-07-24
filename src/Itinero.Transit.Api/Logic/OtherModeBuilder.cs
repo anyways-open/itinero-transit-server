@@ -70,6 +70,11 @@ namespace Itinero.Transit.Api.Logic
 
         private void AddProfilesFromConfig(IConfiguration configuration)
         {
+            if (configuration == null)
+            {
+                return;
+            }
+
             foreach (var path in configuration.GetChildren())
             {
                 try

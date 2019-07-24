@@ -24,11 +24,14 @@ namespace Itinero.Transit.Api.Models
             }
 
             Generator = null;
-            AllStops = intermediateStops;
             Coordinates = new List<Coordinate>();
-            foreach (var intermediateStop in intermediateStops)
+            AllStops = intermediateStops;
+            if (intermediateStops != null)
             {
-                Coordinates.Add(new Coordinate(intermediateStop.Location.Lat, intermediateStop.Location.Lon));
+                foreach (var intermediateStop in intermediateStops)
+                {
+                    Coordinates.Add(new Coordinate(intermediateStop.Location.Lat, intermediateStop.Location.Lon));
+                }
             }
         }
 

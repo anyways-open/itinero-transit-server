@@ -53,7 +53,7 @@ namespace Itinero.Transit.Api.Logic
         private static (Segment, int newIndex) TranslateSegment<T>(this State dbs, List<Journey<T>> parts, int i)
             where T : IJourneyMetric<T>
         {
-            var stops = StopsReaderAggregator.CreateFrom(dbs.All());
+            var stops = dbs.GetStopsReader().AddOsmReader();
 
             var j = parts[i];
             var connectionReader = dbs.GetConnectionsReader();
@@ -251,7 +251,7 @@ namespace Itinero.Transit.Api.Logic
 
         public static Location LocationOf(this State dbs, string globalId)
         {
-            var stops = dbs.GetStopsReader(true);
+            var stops = dbs.GetStopsReader().AddOsmReader();
             return !stops.MoveTo(globalId) ? null : new Location(stops);
         }
 
@@ -271,7 +271,7 @@ namespace Itinero.Transit.Api.Logic
             string globalId, DateTime time, TimeSpan window)
         {
             if (dbs == null) throw new ArgumentNullException(nameof(dbs));
-            var stops = dbs.GetStopsReader(true);
+            var stops = dbs.GetStopsReader().AddOsmReader();
             if (!stops.MoveTo(globalId))
             {
                 return null;

@@ -16,7 +16,7 @@ namespace Itinero.Transit.Api.Controllers
 
 
 
-        private uint _loadedTilesCount = 0;
+        private uint _loadedTilesCount;
         private DateTime _lastTileIndexation = DateTime.MinValue;
         
         /// <summary>
@@ -80,7 +80,7 @@ namespace Itinero.Transit.Api.Controllers
                 State.Version,
                 tasks,
                 state.OtherModeBuilder.SupportedUrls(),
-                state.OtherModeBuilder.OsmVehicleProfiles.Select(prof => prof.Name).ToList(), 0
+                state.OtherModeBuilder.OsmVehicleProfiles.Select(prof => prof.Name).ToList(), _loadedTilesCount
             );
         }
     }

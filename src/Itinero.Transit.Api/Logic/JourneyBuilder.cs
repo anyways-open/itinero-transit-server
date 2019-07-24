@@ -27,7 +27,7 @@ namespace Itinero.Transit.Api.Logic
             uint maxNumberOfTransfers = uint.MaxValue
         )
         {
-            var stops = State.GlobalState.GetStopsReader(true);
+            var stops = State.GlobalState.GetStopsReader().AddOsmReader();
 
             stops.MoveTo(from);
             var fromId = stops.Id;
@@ -149,7 +149,7 @@ namespace Itinero.Transit.Api.Logic
             departure = departure?.ToUniversalTime();
             arrival = arrival?.ToUniversalTime();
 
-            var reader = State.GlobalState.GetStopsReader(false);
+            var reader = State.GlobalState.GetStopsReader();
             var osmIndex = reader.DatabaseIndexes().Max() + 1u;
 
             var stopsReader = StopsReaderAggregator.CreateFrom(new List<IStopsReader>
