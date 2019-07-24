@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Itinero.Transit.Api.Models;
 using Itinero.Transit.Data;
+using Itinero.Transit.Data.Aggregators;
 using Itinero.Transit.Data.Core;
 using Itinero.Transit.IO.OSM;
 using Itinero.Transit.Journey;
@@ -51,6 +52,8 @@ namespace Itinero.Transit.Api.Logic
         private static (Segment, int newIndex) TranslateSegment<T>(this State dbs, List<Journey<T>> parts, int i)
             where T : IJourneyMetric<T>
         {
+            var stops = StopsReaderAggregator.CreateFrom(dbs.All());
+
             var j = parts[i];
             var connectionReader = dbs.GetConnectionsReader();
             var connection = connectionReader.Get(j.Connection);
@@ -68,7 +71,7 @@ namespace Itinero.Transit.Api.Logic
 
 
             // Get the departure information
-            var departure = dbs.LocationOf(connection.DepartureStop);
+            var departure = stops.LocationOf(connection.DepartureStop);
             var departureTimed = new TimedLocation(
                 departure,
                 connection.DepartureTime.FromUnixTime(),
@@ -111,8 +114,8 @@ namespace Itinero.Transit.Api.Logic
 
                 // We pass a stop
                 // We should add this to the intermediate stops
-                var loc = dbs.LocationOf(parts[i].Location);
-                
+                var loc = stops.LocationOf(parts[i].Location);
+
                 var tloc = new TimedLocation(loc, parts[i].Time, connection.ArrivalDelay);
                 allStations.Add(tloc);
             }
@@ -121,7 +124,7 @@ namespace Itinero.Transit.Api.Logic
             j = parts[i];
 
             connectionReader.Get(j.Connection, connection);
-            var arrival = dbs.LocationOf(connection.ArrivalStop);
+            var arrival = stops.LocationOf(connection.ArrivalStop);
             var arrivalTimed = new TimedLocation(arrival,
                 connection.ArrivalTime, connection.ArrivalDelay);
 
@@ -141,6 +144,7 @@ namespace Itinero.Transit.Api.Logic
         private static Segment TranslateWalkSegment<T>(this State dbs,
             Journey<T> j, IOtherModeGenerator walkgenerator) where T : IJourneyMetric<T>
         {
+            var stops = StopsReaderAggregator.CreateFrom(dbs.All());
             if (j.Location.Equals(j.PreviousLink.Location))
             {
                 // Object represent a transfer without moving...
@@ -151,10 +155,10 @@ namespace Itinero.Transit.Api.Logic
             // This is a piece where we walk/cycle/... or some other continuous transportation mode
             // Lets try to figure out what exactly we are doing
 
-            var departure = dbs.LocationOf(j.PreviousLink.Location);
+            var departure = stops.LocationOf(j.PreviousLink.Location);
             var departureTimed = new TimedLocation(
                 departure, j.PreviousLink.Time, 0);
-            var arrival = dbs.LocationOf(j.Location);
+            var arrival = stops.LocationOf(j.Location);
             var arrivalTimed = new TimedLocation(
                 arrival, j.Time, 0);
 
@@ -250,10 +254,8 @@ namespace Itinero.Transit.Api.Logic
             return !stops.MoveTo(globalId) ? null : new Location(stops);
         }
 
-        private static Location LocationOf(this State dbs, StopId localId)
+        private static Location LocationOf(this IStopsReader stops, StopId localId)
         {
-            var stops = dbs.GetStopsReader(true);
-
             if (!stops.MoveTo(localId))
             {
                 throw new NullReferenceException("Location " + localId + " not found");
@@ -261,6 +263,7 @@ namespace Itinero.Transit.Api.Logic
 
             return new Location(stops);
         }
+
 
         internal static LocationSegmentsResult SegmentsForLocation
         (this State dbs,

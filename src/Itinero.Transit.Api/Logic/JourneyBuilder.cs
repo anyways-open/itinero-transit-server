@@ -165,7 +165,6 @@ namespace Itinero.Transit.Api.Logic
             stopsReader.MoveTo(from);
             var fromStop = new Stop(stopsReader);
 
-
             stopsReader.MoveTo(to);
             var toStop = new Stop(stopsReader);
 

@@ -31,7 +31,7 @@ namespace Itinero.Transit.Api.Logic
 
 
         // First profile is the default profile
-        public readonly List<Profile> OsmVehicleProfiles = new List<Profile>()
+        public readonly List<Profile> OsmVehicleProfiles = new List<Profile>
         {
             OsmProfiles.Pedestrian,
             OsmProfiles.Bicycle
@@ -46,8 +46,16 @@ namespace Itinero.Transit.Api.Logic
                 OsmTransferGenerator.EnableCaching(osmRoutableTilesCacheDirectory);
             }
 
+            var edgeDataLayouts = new List<(string key, EdgeDataType dataType)>();
 
-            var edgeDataLayouts = AddProfilesFromConfig(configuration);
+
+            AddProfilesFromConfig(configuration);
+
+            foreach (var profile in OsmVehicleProfiles)
+            {
+                edgeDataLayouts.Add((profile.Name + ".weight", EdgeDataType.UInt32));
+            }
+
             // initialize the routerdb with a configuration to cache profile weights.
             // REMARK: this explicit router db layouting will be removed later.
             RouterDb = new RouterDb(new RouterDbConfiguration()
@@ -60,20 +68,13 @@ namespace Itinero.Transit.Api.Logic
             AddFactories();
         }
 
-        private IEnumerable<(string key, EdgeDataType dataType)> AddProfilesFromConfig(IConfiguration configuration)
+        private void AddProfilesFromConfig(IConfiguration configuration)
         {
-            var edgeDataLayouts = new List<(string key, EdgeDataType dataType)>();
-            if (configuration == null)
-            {
-                return edgeDataLayouts;
-            }
-
             foreach (var path in configuration.GetChildren())
             {
                 try
                 {
                     var profile = LuaProfile.Load(File.ReadAllText(path.GetValue<string>("path")));
-                    edgeDataLayouts.Add((profile.Name + ".weight", EdgeDataType.UInt32));
                     OsmVehicleProfiles.Add(profile);
                 }
                 catch (Exception e)
@@ -81,8 +82,6 @@ namespace Itinero.Transit.Api.Logic
                     Log.Error($"Could not load the OSM-Profile " + e);
                 }
             }
-
-            return edgeDataLayouts;
         }
 
         private void AddFactories()

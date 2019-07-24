@@ -12,6 +12,7 @@ namespace Itinero.Transit.Api.Models
     /// </summary>
     public class StatusReport
     {
+       
         /// <summary>
         /// Indicates if the server is online
         /// </summary>
@@ -44,13 +45,19 @@ namespace Itinero.Transit.Api.Models
         public readonly List<string> SupportedOsmProfiles;
 
         public readonly Dictionary<string, string> CurrentRunningTask;
+        
+        /// <summary>
+        /// Indicates how many routable tiles are cached on the disk. 
+        /// </summary>
+        public uint TilesOnDisk;
 
 
         public StatusReport(DateTime onlineSince, long uptime,
             Dictionary<string, IEnumerable<(DateTime start, DateTime end)>> loadedTimeWindows,
             string version, Dictionary<string, string> currentRunningTask, List<string> supportedProfiles,
-            List<string> supportedOsmProfiles)
+            List<string> supportedOsmProfiles, uint tilesOnDisk)
         {
+            TilesOnDisk = tilesOnDisk;
             OnlineSince = onlineSince;
             Uptime = uptime;
             LoadedTimeWindows = new Dictionary<string, List<TimeWindow>>();

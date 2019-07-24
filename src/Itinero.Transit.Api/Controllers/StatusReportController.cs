@@ -13,6 +13,12 @@ namespace Itinero.Transit.Api.Controllers
     [ProducesResponseType(200)]
     public class StatusController : ControllerBase
     {
+
+
+
+        private uint _loadedTilesCount = 0;
+        private DateTime _lastTileIndexation = DateTime.MinValue;
+        
         /// <summary>
         /// Gives some insight in the database
         /// </summary>
@@ -22,9 +28,17 @@ namespace Itinero.Transit.Api.Controllers
             var loadedTimeWindows = new Dictionary<string, IEnumerable<(DateTime start, DateTime end)>>();
             var tasks = new Dictionary<string, string>();
 
+
+            if ((DateTime.Now - _lastTileIndexation).TotalMinutes > 2)
+            {
+                _loadedTilesCount = OsmTransferGenerator.LoadedTilesCount();
+                _lastTileIndexation = DateTime.Now;
+            }
             var state = State.GlobalState;
             if (state == null)
             {
+                
+                
                 return new StatusReport(
                     DateTime.Now,
                     0,
@@ -33,7 +47,8 @@ namespace Itinero.Transit.Api.Controllers
                     new Dictionary<string, string>()
                         {{"statusmessage", "Still booting, hang on"}},
                     new List<string>(), 
-                    new List<string>()
+                    new List<string>(),
+                    _loadedTilesCount
                 );
             }
 
@@ -65,7 +80,7 @@ namespace Itinero.Transit.Api.Controllers
                 State.Version,
                 tasks,
                 state.OtherModeBuilder.SupportedUrls(),
-                state.OtherModeBuilder.OsmVehicleProfiles.Select(prof => prof.Name).ToList()
+                state.OtherModeBuilder.OsmVehicleProfiles.Select(prof => prof.Name).ToList(), 0
             );
         }
     }
