@@ -34,7 +34,7 @@ namespace Itinero.Transit.Api.Logic
         public readonly List<Profile> OsmVehicleProfiles = new List<Profile>()
         {
             OsmProfiles.Pedestrian,
-            OsmProfiles.Bicycle,
+            OsmProfiles.Bicycle
         };
 
         public OtherModeBuilder(
@@ -46,24 +46,8 @@ namespace Itinero.Transit.Api.Logic
                 OsmTransferGenerator.EnableCaching(osmRoutableTilesCacheDirectory);
             }
 
-            var edgeDataLayouts = new List<(string key, EdgeDataType dataType)>();
-            if (configuration != null)
-            {
-                foreach (var path in configuration.GetChildren())
-                {
-                    try
-                    {
-                        var profile = LuaProfile.Load(File.ReadAllText(path.GetValue<string>("path")));
-                        edgeDataLayouts.Add((profile.Name + ".weight", EdgeDataType.UInt32));
-                        OsmVehicleProfiles.Add(profile);
-                    }
-                    catch (Exception e)
-                    {
-                        Log.Error($"Could not load the OSM-Profile " + e);
-                    }
-                }
-            }
 
+            var edgeDataLayouts = AddProfilesFromConfig(configuration);
             // initialize the routerdb with a configuration to cache profile weights.
             // REMARK: this explicit router db layouting will be removed later.
             RouterDb = new RouterDb(new RouterDbConfiguration()
@@ -74,14 +58,22 @@ namespace Itinero.Transit.Api.Logic
             RouterDb.DataProvider = new DataProvider(RouterDb);
 
             AddFactories();
+        }
 
-            if (configuration == null) return;
+        private IEnumerable<(string key, EdgeDataType dataType)> AddProfilesFromConfig(IConfiguration configuration)
+        {
+            var edgeDataLayouts = new List<(string key, EdgeDataType dataType)>();
+            if (configuration == null)
+            {
+                return edgeDataLayouts;
+            }
 
             foreach (var path in configuration.GetChildren())
             {
                 try
                 {
                     var profile = LuaProfile.Load(File.ReadAllText(path.GetValue<string>("path")));
+                    edgeDataLayouts.Add((profile.Name + ".weight", EdgeDataType.UInt32));
                     OsmVehicleProfiles.Add(profile);
                 }
                 catch (Exception e)
@@ -89,6 +81,8 @@ namespace Itinero.Transit.Api.Logic
                     Log.Error($"Could not load the OSM-Profile " + e);
                 }
             }
+
+            return edgeDataLayouts;
         }
 
         private void AddFactories()

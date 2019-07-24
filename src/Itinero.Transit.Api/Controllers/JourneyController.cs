@@ -153,7 +153,10 @@ namespace Itinero.Transit.Api.Controllers
             }
             catch (Exception e)
             {
-                Log.Error(e, $"Unhandled exception in {nameof(JourneyController)}.{nameof(Get)}");
+                Log.Error(e, $"Unhandled exception in {nameof(JourneyController)}.{nameof(Get)}. Parameters are:" +
+                             $"from={from}\n&to={to}\n&walksGeneratorDescription={walksGeneratorDescription}\n&" +
+                             $"departure={departure:s}&\narrival={arrival:s}&" +
+                             $"\nprune={prune}&multipleOptions={multipleOptions}");
                 return BadRequest(e.Message);
             }
         }
