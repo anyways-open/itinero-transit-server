@@ -47,7 +47,7 @@ namespace MicroserviceTest
 
         private List<string> _errorMessages;
 
-        public void RunTestsAgainst(string host = null)
+        public void RunTestsAgainst(string host = null, int? onlyRunThisTest = null)
         {
             host = host ?? DefaultHost;
             if (KnownUrls.ContainsKey(host))
@@ -64,8 +64,35 @@ namespace MicroserviceTest
             var start = DateTime.Now;
 
             var challenges = CreateChallenges();
+
+            if (onlyRunThisTest != null)
+            {
+                var focusedTest = challenges[onlyRunThisTest.Value];
+                challenges = new List<Challenge> {focusedTest};
+            }
+
+            var sumValid = true;
+            uint sum = 0;
+            foreach (var challenge in challenges)
+            {
+                if (challenge.MaxTimeAllowed == 0 || challenge.MaxTimeAllowed == uint.MaxValue)
+                {
+                    sumValid = false;
+                    break;
+                }
+
+                sum += challenge.MaxTimeAllowed;
+            }
+
+            var tm = "";
+
+            if (sumValid)
+            {
+                tm = $"taking at most {sum / 1000}s";
+            }
+
             Console.WriteLine(
-                $"Running {Name} ({challenges.Count} tests) against default host '{host}'");
+                $"Running {Name} with {challenges.Count} tests {tm} against default host '{host}'");
             var failCount = 0;
             var count = 0;
             foreach (var challenge in challenges)
@@ -86,7 +113,7 @@ namespace MicroserviceTest
 
                 if (challenge.MaxTimeAllowed != 0 && timeNeeded > challenge.MaxTimeAllowed)
                 {
-                    _errorMessages.Add($"Timeout: this test is only allowed to run for {challenge.MaxTimeAllowed}msl");
+                    _errorMessages.Add($"Timeout: this test is only allowed to run for {challenge.MaxTimeAllowed}ms");
                 }
 
                 var secs = timeNeeded / 1000;
@@ -138,7 +165,7 @@ namespace MicroserviceTest
                     WriteSeconds();
 
                     Console.WriteLine(
-                        $"{challenge.Name}\n     An error occured while probing {host}{challenge.Url}");
+                        $"{challenge.Name}\n     An error occured while running test {count} against URL\n    {host}{challenge.Url}");
 
                     foreach (var err in _errorMessages)
                     {
@@ -291,6 +318,19 @@ namespace MicroserviceTest
         internal void AssertNotNull(object val, string errMessage = "Value is null")
         {
             if (val == null)
+            {
+                _errorMessages.Add(errMessage);
+            }
+        }
+
+        internal void AssertNotNullOrEmpty(JToken val, string errMessage = "Value is null or empty")
+        {
+            if (val == null)
+            {
+                _errorMessages.Add(errMessage);
+            }
+
+            if (!val.HasValues)
             {
                 _errorMessages.Add(errMessage);
             }

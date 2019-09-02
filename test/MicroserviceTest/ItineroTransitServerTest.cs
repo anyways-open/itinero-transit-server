@@ -9,8 +9,8 @@ namespace MicroserviceTest
     {
         private static readonly Dictionary<string, string> knownUrls = new Dictionary<string, string>
         {
-            {"localhost", "https://localhost:5001/"},
-            {"dev", "https://localhost:5001/"},
+            {"localhost", "http://localhost:5000/"},
+            {"dev", "http://localhost:5000/"},
             {"prod", "https://routing.anyways.eu/transitapi"},
             {"production", "https://routing.anyways.eu/transitapi"}
         };
@@ -656,7 +656,7 @@ namespace MicroserviceTest
                 },
                 jobj =>
                 {
-                    AssertNotNull(jobj["journeys"], "Journeys are null");
+                    AssertNotNullOrEmpty(jobj["journeys"], "Journeys are null");
                     AssertTrue(jobj["journeys"].Any(), "No journeys found");
                     foreach (var j in jobj["journeys"])
                     {
@@ -687,7 +687,7 @@ namespace MicroserviceTest
                     {"lastMileOsmProfile", "pedestrian"},
                     {"lastMileSearchDistance", "10000"}
                 },
-                jobj => { AssertNotNull(jobj["journeys"], "Journeys are null"); }, 4000
+                jobj => { AssertNotNullOrEmpty(jobj["journeys"], "Journeys are null"); }, 4000
             );
 
 
@@ -704,7 +704,7 @@ namespace MicroserviceTest
                     {"lastMileOsmProfile", "pedestrian"},
                     {"lastMileSearchDistance", "10000"},
                     {"multipleOptions", "true"}
-                }, jobj => { AssertNotNull(jobj["journeys"], "Journeys are null"); }, maxTimeAllowed: 4000);
+                }, jobj => { AssertNotNullOrEmpty(jobj["journeys"], "Journeys are null"); }, maxTimeAllowed: 4000);
 
 
             Challenge("Journey", "Regr test with real URL 3",
@@ -721,22 +721,25 @@ namespace MicroserviceTest
                     {"lastMileSearchDistance ", "10000"},
                     {"multipleOptions", "true"}
                 },
-                jobj => { AssertNotNull(jobj["journeys"], "Journeys are null"); },
+                jobj => { AssertNotNullOrEmpty(jobj["journeys"], "Journeys are null"); },
                 maxTimeAllowed: 4000
             );
 
             Challenge("journey", "Regr 4 with direct cycling path",
                 new Dictionary<string, string>
                 {
-                    {"from", "https://www.openstreetmap.org/#map=19/51.270256567260844/3.0617134555123755"},
-                    {"to", "https://www.openstreetmap.org/#map=19/51.15411507271051/2.9583424054475813"},
+                    {"from", "https://www.openstreetmap.org/#map=19/51.270256567260844/3.0617134555123755"}, // Nieuwmunster
+                    {"to", "https://www.openstreetmap.org/#map=16/51.2646/3.1546"}, // Zuienkerke
                     {"departure", "2019-07-24T10:50:00.000Z"},
                     {"inBetweenOsmProfile", "crowsflight"},
                     {"inBetweenSearchDistance", "0"}, {"firstMileOsmProfile", "bicycle"},
                     {"firstMileSearchDistance", "10000"}, {"lastMileOsmProfile", "pedestrian"},
                     {"lastMileSearchDistance", "10000"}
                 },
-                jobj => { AssertNotNull(jobj["journeys"], "Journeys are null"); },
+                jobj =>
+                {
+                    AssertNotNullOrEmpty(jobj["journeys"], "Journeys are null");
+                },
                 maxTimeAllowed: 4000);
         }
     }
