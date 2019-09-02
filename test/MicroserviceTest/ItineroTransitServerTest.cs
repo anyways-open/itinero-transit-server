@@ -1,46 +1,40 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Net.Http;
-using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 
-namespace Itinero.Transit.API.Tests.Functional
+namespace MicroserviceTest
 {
-    public class ServerTest
+    public class ItineroTransitServerTest : ServerTest
     {
-        private readonly string _host;
-
-        public ServerTest(string host)
+        private static readonly Dictionary<string, string> knownUrls = new Dictionary<string, string>
         {
-            _host = host;
-            if (_host.Equals("production") || _host.Equals("prod") || _host.Equals("--prod"))
-            {
-                _host = "https://routing.anyways.eu/transitapi";
-            }
+            {"localhost", "https://localhost:5001/"},
+            {"dev", "https://localhost:5001/"},
+            {"prod", "https://routing.anyways.eu/transitapi"},
+            {"production", "https://routing.anyways.eu/transitapi"}
+        };
 
-            if (!_host.EndsWith('/'))
-            {
-                _host += '/';
-            }
 
-            Console.WriteLine("Host is " + _host);
+        public ItineroTransitServerTest() : base(
+            "Itinero-Transit Tester",
+            "production",
+            knownUrls,
+            defaultTimeout: 1000)
+        {
         }
 
-        public void RunTests()
+        protected override void RunTests()
         {
-            Console.WriteLine("Running integration tests");
-            File.WriteAllText("testUrls", "Testing urls are: \n");
             // Is the server online?
             Challenge("status", "IsOnline",
-                new Dictionary<string, string>(),
-                jobj =>
+                property: jobj =>
                 {
                     AssertTrue(jobj["online"].Value<bool>(), "Not online");
                     var loadedWindows = jobj["loadedTimeWindows"].Count();
                     AssertTrue(loadedWindows > 0, "Not all operators are loaded");
-                });
+                }
+            );
 
             // Do we find stops?
             Challenge("LocationsByName", "Search Brugge",
@@ -85,7 +79,7 @@ namespace Itinero.Transit.API.Tests.Functional
 
             // Do we find locations around a stop?
             Challenge("LocationsAround", "Search Locations around",
-                new Dictionary<string, string>()
+                new Dictionary<string, string>
                 {
                     {"lat", "51.1978"},
                     {"lon", "3.2184"},
@@ -128,7 +122,8 @@ namespace Itinero.Transit.API.Tests.Functional
                 {
                     AssertEqual("http://irail.be/stations/NMBS/008891009", jobj["location"]["id"]);
                     AssertTrue(jobj["segments"].Any());
-                });
+                }
+            );
 
 
             // Can we find journeys? Brugge => Gent-St-Pieters
@@ -469,13 +464,14 @@ namespace Itinero.Transit.API.Tests.Functional
                     }
                 }
             );
-            
-            
-            
+
+
             Challenge("Journey", "PARETO - Poperinge -> Brussels",
                 new Dictionary<string, string>
                 {
-                    {"from", "http://irail.be/stations/NMBS/008896735"}, //"https://www.openstreetmap.org/#map=14/50.8535/2.7345"},
+                    {
+                        "from", "http://irail.be/stations/NMBS/008896735"
+                    }, //"https://www.openstreetmap.org/#map=14/50.8535/2.7345"},
                     {"to", "https://www.openstreetmap.org/#map=11/50.8469/4.2249"},
 
                     {"departure", $"{DateTime.Now:s}Z"},
@@ -594,7 +590,7 @@ namespace Itinero.Transit.API.Tests.Functional
             );
 
 
-            Challenge("Journey", "(Regr test 0)",
+            Challenge("Journey", "Regr test 0",
                 new Dictionary<string, string>
                 {
                     {"from", "https://www.openstreetmap.org/#map=19/50.86051035579558/4.358399302117419"},
@@ -632,7 +628,7 @@ namespace Itinero.Transit.API.Tests.Functional
                 }
             );
 
-            Challenge("Journey", "(Regr test 1)",
+            Challenge("Journey", "Regr test 1",
                 new Dictionary<string, string>
                 {
                     {
@@ -678,7 +674,7 @@ namespace Itinero.Transit.API.Tests.Functional
 
             Challenge(
                 "journey",
-                "(Regr test Real URL)",
+                "Regr test with real URL 1",
                 new Dictionary<string, string>
                 {
                     {"from", "https://www.openstreetmap.org/#map=19/51.1951297895458/3.214899786053735"},
@@ -691,15 +687,11 @@ namespace Itinero.Transit.API.Tests.Functional
                     {"lastMileOsmProfile", "pedestrian"},
                     {"lastMileSearchDistance", "10000"}
                 },
-                jobj =>
-                {
-                    AssertNotNull(jobj["journeys"], "Journeys are null");
-                    // TODO check properties    
-                }
+                jobj => { AssertNotNull(jobj["journeys"], "Journeys are null"); }, 4000
             );
 
 
-            Challenge("journey", "Regr Test Real URL2",
+            Challenge("journey", "Regr test with real URL 2",
                 new Dictionary<string, string>
                 {
                     {"from", "https://www.openstreetmap.org/#map=19/51.21523909670509/4.268520576417103"},
@@ -712,13 +704,10 @@ namespace Itinero.Transit.API.Tests.Functional
                     {"lastMileOsmProfile", "pedestrian"},
                     {"lastMileSearchDistance", "10000"},
                     {"multipleOptions", "true"}
-                }, jobj =>
-                {
-                    // TODO check properties
-                });
+                }, jobj => { AssertNotNull(jobj["journeys"], "Journeys are null"); }, maxTimeAllowed: 4000);
 
 
-            Challenge("Journey", "Regr 3",
+            Challenge("Journey", "Regr test with real URL 3",
                 new Dictionary<string, string>
                 {
                     {"from", "https://www.openstreetmap.org/#map=19/51.199993/4.431101"},
@@ -732,10 +721,8 @@ namespace Itinero.Transit.API.Tests.Functional
                     {"lastMileSearchDistance ", "10000"},
                     {"multipleOptions", "true"}
                 },
-                jobj =>
-                {
-                    // TODO check properties
-                }
+                jobj => { AssertNotNull(jobj["journeys"], "Journeys are null"); },
+                maxTimeAllowed: 4000
             );
 
             Challenge("journey", "Regr 4 with direct cycling path",
@@ -749,124 +736,8 @@ namespace Itinero.Transit.API.Tests.Functional
                     {"firstMileSearchDistance", "10000"}, {"lastMileOsmProfile", "pedestrian"},
                     {"lastMileSearchDistance", "10000"}
                 },
-                jobj =>
-                {
-                    // TODO CHECK PROPERTIES
-                });
-
-            if (_failed)
-            {
-                throw new Exception("Some tests failed");
-            }
-        }
-
-
-        private static List<string> _errorMessages = new List<string>();
-
-        private static void Commit()
-        {
-            if (!_errorMessages.Any()) return;
-            var e = new Exception(
-                string.Join("\n", _errorMessages));
-            _errorMessages.Clear();
-            throw e;
-        }
-
-
-        private static void AssertEqual<T>(T expected, T val, string errMessage = "")
-        {
-            if (!expected.Equals(val))
-            {
-                _errorMessages.Add($"Values are not the same. Expected {expected} but got {val}. {errMessage}");
-            }
-        }
-
-
-        // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
-        private static void AssertTrue(bool val, string errMessage = "Expected True")
-        {
-            if (!val)
-            {
-                _errorMessages.Add(errMessage);
-            }
-        }
-
-        private static void AssertNotNull(object val, string errMessage = "Value is null")
-        {
-            if (val == null)
-            {
-                _errorMessages.Add(errMessage);
-            }
-        }
-
-        private void Challenge(string endpoint,
-            string name,
-            Dictionary<string, string> keyValues,
-            Action<JToken> property)
-        {
-            var parameters = string.Join("&", keyValues.Select(kv => kv.Key + "=" + Uri.EscapeDataString(kv.Value)));
-            var url = endpoint;
-            if (parameters.Any())
-            {
-                url = endpoint + "?" + parameters;
-            }
-
-            try
-            {
-                ChallengeAsync(name, url, property).ConfigureAwait(false).GetAwaiter().GetResult();
-                Commit();
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("\r[FAILED]");
-                Console.WriteLine("     DOWNLOADING FAILED: " + e.Message);
-            }
-        }
-
-        private static bool _failed;
-
-        private async Task ChallengeAsync(
-            string name,
-            string urlParams,
-            Action<JToken> property)
-        {
-            Console.Write($"[.....]    Running test {name} " +
-                          urlParams.Substring(0, Math.Min(70, urlParams.Length)));
-            File.AppendAllText("testUrls", name + "," + urlParams + "\n");
-            var start = DateTime.Now;
-            var client = new HttpClient();
-            var uri = _host + urlParams;
-            var response = await client.GetAsync(uri).ConfigureAwait(false);
-            if (response == null || !response.IsSuccessStatusCode)
-            {
-                throw new HttpRequestException("Could not open " + uri);
-            }
-
-            var data = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-
-            var json = JToken.Parse(data);
-
-            var end = DateTime.Now;
-            var time = (int) (end - start).TotalMilliseconds;
-            var timing = $"{time}ms";
-            if (time > 1000)
-            {
-                time /= 1000;
-                timing = $"{time}s";
-            }
-
-
-            try
-            {
-                property(json);
-                Console.WriteLine($"\r[OK] {timing}");
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine($"\rFAIL {timing}");
-                Console.WriteLine(" " + e.Message);
-                _failed = true;
-            }
+                jobj => { AssertNotNull(jobj["journeys"], "Journeys are null"); },
+                maxTimeAllowed: 4000);
         }
     }
 }

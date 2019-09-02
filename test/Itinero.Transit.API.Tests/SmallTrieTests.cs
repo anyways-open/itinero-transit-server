@@ -1,7 +1,7 @@
 using Itinero.Transit.Api.Logic;
 using Xunit;
 
-namespace Test
+namespace Itinero.Transit.API.Tests
 {
     public class SmallTrieTests
     {

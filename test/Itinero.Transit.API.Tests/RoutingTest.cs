@@ -4,7 +4,7 @@ using Itinero.Transit.IO.OSM;
 using Itinero.Transit.OtherMode;
 using Xunit;
 
-namespace Test
+namespace Itinero.Transit.API.Tests
 {
     public class RoutingTest
     {

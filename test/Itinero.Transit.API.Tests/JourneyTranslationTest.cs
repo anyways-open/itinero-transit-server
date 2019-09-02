@@ -10,7 +10,7 @@ using Itinero.Transit.Utils;
 using Xunit;
 using Attribute = Itinero.Transit.Data.Attributes.Attribute;
 
-namespace Test
+namespace Itinero.Transit.API.Tests
 {
     public class JourneyTranslationTest
     {

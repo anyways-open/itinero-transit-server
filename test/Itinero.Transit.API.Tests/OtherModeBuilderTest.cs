@@ -5,7 +5,7 @@ using Itinero.Transit.Data.Core;
 using Itinero.Transit.OtherMode;
 using Xunit;
 
-namespace Test
+namespace Itinero.Transit.API.Tests
 {
     public class OtherModeBuilderTest
     {
