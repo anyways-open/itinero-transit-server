@@ -22,7 +22,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\src\Itinero.Transit.Api\Itinero.Transit.Api.csproj" />
+      <ProjectReference Include="..\..\src\Itinero.Transit.Api\Itinero.Transit.Api.csproj" />
     </ItemGroup>
 
 </Project>

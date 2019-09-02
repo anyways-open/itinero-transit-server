@@ -11,7 +11,7 @@ namespace Test
         private string GetRepoPath()
         {
             var dir = Directory.GetCurrentDirectory();
-            var i = dir.IndexOf("Test/", StringComparison.Ordinal);
+            var i = dir.IndexOf("test/", StringComparison.Ordinal);
             if (i < 0)
             {
                 return dir;
@@ -24,7 +24,7 @@ namespace Test
         {
             var dirsToTest = new[]
             {
-                // Working dir: itinero-transit-server/Test/bin/Debug/netcoreapp2.2
+                // Working dir: /home/pietervdvn/werk/itinero-transit-server/test/Itinero.Transit.API.Tests/bin/Debug/src/Itinero.Transit.Api/appsettings.json'.
                 "src/Itinero.Transit.Api/appsettings.json",
                 "src/Itinero.Transit.Api/appsettings.documentation.json",
                 "src/Itinero.Transit.Api/appsettings.Docker.json"
