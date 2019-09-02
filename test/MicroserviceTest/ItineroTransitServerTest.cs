@@ -733,7 +733,7 @@ namespace MicroserviceTest
                     {"departure", "2019-07-24T10:50:00.000Z"},
                     {"inBetweenOsmProfile", "crowsflight"},
                     {"inBetweenSearchDistance", "0"}, {"firstMileOsmProfile", "bicycle"},
-                    {"firstMileSearchDistance", "10000"}, {"lastMileOsmProfile", "pedestrian"},
+                    {"firstMileSearchDistance", "20000"}, {"lastMileOsmProfile", "pedestrian"},
                     {"lastMileSearchDistance", "10000"}
                 },
                 jobj =>

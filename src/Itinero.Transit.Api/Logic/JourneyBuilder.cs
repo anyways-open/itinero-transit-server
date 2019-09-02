@@ -60,7 +60,7 @@ namespace Itinero.Transit.Api.Logic
 
         private static void DetectFirstMileWalks<T>(
             this Profile<T> p,
-            IStopsReader stops, IStop stop, uint osmIndex, bool isLastMile, string name) where T : IJourneyMetric<T>
+            IStopsReader stops, Stop stop, uint osmIndex, bool isLastMile, string name) where T : IJourneyMetric<T>
         {
             if (stop.Id.DatabaseId != osmIndex)
             {
@@ -76,13 +76,14 @@ namespace Itinero.Transit.Api.Logic
                 return;
             }
 
-            var inRange = stops.StopsAround(new Stop(stop), p.WalksGenerator.Range()).ToList();
-            if (inRange == null || !inRange.Any() || (inRange.Count == 1 && inRange[0].Id.Equals(stop.Id)))
+            var inRange = stops.StopsAround(stop, p.WalksGenerator.Range()).ToList();
+            if (inRange == null 
+                || !inRange.Any() 
+                || inRange.Count == 1 && inRange[0].Id.Equals(stop.Id))
             {
                 throw new ArgumentException(
                     $"Could not find a station that is range from the {name}-location {stop.GlobalId} within {p.WalksGenerator.Range()}m. This range is calculated 'as the  crows fly', try increasing the range of your walksGenerator");
             }
-
             Dictionary<StopId, uint> foundRoutes;
             if (isLastMile)
             {
@@ -168,6 +169,8 @@ namespace Itinero.Transit.Api.Logic
             stopsReader.MoveTo(to);
             var toStop = new Stop(stopsReader);
 
+            p.WalksGenerator.TimeBetween(fromStop, toStop);
+            
             p.DetectFirstMileWalks(stopsReader, fromStop, osmIndex, false, "departure");
             p.DetectFirstMileWalks(stopsReader, toStop, osmIndex, true, "arrival");
 
@@ -180,7 +183,7 @@ namespace Itinero.Transit.Api.Logic
             var precalculator =
                 State.GlobalState.All()
                     .SelectProfile(p)
-                    .SetStopsReader(() => stopsReader)
+                    .SetStopsReader(stopsReader)
                     .UseOsmLocations()
                     .SelectStops(from, to);
             WithTime<TransferMetric> calculator;
