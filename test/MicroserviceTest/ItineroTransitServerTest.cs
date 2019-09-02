@@ -505,7 +505,8 @@ namespace MicroserviceTest
                             j["arrival"]["location"]["id"],
                             "Wrong arrival stations");
                     }
-                }
+                },
+                maxTimeAllowed: 2000
             );
             Challenge("Journey", "Sint-Niklaas OSM -> BxlN OSM (Regr test)",
                 new Dictionary<string, string>
@@ -722,7 +723,7 @@ namespace MicroserviceTest
                     {"multipleOptions", "true"}
                 },
                 jobj => { AssertNotNullOrEmpty(jobj["journeys"], "Journeys are null"); },
-                maxTimeAllowed: 4000
+                maxTimeAllowed: 5000
             );
 
             Challenge("journey", "Regr 4 with direct cycling path",

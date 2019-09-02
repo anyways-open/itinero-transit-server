@@ -64,23 +64,19 @@ namespace MicroserviceTest
             {
                 serverTest = new Failer();
             }
-            
-            if (int.TryParse(args[0], out var onlyRunThisTest))
+
+
+            if (args.Length == 3 && args[1].Equals("--only-run"))
             {
-                onlyRunThisTest--;
-                var argsLst = args.ToList();
-                argsLst.RemoveAt(0);
-                args = argsLst.ToArray();
-                if (args.Length == 0)
-                {
-                    args = new[] {serverTest.DefaultHost};
-                }
+                var focus = int.Parse(args[2]) - 1;
+                serverTest.RunTestsAgainst(args[0], focus);
+                return;
             }
             
             
            
 
-            serverTest.RunTestsAgainst(args[0], onlyRunThisTest);
+            serverTest.RunTestsAgainst(args[0], null);
         }
     }
 
