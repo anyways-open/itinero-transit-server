@@ -169,8 +169,6 @@ namespace Itinero.Transit.Api.Logic
             stopsReader.MoveTo(to);
             var toStop = new Stop(stopsReader);
 
-            p.WalksGenerator.TimeBetween(fromStop, toStop);
-            
             p.DetectFirstMileWalks(stopsReader, fromStop, osmIndex, false, "departure");
             p.DetectFirstMileWalks(stopsReader, toStop, osmIndex, true, "arrival");
 
