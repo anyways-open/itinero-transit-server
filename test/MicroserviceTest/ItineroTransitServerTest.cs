@@ -25,6 +25,11 @@ namespace MicroserviceTest
         {
         }
 
+        private string TestDepartureTime()
+        {
+            return DateTime.Now.ToString("s");
+        }
+
         protected override void RunTests()
         {
             // Is the server online?
@@ -133,7 +138,7 @@ namespace MicroserviceTest
                 {
                     {"from", "http://irail.be/stations/NMBS/008891009"},
                     {"to", "http://irail.be/stations/NMBS/008892007"},
-                    {"departure", DateTime.Now.ToString("s")}
+                    {"departure", TestDepartureTime()}
                 },
                 jobj =>
                 {
@@ -157,7 +162,7 @@ namespace MicroserviceTest
                 {
                     {"from", "http://irail.be/stations/NMBS/008891009"},
                     {"to", "http://irail.be/stations/NMBS/008892007"},
-                    {"departure", DateTime.Now.ToString("s")},
+                    {"departure", TestDepartureTime()},
                     {"multipleOptions", "true"}
                 },
                 jobj =>
@@ -184,7 +189,7 @@ namespace MicroserviceTest
                 {
                     {"from", "https://www.openstreetmap.org/#map=19/51.19764/3.21847"},
                     {"to", "http://irail.be/stations/NMBS/008892007"},
-                    {"departure", DateTime.Now.ToString("s")}
+                    {"departure", TestDepartureTime()}
                 },
                 jobj =>
                 {
@@ -209,7 +214,7 @@ namespace MicroserviceTest
                 {
                     {"from", "http://irail.be/stations/NMBS/008892007"},
                     {"to", "https://www.openstreetmap.org/#map=19/51.19764/3.21847"},
-                    {"departure", DateTime.Now.ToString("s")}
+                    {"departure", TestDepartureTime()}
                 },
                 jobj =>
                 {
@@ -232,7 +237,7 @@ namespace MicroserviceTest
                 {
                     {"from", "https://www.openstreetmap.org/#map=15/51.0359/3.7108"},
                     {"to", "https://www.openstreetmap.org/#map=19/51.19764/3.21847"}, // Close to bruges station
-                    {"departure", DateTime.Now.ToString("s")}
+                    {"departure", TestDepartureTime()}
                 },
                 jobj =>
                 {
@@ -256,7 +261,7 @@ namespace MicroserviceTest
                 {
                     {"from", "https://www.openstreetmap.org/#map=15/51.0359/3.7108"},
                     {"to", "https://www.openstreetmap.org/#map=19/51.19764/3.21847"}, // Close to bruges station
-                    {"departure", DateTime.Now.ToString("s")},
+                    {"departure", TestDepartureTime()},
                     {"multipleOptions", "true"}
                 },
                 jobj =>
@@ -283,7 +288,7 @@ namespace MicroserviceTest
                 {
                     {"from", "https://www.openstreetmap.org/#map=19/51.19764/3.21847"}, // Close to bruges
                     {"to", "http://irail.be/stations/NMBS/008891009"}, // station of bruges
-                    {"departure", DateTime.Now.ToString("s")}
+                    {"departure", TestDepartureTime()}
                 },
                 jobj =>
                 {
@@ -681,7 +686,7 @@ namespace MicroserviceTest
                 {
                     {"from", "https://www.openstreetmap.org/#map=19/51.1951297895458/3.214899786053735"},
                     {"to", "https://www.openstreetmap.org/#map=19/50.84388967236137/4.354740038815095"},
-                    {"departure", "2019-07-17T08:35:00.000Z"},
+                    {"departure", TestDepartureTime()},
                     {"inBetweenOsmProfile", "pedestrian"},
                     {"inBetweenSearchDistance", "500"},
                     {"firstMileOsmProfile", "speedPedelec"},
@@ -698,7 +703,7 @@ namespace MicroserviceTest
                 {
                     {"from", "https://www.openstreetmap.org/#map=19/51.21523909670509/4.268520576417103"},
                     {"to", "https://www.openstreetmap.org/#map=19/51.16509172615645/4.135866853010015"},
-                    {"departure", "2019-07-22T15:23:00.000Z"},
+                    {"departure", TestDepartureTime()},
                     {"inBetweenOsmProfile", "crowsflight"},
                     {"inBetweenSearchDistance", "500"},
                     {"firstMileOsmProfile", "bicycle"},
@@ -714,7 +719,7 @@ namespace MicroserviceTest
                 {
                     {"from", "https://www.openstreetmap.org/#map=19/51.199993/4.431101"},
                     {"to", "https://www.openstreetmap.org/#map=19/50.843183/4.371755"},
-                    {"departure", "2019-07-24T10:05:00.000Z"},
+                    {"departure", TestDepartureTime()},
                     {"inBetweenOsmProfile", "crowsflight"},
                     {"inBetweenSearchDistance", "500"},
                     {"firstMileOsmProfile", "bicycle"},
@@ -732,7 +737,7 @@ namespace MicroserviceTest
                 {
                     {"from", "https://www.openstreetmap.org/#map=19/51.270256567260844/3.0617134555123755"}, // Nieuwmunster
                     {"to", "https://www.openstreetmap.org/#map=16/51.2646/3.1546"}, // Zuienkerke
-                    {"departure", "2019-07-24T10:50:00.000Z"},
+                    {"departure", TestDepartureTime()},
                     {"inBetweenOsmProfile", "crowsflight"},
                     {"inBetweenSearchDistance", "0"}, {"firstMileOsmProfile", "bicycle"},
                     {"firstMileSearchDistance", "20000"}, {"lastMileOsmProfile", "pedestrian"},
