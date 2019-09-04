@@ -11,6 +11,7 @@ namespace MicroserviceTest
         {
             {"localhost", "http://localhost:5000/"},
             {"dev", "http://localhost:5000/"},
+            {"staging", "https://staging.anyways.eu/transitapi"},
             {"prod", "https://routing.anyways.eu/transitapi"},
             {"production", "https://routing.anyways.eu/transitapi"}
         };
