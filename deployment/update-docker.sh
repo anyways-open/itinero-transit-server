@@ -14,10 +14,10 @@ then
     ./update-docker
 fi
 
-NAME="$BASENAME$1"
+NAME="$BASENAME"
 PORT=5001
 STAGING_PORT=5003
-IMAGE="anywaysopen/itinero-transit-server$1"
+IMAGE="anywaysopen/itinero-transit-server:prod"
 docker pull $IMAGE
 echo "Docker pull is done for $NAME"
 
@@ -52,14 +52,9 @@ fi
 
 echo "Starting the docker image"
 
-if [ "$1" == "-staging" ]
-then
-    echo "Using staging deploy (port 5002)"
-    PORT=5002
-    docker run -d --rm --name $NAME -v /var/services/transit-api/logs:/var/app/logs -v /var/services/transit-api/db:/var/app/db -v /var/services/transit-api/routable-tiles:/var/app/cache -p $STAGING_PORT:5000 $IMAGE
-else
-    docker run -d --rm --name $NAME -v /var/services/transit-api/logs:/var/app/logs -v /var/services/transit-api/db:/var/app/db -v /var/services/transit-api/routable-tiles:/var/app/cache -p $PORT:5000 $IMAGE
-fi
+
+docker run -d --rm --name $NAME -v /var/services/transit-api/logs:/var/app/logs -v /var/services/transit-api/db:/var/app/db -v /var/services/transit-api/routable-tiles:/var/app/cache -p $PORT:5000 $IMAGE
+
 
 
 git pull
