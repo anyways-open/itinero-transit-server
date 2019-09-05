@@ -27,7 +27,8 @@ namespace MicroserviceTest
 
         private string TestDepartureTime()
         {
-            return DateTime.Now.ToString("s");
+            var testMoment = DateTime.Now.Date.AddDays(1).AddHours(10);
+            return testMoment.ToString("s");
         }
 
         protected override void RunTests()
@@ -278,7 +279,7 @@ namespace MicroserviceTest
                             j["arrival"]["location"]["id"],
                             "Wrong arrival stations");
                     }
-                }
+                }, maxTimeAllowed:2000
             );
 
 
@@ -559,11 +560,8 @@ namespace MicroserviceTest
             Challenge("Journey", "Sint-Niklaas OSM -> BxlN OSM (Regr test with ebike)",
                 new Dictionary<string, string>
                 {
-                    {
-                        "from", "https://www.openstreetmap.org/#map=19/51.17236/4.14396"
-                    },
+                    {"from", "https://www.openstreetmap.org/#map=19/51.17236/4.14396"},
                     {"to", "https://www.openstreetmap.org/#map=19/50.86044/4.35865"},
-
                     {"departure", $"{DateTime.Now:s}Z"},
                     {
                         "walksGeneratorDescription",
@@ -593,7 +591,7 @@ namespace MicroserviceTest
                             j["arrival"]["location"]["id"],
                             "Wrong arrival stations");
                     }
-                }
+                }, maxTimeAllowed:2000
             );
 
 
@@ -632,7 +630,7 @@ namespace MicroserviceTest
                             j["arrival"]["location"]["id"],
                             "Wrong arrival stations");
                     }
-                }
+                }, maxTimeAllowed:2000
             );
 
             Challenge("Journey", "Regr test 1",
@@ -735,7 +733,9 @@ namespace MicroserviceTest
             Challenge("journey", "Regr 4 with direct cycling path",
                 new Dictionary<string, string>
                 {
-                    {"from", "https://www.openstreetmap.org/#map=19/51.270256567260844/3.0617134555123755"}, // Nieuwmunster
+                    {
+                        "from", "https://www.openstreetmap.org/#map=19/51.270256567260844/3.0617134555123755"
+                    }, // Nieuwmunster
                     {"to", "https://www.openstreetmap.org/#map=16/51.2646/3.1546"}, // Zuienkerke
                     {"departure", TestDepartureTime()},
                     {"inBetweenOsmProfile", "crowsflight"},
@@ -743,10 +743,7 @@ namespace MicroserviceTest
                     {"firstMileSearchDistance", "20000"}, {"lastMileOsmProfile", "pedestrian"},
                     {"lastMileSearchDistance", "10000"}
                 },
-                jobj =>
-                {
-                    AssertNotNullOrEmpty(jobj["journeys"], "Journeys are null");
-                },
+                jobj => { AssertNotNullOrEmpty(jobj["journeys"], "Journeys are null"); },
                 maxTimeAllowed: 4000);
         }
     }
