@@ -1,6 +1,5 @@
 using Itinero.Transit.Api;
-using Itinero.Transit.Api.Logic;
-using Itinero.Transit.IO.OSM;
+using Itinero.Transit.Api.Logic.Transfers;
 using Itinero.Transit.OtherMode;
 using Xunit;
 

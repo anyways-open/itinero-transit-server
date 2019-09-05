@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Itinero.Transit.Api.Logic.Transfers;
 using Itinero.Transit.Api.Models;
 using Itinero.Transit.Data;
 using Itinero.Transit.Data.Aggregators;
 using Itinero.Transit.Data.Core;
-using Itinero.Transit.IO.OSM;
 using Itinero.Transit.IO.OSM.Data;
 using Itinero.Transit.Journey;
 using Itinero.Transit.OtherMode;
@@ -284,9 +284,9 @@ namespace Itinero.Transit.Api.Logic
             departureEnumerator.MoveTo(time.ToUnixTime());
 
 
-            if (!departureEnumerator.HasNext())
+            if (!departureEnumerator.MoveNext())
             {
-                return new LocationSegmentsResult()
+                return new LocationSegmentsResult
                 {
                     Location = location,
                     Segments = new Segment[0]
@@ -320,7 +320,7 @@ namespace Itinero.Transit.Api.Logic
 
 
                 segments.Add(new Segment(departure, arrival, route, headSign, null));
-            } while (departureEnumerator.HasNext());
+            } while (departureEnumerator.MoveNext());
 
 
             return new LocationSegmentsResult()

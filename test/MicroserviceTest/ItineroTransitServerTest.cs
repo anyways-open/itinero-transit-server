@@ -351,33 +351,6 @@ namespace MicroserviceTest
                 }
             );
 
-            Challenge("Journey", "Walk [PCS], Brugge (OSM) to Brugge (NMBS)",
-                new Dictionary<string, string>
-                {
-                    {"from", "https://www.openstreetmap.org/#map=19/51.19764/3.21847"}, // Close to bruges
-                    {"to", "http://irail.be/stations/NMBS/008891009"}, // station of bruges
-                    {"departure", TestDepartureTime()},
-                    {"multipleOptions", "true"}
-                },
-                jobj =>
-                {
-                    AssertNotNull(jobj["journeys"], "Journeys are null");
-
-                    AssertTrue(jobj["journeys"].Any(), "No journeys found");
-                    foreach (var j in jobj["journeys"])
-                    {
-                        AssertEqual("https://www.openstreetmap.org/#map=19/51.19764/3.21847",
-                            j["departure"]["location"]["id"],
-                            "Wrong departure stations");
-
-                        AssertEqual("http://irail.be/stations/NMBS/008891009", j["arrival"]["location"]["id"],
-                            "Wrong arrival stations");
-                        AssertEqual(0, j["vehiclesTaken"].Value<int>());
-                    }
-                }
-            );
-
-
             Challenge("Journey", "EAS with FirstLastMile walk, crow inbetween,  Rijselsestraat Brugge -> Ghent",
                 new Dictionary<string, string>
                 {
@@ -414,7 +387,7 @@ namespace MicroserviceTest
                             "Wrong arrival stations");
                     }
                 },
-                maxTimeAllowed:1500
+                maxTimeAllowed: 1500
             );
             Challenge("Journey", "PCS with FirstLastMile walk, crow inbetween,  Rijselsestraat Brugge -> Ghent",
                 new Dictionary<string, string>
@@ -533,7 +506,7 @@ namespace MicroserviceTest
                             "Wrong arrival stations");
                     }
                 },
-                maxTimeAllowed:2000
+                maxTimeAllowed: 2000
             );
 
             Challenge("Journey", "EAS with FirstLastMile walk, crow inbetween, Rijselsestraat Brugge -> Close to Ghent",
@@ -611,7 +584,7 @@ namespace MicroserviceTest
                             "Wrong arrival stations");
                     }
                 },
-                maxTimeAllowed:2000
+                maxTimeAllowed: 2000
             );
 
             Challenge("Journey", "EAS with FirstLastMile walk, crow inbetween, Adinkerke -> Gouvy",
@@ -689,7 +662,7 @@ namespace MicroserviceTest
                             "Wrong arrival stations");
                     }
                 },
-                maxTimeAllowed:2000
+                maxTimeAllowed: 2000
             );
 
 
@@ -846,7 +819,7 @@ namespace MicroserviceTest
                             "Wrong arrival stations");
                     }
                 },
-                maxTimeAllowed:2000
+                maxTimeAllowed: 2000
             );
 
 
@@ -1040,7 +1013,7 @@ namespace MicroserviceTest
                 },
                 maxTimeAllowed: 3000
             );
-            
+
             Challenge(
                 "journey",
                 "EAS (speedpedelec, walk, walk), Rijselsestraat Brugge (OSM) ->  Bxl Centr (OSM)",
@@ -1090,9 +1063,9 @@ namespace MicroserviceTest
                     {"firstMileSearchDistance", "10000"},
                     {"lastMileOsmProfile", "pedestrian"},
                     {"lastMileSearchDistance", "10000"},
-                }, 
+                },
                 jobj => { AssertNotNullOrEmpty(jobj["journeys"], "Journeys are null"); }, maxTimeAllowed: 4000);
-   
+
             Challenge("journey", "PCS (cycle, crow, walk), Beveren (OSM) -> St Niklaas (OSM)",
                 new Dictionary<string, string>
                 {
@@ -1106,7 +1079,7 @@ namespace MicroserviceTest
                     {"firstMileSearchDistance", "10000"},
                     {"lastMileOsmProfile", "pedestrian"},
                     {"lastMileSearchDistance", "10000"},
-                }, 
+                },
                 jobj => { AssertNotNullOrEmpty(jobj["journeys"], "Journeys are null"); }, maxTimeAllowed: 4000);
 
 
@@ -1155,31 +1128,6 @@ namespace MicroserviceTest
                     {"inBetweenOsmProfile", "crowsflight"},
                     {"inBetweenSearchDistance", "0"}, {"firstMileOsmProfile", "bicycle"},
                     {"firstMileSearchDistance", "20000"}, {"lastMileOsmProfile", "pedestrian"},
-                    {"lastMileSearchDistance", "10000"}
-                },
-                jobj =>
-                {
-                    AssertNotNullOrEmpty(jobj["journeys"], "Journeys are null");
-                    foreach (var j in jobj["journeys"])
-                    {
-                        AssertEqual(0, j["vehiclesTaken"].Value<int>(),
-                            "This journey should not take any PT-vehicle, only cycle");
-                    }
-                },
-                maxTimeAllowed: 4000);
-
-            Challenge("journey", "Cycle [PCS] (cycle, crow, walk), Nieuwmunster -> Zuienkerke, expects cycling only",
-                new Dictionary<string, string>
-                {
-                    {"from", "https://www.openstreetmap.org/#map=19/51.270256567260844/3.0617134555123755"},
-                    {"to", "https://www.openstreetmap.org/#map=16/51.2646/3.1546"},
-                    {"departure", TestDepartureTime()},
-                    {"multipleOptions", "true"},
-                    {"inBetweenOsmProfile", "crowsflight"},
-                    {"inBetweenSearchDistance", "0"},
-                    {"firstMileOsmProfile", "bicycle"},
-                    {"firstMileSearchDistance", "20000"},
-                    {"lastMileOsmProfile", "pedestrian"},
                     {"lastMileSearchDistance", "10000"}
                 },
                 jobj =>

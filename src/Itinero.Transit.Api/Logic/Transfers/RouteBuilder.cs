@@ -1,10 +1,9 @@
 using System;
 using System.Collections.Generic;
 using Itinero.Transit.Api.Models;
-using Itinero.Transit.IO.OSM;
 using Serilog;
 
-namespace Itinero.Transit.Api.Logic
+namespace Itinero.Transit.Api.Logic.Transfers
 {
     /// <summary>
     /// Builds a route (list of geometries) between two given points via the OSM network
