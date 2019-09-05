@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.SymbolStore;
 using System.Linq;
 
 namespace MicroserviceTest
@@ -72,11 +73,14 @@ namespace MicroserviceTest
                 serverTest.RunTestsAgainst(args[0], focus);
                 return;
             }
-            
-            
-           
 
-            serverTest.RunTestsAgainst(args[0], null);
+            var ignoreTimout = args.Length >= 2 && args[1].Equals("--ignore-timeout");
+            if (ignoreTimout)
+            {
+                ServerTest.WriteWarn("Running with elevated timeout of 2 minutes");
+                Console.WriteLine();
+            }
+            serverTest.RunTestsAgainst(args[0], null, ignoreTimout);
         }
     }
 

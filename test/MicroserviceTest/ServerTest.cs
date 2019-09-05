@@ -47,7 +47,7 @@ namespace MicroserviceTest
 
         private List<string> _errorMessages;
 
-        public void RunTestsAgainst(string host = null, int? onlyRunThisTest = null)
+        public void RunTestsAgainst(string host = null, int? onlyRunThisTest = null, bool ignoreTimouts = false)
         {
             host = host ?? DefaultHost;
             if (KnownUrls.ContainsKey(host))
@@ -104,16 +104,25 @@ namespace MicroserviceTest
 
                 try
                 {
-                    timeNeeded = ChallengeAsync(host, challenge).Result;
+                    timeNeeded = ChallengeAsync(host, challenge, ignoreTimouts ? 120000 : challenge.MaxTimeAllowed).Result;
                 }
                 catch (Exception e)
                 {
                     _errorMessages.Add(e.Message);
                 }
 
-                if (challenge.MaxTimeAllowed != 0 && timeNeeded > challenge.MaxTimeAllowed)
+                if (challenge.MaxTimeAllowed != 0 &&
+                    timeNeeded > challenge.MaxTimeAllowed)
                 {
-                    _errorMessages.Add($"Timeout: this test is only allowed to run for {challenge.MaxTimeAllowed}ms");
+                    var msg = $"Timeout: this test is only allowed to run for {challenge.MaxTimeAllowed}ms";
+                    if (ignoreTimouts)
+                    {
+                        WriteWarnHard(msg);
+                    }
+                    else
+                    {
+                        _errorMessages.Add(msg);
+                    }
                 }
 
                 var secs = timeNeeded / 1000;
@@ -205,11 +214,13 @@ namespace MicroserviceTest
         /// </summary>
         private async Task<int> ChallengeAsync(
             string host,
-            Challenge challenge)
+            Challenge challenge,
+            uint timoutInMillis)
         {
             var urlParams = challenge.Url;
             var start = DateTime.Now;
             var client = new HttpClient();
+            client.Timeout = TimeSpan.FromMilliseconds(timoutInMillis);
             var uri = host + urlParams;
             var response = await client.GetAsync(uri).ConfigureAwait(false);
             if (response == null || !response.IsSuccessStatusCode)
@@ -336,7 +347,7 @@ namespace MicroserviceTest
             }
         }
 
-        private void WriteErrHard(string msg)
+        internal static void WriteErrHard(string msg)
         {
             Console.BackgroundColor = ConsoleColor.Red;
             Console.ForegroundColor = ConsoleColor.Black;
@@ -344,7 +355,7 @@ namespace MicroserviceTest
             Console.ResetColor();
         }
 
-        private void WriteErr(string msg)
+        internal static void WriteErr(string msg)
         {
             Console.ForegroundColor = ConsoleColor.Red;
             Console.BackgroundColor = ConsoleColor.Black;
@@ -352,7 +363,7 @@ namespace MicroserviceTest
             Console.ResetColor();
         }
 
-        private void WriteWarn(string msg)
+        internal static void WriteWarn(string msg)
         {
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.BackgroundColor = ConsoleColor.Black;
@@ -360,7 +371,17 @@ namespace MicroserviceTest
             Console.ResetColor();
         }
 
-        private void WriteGood(string msg)
+        internal static void WriteWarnHard(string msg)
+        {
+            Console.BackgroundColor
+                = ConsoleColor.Yellow;
+            Console.ForegroundColor
+                = ConsoleColor.Black;
+            Console.Write(msg);
+            Console.ResetColor();
+        }
+
+        internal static void WriteGood(string msg)
         {
             Console.ForegroundColor = ConsoleColor.Green;
             Console.BackgroundColor = ConsoleColor.Black;
@@ -368,7 +389,7 @@ namespace MicroserviceTest
             Console.ResetColor();
         }
 
-        private void WriteGoodHard(string msg)
+        internal static void WriteGoodHard(string msg)
         {
             Console.ForegroundColor = ConsoleColor.Black;
             Console.BackgroundColor = ConsoleColor.Green;
