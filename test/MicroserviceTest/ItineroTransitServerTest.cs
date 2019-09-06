@@ -247,7 +247,8 @@ namespace MicroserviceTest
                         AssertEqual("http://irail.be/stations/NMBS/008892007", j["departure"]["location"]["id"],
                             "Wrong departure stations");
                     }
-                }
+                },
+                maxTimeAllowed:2000
             );
 
             Challenge("Journey", "PCS, Gent -> Brugge (OSM)",
@@ -270,7 +271,8 @@ namespace MicroserviceTest
                         AssertEqual("http://irail.be/stations/NMBS/008892007", j["departure"]["location"]["id"],
                             "Wrong departure stations");
                     }
-                }, maxTimeAllowed:2000
+                },
+                maxTimeAllowed:2000
             );
 
             Challenge("Journey", "EAS, Ghent (OSM) -> Brugge (OSM)",
