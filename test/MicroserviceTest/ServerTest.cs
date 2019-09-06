@@ -94,6 +94,7 @@ namespace MicroserviceTest
             Console.WriteLine(
                 $"Running {Name} with {challenges.Count} tests {tm} against default host '{host}'");
             var failCount = 0;
+            var timeOutCount = 0;
             var count = 0;
             foreach (var challenge in challenges)
             {
@@ -112,22 +113,8 @@ namespace MicroserviceTest
                 }
 
                 var endCh = DateTime.Now;
-                var timeNeeded = (endCh - startCH).TotalMilliseconds;
+                var timeNeeded = (int) (endCh - startCH).TotalMilliseconds;
 
-
-                if (challenge.MaxTimeAllowed != 0 &&
-                    timeNeeded > challenge.MaxTimeAllowed)
-                {
-                    var msg = $"Timeout: this test is only allowed to run for {challenge.MaxTimeAllowed}ms";
-                    if (ignoreTimouts)
-                    {
-                        WriteWarnHard(msg);
-                    }
-                    else
-                    {
-                        _errorMessages.Add(msg);
-                    }
-                }
 
                 var secs = timeNeeded / 1000;
                 var ms = timeNeeded % 1000;
@@ -143,19 +130,20 @@ namespace MicroserviceTest
                         err = 5000;
                     }
 
-                    var warn = err * 3 / 4;
+                    var warnHard = err * 3 / 4;
+                    var warn = err / 2;
 
                     if (timeNeeded > err)
                     {
-                        WriteErr(timing);
+                        WriteErrHard(timing);
+                    }
+                    else if (timeNeeded > warnHard)
+                    {
+                        WriteWarnHard(timing);
                     }
                     else if (timeNeeded > warn)
                     {
                         WriteWarn(timing);
-                    }
-                    else if (challenge.MaxTimeAllowed == 0)
-                    {
-                        Console.Write(timing);
                     }
                     else
                     {
@@ -163,20 +151,41 @@ namespace MicroserviceTest
                     }
                 }
 
+                bool timedOut = challenge.MaxTimeAllowed != 0 &&
+                                timeNeeded > challenge.MaxTimeAllowed;
+                if (timedOut)
+                {
+                    timeOutCount++;
+                }
 
                 Console.Write("\r");
-                if (!_errorMessages.Any())
+                if (_errorMessages.Any())
+                {
+                    failCount++;
+                    WriteErrHard("FAIL");
+                }
+                else if (timedOut)
+                {
+                    if (!ignoreTimouts)
+                    {
+                        failCount++;
+                    }
+
+                    WriteWarnHard("TIME");
+                }
+                else
                 {
                     WriteGood(" OK ");
-                    WriteSeconds();
+                }
+
+                WriteSeconds();
+
+                if (!_errorMessages.Any())
+                {
                     Console.WriteLine($"{challenge.Name}");
                 }
                 else
                 {
-                    failCount++;
-                    WriteErrHard("FAIL");
-                    WriteSeconds();
-
                     Console.WriteLine(
                         $"{challenge.Name}\n     An error occured while running test {count} against URL\n    {host}{challenge.Url}");
 
@@ -200,10 +209,22 @@ namespace MicroserviceTest
 
             if (failCount > 0)
             {
-                var msg = $"{failCount}/{challenges.Count} tests failed.";
+                var msg = $"{failCount}/{challenges.Count} tests failed - {timeOutCount} did time out.";
                 WriteErrHard(msg);
                 Console.WriteLine();
                 throw new Exception(msg);
+            }
+
+            if (timeOutCount > 0)
+            {
+                var msg = $"{timeOutCount}/{challenges.Count} tests did timeout.";
+
+                WriteWarnHard(msg);
+                Console.WriteLine();
+                if (!ignoreTimouts)
+                {
+                    throw new Exception(msg);
+                }
             }
             else
             {
@@ -224,7 +245,7 @@ namespace MicroserviceTest
             var urlParams = challenge.Url;
             var client = new HttpClient
             {
-                Timeout = TimeSpan.FromMilliseconds(timoutInMillis*2)
+                Timeout = TimeSpan.FromMilliseconds(timoutInMillis * 2)
             };
             var uri = host + urlParams;
             var response = await client.GetAsync(uri).ConfigureAwait(false);
