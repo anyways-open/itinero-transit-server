@@ -21,7 +21,7 @@ namespace MicroserviceTest
             "Itinero-Transit Tester",
             "production",
             knownUrls,
-            defaultTimeout: 1000)
+            defaultTimeout: 2000)
         {
         }
 
@@ -150,8 +150,7 @@ namespace MicroserviceTest
                         AssertEqual("http://irail.be/stations/NMBS/008892007", j["arrival"]["location"]["id"],
                             "Wrong arrival stations");
                     }
-                },
-                maxTimeAllowed: 2000
+                }
             );
 
             Challenge("Journey", "PCS, Brugge -> Gent",
@@ -247,8 +246,7 @@ namespace MicroserviceTest
                         AssertEqual("http://irail.be/stations/NMBS/008892007", j["departure"]["location"]["id"],
                             "Wrong departure stations");
                     }
-                },
-                maxTimeAllowed:2000
+                }
             );
 
             Challenge("Journey", "PCS, Gent -> Brugge (OSM)",
@@ -271,8 +269,7 @@ namespace MicroserviceTest
                         AssertEqual("http://irail.be/stations/NMBS/008892007", j["departure"]["location"]["id"],
                             "Wrong departure stations");
                     }
-                },
-                maxTimeAllowed:2000
+                }
             );
 
             Challenge("Journey", "EAS, Ghent (OSM) -> Brugge (OSM)",
@@ -321,7 +318,7 @@ namespace MicroserviceTest
                             j["arrival"]["location"]["id"],
                             "Wrong arrival stations");
                     }
-                }, maxTimeAllowed: 2000
+                }
             );
 
 
@@ -424,8 +421,7 @@ namespace MicroserviceTest
                             j["arrival"]["location"]["id"],
                             "Wrong arrival stations");
                     }
-                },
-                maxTimeAllowed: 2000
+                }
             );
             Challenge("Journey",
                 "EAS with FirstLastMile walk, crow inbetween, Rijselsestraat Brugge -> De Sterre, Gent",
@@ -504,8 +500,7 @@ namespace MicroserviceTest
                             j["arrival"]["location"]["id"],
                             "Wrong arrival stations");
                     }
-                },
-                maxTimeAllowed: 2000
+                }
             );
 
             Challenge("Journey", "EAS with FirstLastMile walk, crow inbetween, Rijselsestraat Brugge -> Close to Ghent",
@@ -582,8 +577,7 @@ namespace MicroserviceTest
                             j["arrival"]["location"]["id"],
                             "Wrong arrival stations");
                     }
-                },
-                maxTimeAllowed: 2000
+                }
             );
 
             Challenge("Journey", "EAS with FirstLastMile walk, crow inbetween, Adinkerke -> Gouvy",
@@ -660,8 +654,7 @@ namespace MicroserviceTest
                             j["arrival"]["location"]["id"],
                             "Wrong arrival stations");
                     }
-                },
-                maxTimeAllowed: 2000
+                }
             );
 
 
@@ -700,8 +693,7 @@ namespace MicroserviceTest
                             j["arrival"]["location"]["id"],
                             "Wrong arrival stations");
                     }
-                },
-                maxTimeAllowed: 2000
+                }
             );
 
             Challenge("Journey", "PCS with FirstLastMile walk, crow inbetween, Poperinge -> Brussel (OSM)",
@@ -740,8 +732,7 @@ namespace MicroserviceTest
                             j["arrival"]["location"]["id"],
                             "Wrong arrival stations");
                     }
-                },
-                maxTimeAllowed: 2000
+                }
             );
             Challenge("Journey", "EAS with FirstLastMile walk, crow inbetween, Sint-Niklaas (OSM) -> BxlN (OSM)",
                 new Dictionary<string, string>
@@ -817,8 +808,7 @@ namespace MicroserviceTest
                             j["arrival"]["location"]["id"],
                             "Wrong arrival stations");
                     }
-                },
-                maxTimeAllowed: 2000
+                }
             );
 
 
@@ -857,7 +847,7 @@ namespace MicroserviceTest
                             j["arrival"]["location"]["id"],
                             "Wrong arrival stations");
                     }
-                }, maxTimeAllowed: 2000
+                }
             );
 
             Challenge("Journey", "EAS with FirstLastMile ebike, Sint-Niklaas (OSM) -> BxlN OSM",
@@ -894,7 +884,7 @@ namespace MicroserviceTest
                             j["arrival"]["location"]["id"],
                             "Wrong arrival stations");
                     }
-                }, maxTimeAllowed: 2000
+                }
             );
 
 
@@ -933,7 +923,7 @@ namespace MicroserviceTest
                             j["arrival"]["location"]["id"],
                             "Wrong arrival stations");
                     }
-                }, maxTimeAllowed: 2000
+                }
             );
 
             Challenge("Journey", "EAS with FirstLastMile ebike, BxlN (OSM) -> Aalst (OSM)",
@@ -971,7 +961,7 @@ namespace MicroserviceTest
                             j["arrival"]["location"]["id"],
                             "Wrong arrival stations");
                     }
-                }, maxTimeAllowed: 2000
+                }
             );
 
             Challenge("Journey", "PCS with FirstLastMile ebike, WTC3 BxlN (OSM) -> Gent (OSM)",
