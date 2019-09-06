@@ -56,12 +56,12 @@ namespace Itinero.Transit.Api.Controllers
             {
                 foreach (var (name, (_, synchronizer)) in state.TransitDbs)
                 {
-                    if (synchronizer.LoadedTimeWindows != null)
+                    if (synchronizer?.LoadedTimeWindows != null)
                     {
                         loadedTimeWindows.Add(name, synchronizer.LoadedTimeWindows);
                     }
 
-                    if (synchronizer.CurrentlyRunning != null)
+                    if (synchronizer?.CurrentlyRunning != null)
                     {
                         tasks.Add(name, synchronizer.CurrentlyRunning.ToString());
                     }
