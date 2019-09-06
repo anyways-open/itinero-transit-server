@@ -100,16 +100,20 @@ namespace MicroserviceTest
                 _errorMessages = new List<string>();
                 Console.Write($"{(challenges.Count - count):D4} Running {challenge.Name}");
                 count++;
-                var timeNeeded = 0;
 
+                var startCH = DateTime.Now;
                 try
                 {
-                    timeNeeded = ChallengeAsync(host, challenge, ignoreTimouts ? 120000 : challenge.MaxTimeAllowed).Result;
+                    var x = ChallengeAsync(host, challenge, ignoreTimouts ? 120000 : challenge.MaxTimeAllowed).Result;
                 }
                 catch (Exception e)
                 {
                     _errorMessages.Add(e.Message);
                 }
+
+                var endCh = DateTime.Now;
+                var timeNeeded = (endCh - startCH).Milliseconds;
+
 
                 if (challenge.MaxTimeAllowed != 0 &&
                     timeNeeded > challenge.MaxTimeAllowed)
@@ -218,7 +222,6 @@ namespace MicroserviceTest
             uint timoutInMillis)
         {
             var urlParams = challenge.Url;
-            var start = DateTime.Now;
             var client = new HttpClient();
             client.Timeout = TimeSpan.FromMilliseconds(timoutInMillis);
             var uri = host + urlParams;
@@ -240,8 +243,6 @@ namespace MicroserviceTest
                 throw new HttpRequestException("Result is not a valid JSON-file");
             }
 
-            var end = DateTime.Now;
-            var time = (int) (end - start).TotalMilliseconds;
 
             try
             {
@@ -252,7 +253,7 @@ namespace MicroserviceTest
                 _errorMessages.Add(e.Message);
             }
 
-            return time;
+            return 0;
         }
 
         protected abstract void RunTests();
