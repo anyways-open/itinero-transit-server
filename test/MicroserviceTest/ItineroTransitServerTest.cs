@@ -33,7 +33,6 @@ namespace MicroserviceTest
 
         protected override void RunTests()
         {
-            // Is the server online?
             Challenge("status", "Is the server online?",
                 property: jobj =>
                 {
@@ -43,7 +42,6 @@ namespace MicroserviceTest
                 }
             );
 
-            // Do we find stops?
             Challenge("LocationsByName", "Search for station 'Brugge'",
                 new Dictionary<string, string>
                 {
@@ -63,7 +61,6 @@ namespace MicroserviceTest
                 }
             );
 
-            // Do we find stops with spelling errors?
             Challenge("LocationsByName", "Search for station 'Brugg'",
                 new Dictionary<string, string>
                 {
@@ -84,7 +81,6 @@ namespace MicroserviceTest
             );
 
 
-            // Do we find locations around a stop?
             Challenge("LocationsAround", "Search Locations around",
                 new Dictionary<string, string>
                 {
@@ -103,7 +99,6 @@ namespace MicroserviceTest
             );
 
 
-            // Do we find information on a location
             Challenge("Location", "Get info about station of Bruges",
                 new Dictionary<string, string>
                 {
@@ -155,7 +150,8 @@ namespace MicroserviceTest
                         AssertEqual("http://irail.be/stations/NMBS/008892007", j["arrival"]["location"]["id"],
                             "Wrong arrival stations");
                     }
-                }
+                },
+                maxTimeAllowed: 2000
             );
 
             Challenge("Journey", "PCS, Brugge -> Gent",
@@ -274,7 +270,7 @@ namespace MicroserviceTest
                         AssertEqual("http://irail.be/stations/NMBS/008892007", j["departure"]["location"]["id"],
                             "Wrong departure stations");
                     }
-                }
+                }, maxTimeAllowed:2000
             );
 
             Challenge("Journey", "EAS, Ghent (OSM) -> Brugge (OSM)",

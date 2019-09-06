@@ -222,8 +222,10 @@ namespace MicroserviceTest
             uint timoutInMillis)
         {
             var urlParams = challenge.Url;
-            var client = new HttpClient();
-            client.Timeout = TimeSpan.FromMilliseconds(timoutInMillis);
+            var client = new HttpClient
+            {
+                Timeout = TimeSpan.FromMilliseconds(timoutInMillis*2)
+            };
             var uri = host + urlParams;
             var response = await client.GetAsync(uri).ConfigureAwait(false);
             if (response == null || !response.IsSuccessStatusCode)
