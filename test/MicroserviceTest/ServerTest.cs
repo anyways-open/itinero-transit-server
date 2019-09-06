@@ -112,7 +112,7 @@ namespace MicroserviceTest
                 }
 
                 var endCh = DateTime.Now;
-                var timeNeeded = (endCh - startCH).Milliseconds;
+                var timeNeeded = (endCh - startCH).TotalMilliseconds;
 
 
                 if (challenge.MaxTimeAllowed != 0 &&
