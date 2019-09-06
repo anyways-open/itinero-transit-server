@@ -99,6 +99,7 @@ namespace Itinero.Transit.Api.Logic
                 _cachedStopsReader = newReader.UseCache();
                 return _cachedStopsReader;
             }
+            // Return a new stospReader which shares the cache with the already existing cache
             return new StopSearchCache(newReader, _cachedStopsReader);
         }
 
