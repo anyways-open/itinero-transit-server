@@ -266,9 +266,18 @@ namespace Itinero.Transit.Api.Logic
         }
 
 
+        /// <summary>
+        /// Gives all the connections departing at the given location within the timewindow
+        /// </summary>
+        /// <param name="dbs"></param>
+        /// <param name="globalId"></param>
+        /// <param name="time"></param>
+        /// <param name="window"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
         internal static LocationSegmentsResult SegmentsForLocation
         (this State dbs,
-            string globalId, DateTime time, TimeSpan window)
+            string globalId, DateTime time, DateTime windowEnd)
         {
             if (dbs == null) throw new ArgumentNullException(nameof(dbs));
             var stops = dbs.GetStopsReader().AddOsmReader();
@@ -294,7 +303,7 @@ namespace Itinero.Transit.Api.Logic
             }
 
             var trips = dbs.GetTripsReader();
-            var timeMax = time.Add(window).ToUnixTime();
+            var timeMax = windowEnd.ToUnixTime();
             var segments = new List<Segment>();
             do
             {
@@ -305,10 +314,14 @@ namespace Itinero.Transit.Api.Logic
                 if (connection.DepartureTime >= timeMax) break;
 
                 var trip = new Trip();
-                if (!trips.Get(connection.TripId, trip)) continue;
+                var headSign = "";
+                var route = "";
+                if (trips.Get(connection.TripId, trip))
+                {
+                    trip.Attributes.TryGetValue("headsign", out headSign);
+                    trip.Attributes.TryGetValue("route", out route);
+                }
 
-                trip.Attributes.TryGetValue("headsign", out var headSign);
-                trip.Attributes.TryGetValue("route", out var route);
 
                 if (!stops.MoveTo(connection.DepartureStop)) continue;
                 var departure = new TimedLocation(new Location(stops),
@@ -323,7 +336,7 @@ namespace Itinero.Transit.Api.Logic
             } while (departureEnumerator.MoveNext());
 
 
-            return new LocationSegmentsResult()
+            return new LocationSegmentsResult
             {
                 Location = location,
                 Segments = segments.ToArray()

@@ -123,7 +123,8 @@ namespace MicroserviceTest
             Challenge("Location/Connections", "Load connections of station Brugge",
                 new Dictionary<string, string>
                 {
-                    {"id", "http://irail.be/stations/NMBS/008891009"}
+                    {"id", "http://irail.be/stations/NMBS/008891009"},
+                    {"windowStart", TestDepartureTime()}
                 },
                 jobj =>
                 {
