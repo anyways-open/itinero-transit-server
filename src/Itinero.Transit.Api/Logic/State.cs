@@ -27,7 +27,7 @@ namespace Itinero.Transit.Api.Logic
         /// A version information string - useful to see what version is in production.
         /// The first letter of the word is increased alphabetically
         /// </summary>
-        public const string Version = "Pretty productive (Itinero-transit 1.0.0-pre85, Routable-Tiles pre33)";
+        public const string Version = "Pretty SPeedy (Itinero-transit 1.0.0-pre88, Routable-Tiles pre33)";
 
         /// <summary>
         /// This dictionary contains all the loaded transitDbs, indexed on their name.
