@@ -808,7 +808,8 @@ namespace MicroserviceTest
                             j["arrival"]["location"]["id"],
                             "Wrong arrival stations");
                     }
-                }
+                },
+                maxTimeAllowed:4000
             );
 
 
