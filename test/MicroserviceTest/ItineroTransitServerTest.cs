@@ -31,9 +31,28 @@ namespace MicroserviceTest
             return testMoment.ToString("s");
         }
 
+        /// <summary>
+        /// Same as 'challenge', but adds 'test=true' parameter
+        /// </summary>
+        private void TestChallenge(
+            string endpoint,
+            string name,
+            Dictionary<string, string> keyValues = null,
+            Action<JToken> property = null,
+            uint maxTimeAllowed = 0)
+        {
+            keyValues?.Add("test", "true");
+            Challenge(
+                endpoint,
+                name,
+                keyValues,
+                property,
+                maxTimeAllowed);
+        }
+
         protected override void RunTests()
         {
-            Challenge("status", "Is the server online?",
+            TestChallenge("status", "Is the server online?",
                 property: jobj =>
                 {
                     AssertTrue(jobj["online"].Value<bool>(), "Not online");
@@ -42,7 +61,7 @@ namespace MicroserviceTest
                 }
             );
 
-            Challenge("LocationsByName", "Search for station 'Brugge'",
+            TestChallenge("LocationsByName", "Search for station 'Brugge'",
                 new Dictionary<string, string>
                 {
                     {"name", "Brugge"}
@@ -61,7 +80,7 @@ namespace MicroserviceTest
                 }
             );
 
-            Challenge("LocationsByName", "Search for station 'Brugg'",
+            TestChallenge("LocationsByName", "Search for station 'Brugg'",
                 new Dictionary<string, string>
                 {
                     {"name", "Brugg"}
@@ -81,7 +100,7 @@ namespace MicroserviceTest
             );
 
 
-            Challenge("LocationsAround", "Search Locations around",
+            TestChallenge("LocationsAround", "Search Locations around",
                 new Dictionary<string, string>
                 {
                     {"lat", "51.1978"},
@@ -99,7 +118,7 @@ namespace MicroserviceTest
             );
 
 
-            Challenge("Location", "Get info about station of Bruges",
+            TestChallenge("Location", "Get info about station of Bruges",
                 new Dictionary<string, string>
                 {
                     {"id", "http://irail.be/stations/NMBS/008891009"}
@@ -115,7 +134,7 @@ namespace MicroserviceTest
             );
 
 
-            Challenge("Location/Connections", "Load connections of station Brugge",
+            TestChallenge("Location/Connections", "Load connections of station Brugge",
                 new Dictionary<string, string>
                 {
                     {"id", "http://irail.be/stations/NMBS/008891009"},
@@ -129,7 +148,7 @@ namespace MicroserviceTest
             );
 
 
-            Challenge("Journey", "EAS, Brugge -> Ghent",
+            TestChallenge("Journey", "EAS, Brugge -> Ghent",
                 new Dictionary<string, string>
                 {
                     {"from", "http://irail.be/stations/NMBS/008891009"},
@@ -153,7 +172,7 @@ namespace MicroserviceTest
                 }
             );
 
-            Challenge("Journey", "PCS, Brugge -> Gent",
+            TestChallenge("Journey", "PCS, Brugge -> Gent",
                 new Dictionary<string, string>
                 {
                     {"from", "http://irail.be/stations/NMBS/008891009"},
@@ -178,7 +197,7 @@ namespace MicroserviceTest
                 }
             );
 
-            Challenge("Journey", "EAS, Brugge (OSM) -> Gent",
+            TestChallenge("Journey", "EAS, Brugge (OSM) -> Gent",
                 new Dictionary<string, string>
                 {
                     {"from", "https://www.openstreetmap.org/#map=19/51.19764/3.21847"},
@@ -202,7 +221,7 @@ namespace MicroserviceTest
                 }
             );
 
-            Challenge("Journey", "PCS, Brugge (OSM) -> Gent",
+            TestChallenge("Journey", "PCS, Brugge (OSM) -> Gent",
                 new Dictionary<string, string>
                 {
                     {"from", "https://www.openstreetmap.org/#map=19/51.19764/3.21847"},
@@ -227,7 +246,7 @@ namespace MicroserviceTest
                 }
             );
 
-            Challenge("Journey", "EAS, Gent -> Brugge (OSM)",
+            TestChallenge("Journey", "EAS, Gent -> Brugge (OSM)",
                 new Dictionary<string, string>
                 {
                     {"from", "http://irail.be/stations/NMBS/008892007"},
@@ -249,7 +268,7 @@ namespace MicroserviceTest
                 }
             );
 
-            Challenge("Journey", "PCS, Gent -> Brugge (OSM)",
+            TestChallenge("Journey", "PCS, Gent -> Brugge (OSM)",
                 new Dictionary<string, string>
                 {
                     {"from", "http://irail.be/stations/NMBS/008892007"},
@@ -272,7 +291,7 @@ namespace MicroserviceTest
                 }
             );
 
-            Challenge("Journey", "EAS, Ghent (OSM) -> Brugge (OSM)",
+            TestChallenge("Journey", "EAS, Ghent (OSM) -> Brugge (OSM)",
                 new Dictionary<string, string>
                 {
                     {"from", "https://www.openstreetmap.org/#map=15/51.0359/3.7108"},
@@ -296,7 +315,7 @@ namespace MicroserviceTest
                 }
             );
 
-            Challenge("Journey", "PCS, Gent (OSM) -> Brugge (OSM)",
+            TestChallenge("Journey", "PCS, Gent (OSM) -> Brugge (OSM)",
                 new Dictionary<string, string>
                 {
                     {"from", "https://www.openstreetmap.org/#map=15/51.0359/3.7108"},
@@ -322,7 +341,7 @@ namespace MicroserviceTest
             );
 
 
-            Challenge("Journey", "Walk [EAS], Brugge (OSM) to Brugge (NMBS)",
+            TestChallenge("Journey", "Walk [EAS], Brugge (OSM) to Brugge (NMBS)",
                 new Dictionary<string, string>
                 {
                     {"from", "https://www.openstreetmap.org/#map=19/51.19764/3.21847"}, // Close to bruges
@@ -347,7 +366,7 @@ namespace MicroserviceTest
                 }
             );
 
-            Challenge("Journey", "EAS with FirstLastMile walk, crow inbetween,  Rijselsestraat Brugge -> Ghent",
+            TestChallenge("Journey", "EAS with FirstLastMile walk, crow inbetween,  Rijselsestraat Brugge -> Ghent",
                 new Dictionary<string, string>
                 {
                     {"from", "https://www.openstreetmap.org/#map=17/51.21577/3.21823"},
@@ -385,7 +404,7 @@ namespace MicroserviceTest
                 },
                 maxTimeAllowed: 1500
             );
-            Challenge("Journey", "PCS with FirstLastMile walk, crow inbetween,  Rijselsestraat Brugge -> Ghent",
+            TestChallenge("Journey", "PCS with FirstLastMile walk, crow inbetween,  Rijselsestraat Brugge -> Ghent",
                 new Dictionary<string, string>
                 {
                     {"from", "https://www.openstreetmap.org/#map=17/51.21577/3.21823"},
@@ -423,7 +442,7 @@ namespace MicroserviceTest
                     }
                 }
             );
-            Challenge("Journey",
+            TestChallenge("Journey",
                 "EAS with FirstLastMile walk, crow inbetween, Rijselsestraat Brugge -> De Sterre, Gent",
                 new Dictionary<string, string>
                 {
@@ -462,7 +481,7 @@ namespace MicroserviceTest
                     }
                 }
             );
-            Challenge("Journey",
+            TestChallenge("Journey",
                 "PCS with FirstLastMile walk, crow inbetween, Rijselsestraat Brugge -> De Sterre, Gent",
                 new Dictionary<string, string>
                 {
@@ -503,7 +522,8 @@ namespace MicroserviceTest
                 }
             );
 
-            Challenge("Journey", "EAS with FirstLastMile walk, crow inbetween, Rijselsestraat Brugge -> Close to Ghent",
+            TestChallenge("Journey",
+                "EAS with FirstLastMile walk, crow inbetween, Rijselsestraat Brugge -> Close to Ghent",
                 new Dictionary<string, string>
                 {
                     {"from", "https://www.openstreetmap.org/#map=17/51.21577/3.21823"},
@@ -541,7 +561,8 @@ namespace MicroserviceTest
                 }
             );
 
-            Challenge("Journey", "PCS with FirstLastMile walk, crow inbetween, Rijselsestraat Brugge -> Close to Ghent",
+            TestChallenge("Journey",
+                "PCS with FirstLastMile walk, crow inbetween, Rijselsestraat Brugge -> Close to Ghent",
                 new Dictionary<string, string>
                 {
                     {"from", "https://www.openstreetmap.org/#map=17/51.21577/3.21823"},
@@ -580,7 +601,7 @@ namespace MicroserviceTest
                 }
             );
 
-            Challenge("Journey", "EAS with FirstLastMile walk, crow inbetween, Adinkerke -> Gouvy",
+            TestChallenge("Journey", "EAS with FirstLastMile walk, crow inbetween, Adinkerke -> Gouvy",
                 new Dictionary<string, string>
                 {
                     {"from", "https://www.openstreetmap.org/#map=15/51.0858/2.6017"},
@@ -618,7 +639,7 @@ namespace MicroserviceTest
                 }
             );
 
-            Challenge("Journey", "PCS with FirstLastMile walk, crow inbetween, Adinkerke -> Gouvy",
+            TestChallenge("Journey", "PCS with FirstLastMile walk, crow inbetween, Adinkerke -> Gouvy",
                 new Dictionary<string, string>
                 {
                     {"from", "https://www.openstreetmap.org/#map=15/51.0858/2.6017"},
@@ -658,7 +679,7 @@ namespace MicroserviceTest
             );
 
 
-            Challenge("Journey", "EAS with FirstLastMile walk, crow inbetween, Poperinge -> Brussel (OSM)",
+            TestChallenge("Journey", "EAS with FirstLastMile walk, crow inbetween, Poperinge -> Brussel (OSM)",
                 new Dictionary<string, string>
                 {
                     {"from", "http://irail.be/stations/NMBS/008896735"},
@@ -696,7 +717,7 @@ namespace MicroserviceTest
                 }
             );
 
-            Challenge("Journey", "PCS with FirstLastMile walk, crow inbetween, Poperinge -> Brussel (OSM)",
+            TestChallenge("Journey", "PCS with FirstLastMile walk, crow inbetween, Poperinge -> Brussel (OSM)",
                 new Dictionary<string, string>
                 {
                     {"from", "http://irail.be/stations/NMBS/008896735"},
@@ -734,7 +755,7 @@ namespace MicroserviceTest
                     }
                 }
             );
-            Challenge("Journey", "EAS with FirstLastMile walk, crow inbetween, Sint-Niklaas (OSM) -> BxlN (OSM)",
+            TestChallenge("Journey", "EAS with FirstLastMile walk, crow inbetween, Sint-Niklaas (OSM) -> BxlN (OSM)",
                 new Dictionary<string, string>
                 {
                     {"from", "https://www.openstreetmap.org/#map=19/51.17236/4.14396"},
@@ -772,7 +793,7 @@ namespace MicroserviceTest
                     }
                 }
             );
-            Challenge("Journey", "PCS with FirstLastMile walk, crow inbetween, Sint-Niklaas (OSM) -> BxlN (OSM)",
+            TestChallenge("Journey", "PCS with FirstLastMile walk, crow inbetween, Sint-Niklaas (OSM) -> BxlN (OSM)",
                 new Dictionary<string, string>
                 {
                     {"from", "https://www.openstreetmap.org/#map=19/51.17236/4.14396"},
@@ -809,11 +830,11 @@ namespace MicroserviceTest
                             "Wrong arrival stations");
                     }
                 },
-                maxTimeAllowed:4000
+                maxTimeAllowed: 4000
             );
 
 
-            Challenge("Journey", "EAS with FirstLastMile ebike, Sint-Niklaas (OSM) -> BxlN OSM",
+            TestChallenge("Journey", "EAS with FirstLastMile ebike, Sint-Niklaas (OSM) -> BxlN OSM",
                 new Dictionary<string, string>
                 {
                     {"from", "https://www.openstreetmap.org/#map=19/51.17236/4.14396"},
@@ -851,7 +872,7 @@ namespace MicroserviceTest
                 }
             );
 
-            Challenge("Journey", "EAS with FirstLastMile ebike, Sint-Niklaas (OSM) -> BxlN OSM",
+            TestChallenge("Journey", "EAS with FirstLastMile ebike, Sint-Niklaas (OSM) -> BxlN OSM",
                 new Dictionary<string, string>
                 {
                     {"from", "https://www.openstreetmap.org/#map=19/51.17236/4.14396"},
@@ -889,7 +910,7 @@ namespace MicroserviceTest
             );
 
 
-            Challenge("Journey", "PCS with FirstLastMile ebike, BxlN (OSM) -> Aalst (OSM)",
+            TestChallenge("Journey", "PCS with FirstLastMile ebike, BxlN (OSM) -> Aalst (OSM)",
                 new Dictionary<string, string>
                 {
                     {"from", "https://www.openstreetmap.org/#map=19/50.86051035579558/4.358399302117419"},
@@ -927,7 +948,7 @@ namespace MicroserviceTest
                 }
             );
 
-            Challenge("Journey", "EAS with FirstLastMile ebike, BxlN (OSM) -> Aalst (OSM)",
+            TestChallenge("Journey", "EAS with FirstLastMile ebike, BxlN (OSM) -> Aalst (OSM)",
                 new Dictionary<string, string>
                 {
                     {"from", "https://www.openstreetmap.org/#map=19/50.86051035579558/4.358399302117419"},
@@ -965,7 +986,7 @@ namespace MicroserviceTest
                 }
             );
 
-            Challenge("Journey", "PCS with FirstLastMile ebike, WTC3 BxlN (OSM) -> Gent (OSM)",
+            TestChallenge("Journey", "PCS with FirstLastMile ebike, WTC3 BxlN (OSM) -> Gent (OSM)",
                 new Dictionary<string, string>
                 {
                     {"from", "https://www.openstreetmap.org/#map=17/50.86094/4.35405"},
@@ -1004,7 +1025,7 @@ namespace MicroserviceTest
                 maxTimeAllowed: 3000
             );
 
-            Challenge(
+            TestChallenge(
                 "journey",
                 "EAS (speedpedelec, walk, walk), Rijselsestraat Brugge (OSM) ->  Bxl Centr (OSM)",
                 new Dictionary<string, string>
@@ -1021,7 +1042,7 @@ namespace MicroserviceTest
                 },
                 jobj => { AssertNotNullOrEmpty(jobj["journeys"], "Journeys are null"); }, 4000
             );
-            Challenge(
+            TestChallenge(
                 "journey",
                 "PCS (speedpedelec, walk, walk), Rijselsestraat Brugge (OSM) ->  Bxl Centr (OSM)",
                 new Dictionary<string, string>
@@ -1041,7 +1062,7 @@ namespace MicroserviceTest
             );
 
 
-            Challenge("journey", "EAS (cycle, crow, walk), Beveren (OSM) -> St Niklaas (OSM)",
+            TestChallenge("journey", "EAS (cycle, crow, walk), Beveren (OSM) -> St Niklaas (OSM)",
                 new Dictionary<string, string>
                 {
                     {"from", "https://www.openstreetmap.org/#map=19/51.21523909670509/4.268520576417103"},
@@ -1056,7 +1077,7 @@ namespace MicroserviceTest
                 },
                 jobj => { AssertNotNullOrEmpty(jobj["journeys"], "Journeys are null"); }, maxTimeAllowed: 4000);
 
-            Challenge("journey", "PCS (cycle, crow, walk), Beveren (OSM) -> St Niklaas (OSM)",
+            TestChallenge("journey", "PCS (cycle, crow, walk), Beveren (OSM) -> St Niklaas (OSM)",
                 new Dictionary<string, string>
                 {
                     {"from", "https://www.openstreetmap.org/#map=19/51.21523909670509/4.268520576417103"},
@@ -1073,7 +1094,7 @@ namespace MicroserviceTest
                 jobj => { AssertNotNullOrEmpty(jobj["journeys"], "Journeys are null"); }, maxTimeAllowed: 4000);
 
 
-            Challenge("Journey", "EAS (cycle, crow, walk), Antw Berchem (OSM) -> Brussel Warandepark (OSM)",
+            TestChallenge("Journey", "EAS (cycle, crow, walk), Antw Berchem (OSM) -> Brussel Warandepark (OSM)",
                 new Dictionary<string, string>
                 {
                     {"from", "https://www.openstreetmap.org/#map=19/51.199993/4.431101"},
@@ -1089,7 +1110,7 @@ namespace MicroserviceTest
                 jobj => { AssertNotNullOrEmpty(jobj["journeys"], "Journeys are null"); },
                 maxTimeAllowed: 5000
             );
-            Challenge("Journey", "PCS (cycle, crow, walk), Antw Berchem (OSM) -> Brussel Warandepark (OSM)",
+            TestChallenge("Journey", "PCS (cycle, crow, walk), Antw Berchem (OSM) -> Brussel Warandepark (OSM)",
                 new Dictionary<string, string>
                 {
                     {"from", "https://www.openstreetmap.org/#map=19/51.199993/4.431101"},
@@ -1107,7 +1128,8 @@ namespace MicroserviceTest
                 maxTimeAllowed: 5000
             );
 
-            Challenge("journey", "Cycle [EAS] (cycle, crow, walk), Nieuwmunster -> Zuienkerke, expects cycling only",
+            TestChallenge("journey",
+                "Cycle [EAS] (cycle, crow, walk), Nieuwmunster -> Zuienkerke, expects cycling only",
                 new Dictionary<string, string>
                 {
                     {

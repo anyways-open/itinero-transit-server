@@ -41,7 +41,7 @@ namespace Itinero.Transit.API.Tests
             {
                 {"x", (tdb, null)}
             };
-            State.GlobalState = new State(transitDbs, null, null);
+            State.GlobalState = new State(transitDbs, null, null, null);
             var lc = new LocationController();
             var result = lc.GetConnections("abc", dt);
             var returnedSegments = result.Value.Segments;

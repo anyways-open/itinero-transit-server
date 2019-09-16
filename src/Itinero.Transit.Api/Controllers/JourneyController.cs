@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Itinero.Transit.Api.Logic;
 using Itinero.Transit.Api.Logic.Itinero.Transit.Journey.Metric;
@@ -39,6 +40,7 @@ namespace Itinero.Transit.Api.Controllers
         /// <param name="lastMileOsmProfile">Use this OSM-profile for the last segment</param>
         /// <param name="lastMileSearchDistance">Search distance for the last segment mile, if first mile is specified</param>
         /// <param name="multipleOptions">Set to true if multiple options (profile search) should be used</param>
+        /// <param name="test">Does nothing - except to flag this request as a test in the logs. Useful to filter them out afterwards</param>
         [HttpGet]
         public ActionResult<QueryResult> Get(
             string from,
@@ -55,23 +57,33 @@ namespace Itinero.Transit.Api.Controllers
             uint internalTransferTime = 180,
             uint maxNumberOfTransfers = 4,
             bool prune = true,
-            bool multipleOptions = false
+            bool multipleOptions = false,
+            bool test = false
         )
         {
-
             if (State.GlobalState == null)
             {
                 return BadRequest(
                     "The server is still booting and not able to handle your request at this time. Please come back later. Be aware that queries are already answered even if the data is still loading.");
             }
+
             if (from == null || to == null)
             {
                 return BadRequest("From or To is missing");
             }
 
+            var logMessage = new Dictionary<string, string>();
+
+            logMessage.Add("departure", $"{departure:s}");
+            logMessage.Add("arrival", $"{arrival:s}");
+
+            logMessage.Add("internalTransferTime", "" + internalTransferTime);
+            logMessage.Add("prune", "" + prune);
+            logMessage.Add("maxNumberOfTransfers", "" + maxNumberOfTransfers);
+            logMessage.Add("multipleOptions", "" + multipleOptions);
+
             try
             {
-
                 from = Uri.UnescapeDataString(from);
                 to = Uri.UnescapeDataString(to);
 
@@ -80,6 +92,9 @@ namespace Itinero.Transit.Api.Controllers
                 {
                     return BadRequest("The given from- and to- locations are the same");
                 }
+
+                logMessage.Add("from", from);
+                logMessage.Add("to", to);
 
                 var start = DateTime.Now;
 
@@ -119,6 +134,8 @@ namespace Itinero.Transit.Api.Controllers
                         "&lastMile=" + Uri.EscapeDataString(lastMileOsmProfile);
                 }
 
+                logMessage.Add("walksGenerator", walksGeneratorDescription);
+
 
                 var profile = JourneyBuilder.CreateProfile(from, to,
                     walksGeneratorDescription,
@@ -128,8 +145,9 @@ namespace Itinero.Transit.Api.Controllers
                 var (journeys, queryStart, queryEnd) =
                     profile.BuildJourneys(from, to, departure, arrival, multipleOptions);
 
-
+                logMessage.Add("foundJourneys", (journeys?.Count ?? 0) + "");
                 // ReSharper disable once PossibleMultipleEnumeration
+                State.GlobalState.Logger?.WriteLogEntry(test ? "testrequest" : "request", logMessage);
                 if (journeys == null || !journeys.Any())
                 {
                     return new QueryResult(null, start, DateTime.Now, queryStart, queryEnd,
@@ -151,12 +169,27 @@ namespace Itinero.Transit.Api.Controllers
                     start, end,
                     queryStart, queryEnd, profile.WalksGenerator.OtherModeIdentifier());
             }
+            catch (ArgumentException e)
+            {
+                Log.Warning("Someone used wrong arguments: " + e.Message + "\nParameters are: " +
+                            $"from={from}\n&to={to}\n&walksGeneratorDescription={walksGeneratorDescription}\n&" +
+                            $"departure={departure:s}&\narrival={arrival:s}&" +
+                            $"\nprune={prune}&multipleOptions={multipleOptions}");
+                logMessage.Add("errormessage", e.Message);
+                State.GlobalState.Logger?.WriteLogEntry(test ? "testrequest":"request", logMessage);
+
+                return BadRequest("There was something wrong with the parameters:" + e.Message);
+            }
+
             catch (Exception e)
             {
                 Log.Error(e, $"Unhandled exception in {nameof(JourneyController)}.{nameof(Get)}. Parameters are:" +
                              $"from={from}\n&to={to}\n&walksGeneratorDescription={walksGeneratorDescription}\n&" +
                              $"departure={departure:s}&\narrival={arrival:s}&" +
                              $"\nprune={prune}&multipleOptions={multipleOptions}");
+                logMessage.Add("errormessage", e.Message);
+                State.GlobalState.Logger?.WriteLogEntry(test ? "testrequest":"request", logMessage);
+
                 return BadRequest(e.Message);
             }
         }

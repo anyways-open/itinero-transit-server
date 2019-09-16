@@ -39,7 +39,7 @@ namespace Itinero.Transit.API.Tests.Functional
             var dict = LoadTransitDbs(sources);
 
             var omb = new OtherModeBuilder("rt-cache");
-            var st = new State(dict, omb, omb.RouterDb);
+            var st = new State(dict, omb, omb.RouterDb, null);
             State.GlobalState = st;
 
             for (int i = 0; i < 25; i++)

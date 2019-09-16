@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Itinero.Transit.Api.Logging;
 using Itinero.Transit.Api.Logic.Transfers;
 using Itinero.Transit.Data;
 using Itinero.Transit.Data.Aggregators;
@@ -22,12 +23,13 @@ namespace Itinero.Transit.Api.Logic
 
         public readonly RouterDb RouterDb;
 
+        public const string VersionNr = "1.0.0-pre88";
 
         /// <summary>
         /// A version information string - useful to see what version is in production.
         /// The first letter of the word is increased alphabetically
         /// </summary>
-        public const string Version = "Pretty SPeedy (Itinero-transit 1.0.0-pre88, Routable-Tiles pre33)";
+        public const string Version = "Pretty Speedy (Itinero-transit 1.0.0-pre88, Routable-Tiles pre33, server "+ VersionNr +")";
 
         /// <summary>
         /// This dictionary contains all the loaded transitDbs, indexed on their name.
@@ -39,6 +41,9 @@ namespace Itinero.Transit.Api.Logic
         /// A log message. Startup can assign this message freely.
         /// </summary>
         public string FreeMessage;
+
+        public readonly FileLogger Logger;
+
 
 
         /// <summary>
@@ -71,7 +76,7 @@ namespace Itinero.Transit.Api.Logic
 
 
         public State(Dictionary<string, (TransitDb tdb, Synchronizer synchronizer)> transitDbs,
-            OtherModeBuilder otherModeBuilder, RouterDb routerDb)
+            OtherModeBuilder otherModeBuilder, RouterDb routerDb, FileLogger logger)
         {
             if (transitDbs.Count == 0)
             {
@@ -81,11 +86,12 @@ namespace Itinero.Transit.Api.Logic
             TransitDbs = transitDbs;
             OtherModeBuilder = otherModeBuilder;
             RouterDb = routerDb;
+            Logger = logger;
             BootTime = DateTime.Now;
         }
 
         private StopSearchCache _cachedStopsReader;
-
+        
         /// <summary>
         /// Get a stops reader for all the loaded databases.
         /// </summary>

@@ -1,0 +1,54 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Net;
+using System.Threading;
+using Itinero.Transit.Api.Logging;
+using Xunit;
+
+namespace Itinero.Transit.API.Tests
+{
+    public class LoggerTest
+    {
+        [Fact]
+        public void WriteLogEntry_Test()
+        {
+            var start = DateTime.Now;
+            var logger = new FileLogger("test");
+            logger.WriteLogEntry("cat", new Dictionary<string, string>()
+            {
+                {"foo","bar"}
+            });
+            var end = DateTime.Now;
+            Assert.True((end - start).TotalMilliseconds < 10);
+            Thread.Sleep(1100);
+        }
+
+        [Fact]
+        public void WriteLogEntries_TestIsWritten()
+        {
+            var logger = new FileLogger("test");
+            logger.WriteLogEntry("cat", new Dictionary<string, string>
+            {
+                {"foo","bar"}
+            });
+            logger.WriteLogEntry("cat", new Dictionary<string, string>
+            {
+                {"abc","def"}
+            });
+            Thread.Sleep(100);
+            var read = File.ReadAllLines(logger.ConstructPath("cat"));
+            Assert.Contains("{\"foo\":\"bar\"", read[0]);
+            Assert.Contains("{\"abc\":\"def\"", read[1]);
+
+        }
+
+        [Fact]
+        public void ConstructPath_ExpectsPath()
+        {
+            var logger = new FileLogger("test");
+            var path = logger.ConstructPath("cat");
+            Assert.Equal($"test/cat-{DateTime.Now:yyyy-MM-dd}.log", path);
+        }
+    }
+}
