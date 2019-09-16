@@ -122,7 +122,8 @@ namespace MicroserviceTest
 
                 void WriteSeconds()
                 {
-                    var timing = $" {secs}.{ms:000}s: ";
+                    Console.Write(" ");
+                    var timing = $"{secs}.{ms:000}s";
 
                     var err = challenge.MaxTimeAllowed;
                     if (err == 0)
@@ -132,6 +133,7 @@ namespace MicroserviceTest
 
                     var warnHard = err * 3 / 4;
                     var warn = err / 2;
+                    var veryGood = err / 4;
 
                     if (timeNeeded > err)
                     {
@@ -145,13 +147,18 @@ namespace MicroserviceTest
                     {
                         WriteWarn(timing);
                     }
-                    else
+                    else if(timeNeeded > veryGood)
                     {
                         WriteGood(timing);
                     }
+                    else
+                    {
+                        WriteGoodHard(timing);
+                    }
+                    Console.Write("  ");
                 }
 
-                bool timedOut = challenge.MaxTimeAllowed != 0 &&
+                var timedOut = challenge.MaxTimeAllowed != 0 &&
                                 timeNeeded > challenge.MaxTimeAllowed;
                 if (timedOut)
                 {

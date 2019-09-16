@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Net;
 using System.Threading;
 using Itinero.Transit.Api.Logging;
 using Xunit;
@@ -28,6 +27,7 @@ namespace Itinero.Transit.API.Tests
         public void WriteLogEntries_TestIsWritten()
         {
             var logger = new FileLogger("test");
+            File.Delete(logger.ConstructPath("cat"));
             logger.WriteLogEntry("cat", new Dictionary<string, string>
             {
                 {"foo","bar"}
@@ -36,7 +36,7 @@ namespace Itinero.Transit.API.Tests
             {
                 {"abc","def"}
             });
-            Thread.Sleep(100);
+            Thread.Sleep(1500);
             var read = File.ReadAllLines(logger.ConstructPath("cat"));
             Assert.Contains("{\"foo\":\"bar\"", read[0]);
             Assert.Contains("{\"abc\":\"def\"", read[1]);

@@ -73,6 +73,7 @@ namespace Itinero.Transit.Api.Controllers
             }
 
             var logMessage = new Dictionary<string, string>();
+            var start = DateTime.Now;
 
             logMessage.Add("departure", $"{departure:s}");
             logMessage.Add("arrival", $"{arrival:s}");
@@ -96,7 +97,6 @@ namespace Itinero.Transit.Api.Controllers
                 logMessage.Add("from", from);
                 logMessage.Add("to", to);
 
-                var start = DateTime.Now;
 
                 if (inBetweenOsmProfile != null)
                 {
@@ -147,9 +147,9 @@ namespace Itinero.Transit.Api.Controllers
 
                 logMessage.Add("foundJourneys", (journeys?.Count ?? 0) + "");
                 // ReSharper disable once PossibleMultipleEnumeration
-                State.GlobalState.Logger?.WriteLogEntry(test ? "testrequest" : "request", logMessage);
                 if (journeys == null || !journeys.Any())
                 {
+                    LogRequest(test, start, logMessage);
                     return new QueryResult(null, start, DateTime.Now, queryStart, queryEnd,
                         profile.WalksGenerator.OtherModeIdentifier());
                 }
@@ -162,11 +162,11 @@ namespace Itinero.Transit.Api.Controllers
                         new TravellingTimeMinimizer.Minimizer(State.GlobalState.ImportancesInternal));
                 }
 
-                var end = DateTime.Now;
+                LogRequest(test, start, logMessage);
 
                 // ReSharper disable once PossibleMultipleEnumeration
                 return new QueryResult(State.GlobalState.Translate(journeys, profile.WalksGenerator),
-                    start, end,
+                    start, DateTime.Now,
                     queryStart, queryEnd, profile.WalksGenerator.OtherModeIdentifier());
             }
             catch (ArgumentException e)
@@ -176,7 +176,7 @@ namespace Itinero.Transit.Api.Controllers
                             $"departure={departure:s}&\narrival={arrival:s}&" +
                             $"\nprune={prune}&multipleOptions={multipleOptions}");
                 logMessage.Add("errormessage", e.Message);
-                State.GlobalState.Logger?.WriteLogEntry(test ? "testrequest":"request", logMessage);
+                LogRequest(test, start, logMessage);
 
                 return BadRequest("There was something wrong with the parameters:" + e.Message);
             }
@@ -188,10 +188,18 @@ namespace Itinero.Transit.Api.Controllers
                              $"departure={departure:s}&\narrival={arrival:s}&" +
                              $"\nprune={prune}&multipleOptions={multipleOptions}");
                 logMessage.Add("errormessage", e.Message);
-                State.GlobalState.Logger?.WriteLogEntry(test ? "testrequest":"request", logMessage);
-
+                LogRequest(test, start, logMessage);
                 return BadRequest(e.Message);
             }
+        }
+
+
+        private void LogRequest(bool isTest, DateTime startMoment, Dictionary<string, string> logMessage)
+        {
+            var end = DateTime.Now;
+            var timeNeeded = (int) (end - startMoment).TotalMilliseconds;
+            logMessage.Add("timeneeded", "" + timeNeeded);
+            State.GlobalState.Logger?.WriteLogEntry(isTest ? "testrequest" : "request", logMessage);
         }
     }
 }
