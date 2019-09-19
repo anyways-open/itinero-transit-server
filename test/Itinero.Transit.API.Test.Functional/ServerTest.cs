@@ -5,7 +5,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 
-namespace MicroserviceTest
+namespace Itinero.Transit.API.Tests.Functional
 {
     public struct Challenge
     {

@@ -5,7 +5,6 @@ using Itinero.Transit.Api.Logic;
 using Itinero.Transit.Api.Logic.Itinero.Transit.Journey.Metric;
 using Itinero.Transit.Api.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore.Internal;
 using Serilog;
 
 namespace Itinero.Transit.Api.Controllers

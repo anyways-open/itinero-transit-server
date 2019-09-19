@@ -66,7 +66,7 @@ namespace Itinero.Transit.Api.Logic
             var tripReader = dbs.GetTripsReader();
             var trip = new Trip();
             tripReader.Get(j.TripId, trip);
-            var vehicleId = trip?.GlobalId ?? "";
+            var vehicleId = trip.GlobalId ?? "";
             if (!trip.Attributes.TryGetValue("headsign", out var headsign))
             {
                 headsign = "";

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace MicroserviceTest
+namespace Itinero.Transit.API.Tests.Functional
 {
     class Program
     {

@@ -246,11 +246,12 @@ namespace Itinero.Transit.Api.Logic.Transfers
             }
         }
 
-        public Dictionary<StopId, uint> TimesBetween(IEnumerable<IStop> @from, IStop to)
+        public Dictionary<StopId, uint> TimesBetween(IEnumerable<IStop> from, IStop to)
         {
             try
             {
                 var times = new Dictionary<StopId, uint>();
+                from = from.ToList();
 
                 // collect targets that are in range.
                 var sources = new List<(SnapPoint target, IStop stop)>();

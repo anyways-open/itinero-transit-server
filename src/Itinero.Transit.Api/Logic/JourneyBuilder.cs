@@ -228,7 +228,7 @@ namespace Itinero.Transit.Api.Logic
                     .SetStopsReader(stopsReader)
                     .SelectStops(from, to);
 
-            var directRoute = CalculateDirectRoute(p, @from, to, precalculator, fromStop, toStop);
+            var directRoute = CalculateDirectRoute(p, precalculator, fromStop, toStop);
 
             WithTime<TransferMetric> calculator;
             if (departure == null)
@@ -283,7 +283,7 @@ namespace Itinero.Transit.Api.Logic
             return (calculator.CalculateAllJourneys(), directRoute, calculator.Start, calculator.End);
         }
 
-        private static Segment CalculateDirectRoute(RealLifeProfile p, string @from, string to,
+        private static Segment CalculateDirectRoute(RealLifeProfile p,
             WithLocation<TransferMetric> precalculator,
             Stop fromStop, Stop toStop)
         {
