@@ -38,8 +38,10 @@ namespace Itinero.Transit.API.Tests
             });
             Thread.Sleep(1500);
             var read = File.ReadAllLines(logger.ConstructPath("cat"));
-            Assert.Contains("{\"foo\":\"bar\"", read[0]);
-            Assert.Contains("{\"abc\":\"def\"", read[1]);
+            Assert.Equal(2, read.Length);
+            
+            Assert.True(read[0].Contains("{\"foo\":\"bar\"") || read[1].Contains("{\"foo\":\"bar\""));
+            Assert.True(read[0].Contains("{\"abc\":\"def\"") || read[1].Contains("{\"abc\":\"def\""));
 
         }
 
