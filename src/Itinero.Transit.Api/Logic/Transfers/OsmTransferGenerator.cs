@@ -173,6 +173,7 @@ namespace Itinero.Transit.Api.Logic.Transfers
         public Dictionary<StopId, uint> TimesBetween(IStop from,
             IEnumerable<IStop> to)
         {
+            to = to.ToList();
             try
             {
                 var times = new Dictionary<StopId, uint>();

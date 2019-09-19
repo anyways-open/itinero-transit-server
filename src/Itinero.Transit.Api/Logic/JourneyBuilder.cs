@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Itinero.Transit.Api.Logic.Transfers;
+using Itinero.Transit.Api.Models;
 using Itinero.Transit.Data;
 using Itinero.Transit.Data.Aggregators;
 using Itinero.Transit.Data.Core;
@@ -166,11 +167,23 @@ namespace Itinero.Transit.Api.Logic
                 $"Could not find a route towards/from the {name}-location.\nThe used generator is {w.OtherModeIdentifier()}\n{inRange.Count} stations in range are known\n The location we couldn't reach is {stop.GlobalId}\n {allErrs}");
         }
 
-        public static (List<Journey<TransferMetric>>, DateTime start, DateTime end) BuildJourneys(
-            this RealLifeProfile p,
-            string from, string to, DateTime? departure,
-            DateTime? arrival,
-            bool multipleOptions)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="p"></param>
+        /// <param name="from"></param>
+        /// <param name="to"></param>
+        /// <param name="departure"></param>
+        /// <param name="arrival"></param>
+        /// <param name="multipleOptions"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
+        public static (List<Journey<TransferMetric>>, Segment directJourneyTimeNeeded, DateTime start, DateTime end)
+            BuildJourneys(
+                this RealLifeProfile p,
+                string from, string to, DateTime? departure,
+                DateTime? arrival,
+                bool multipleOptions)
         {
             if (departure == null && arrival == null)
             {
@@ -214,6 +227,9 @@ namespace Itinero.Transit.Api.Logic
                     .SelectProfile(p)
                     .SetStopsReader(stopsReader)
                     .SelectStops(from, to);
+
+            var directRoute = CalculateDirectRoute(p, @from, to, precalculator, fromStop, toStop);
+
             WithTime<TransferMetric> calculator;
             if (departure == null)
             {
@@ -222,11 +238,11 @@ namespace Itinero.Transit.Api.Logic
                 calculator = precalculator.SelectTimeFrame(arrival.Value.AddDays(-1), arrival.Value);
                 // This will set the time frame correctly
                 var latest = calculator
-                    .LatestDepartureJourney(tuple =>
+                    .CalculateLatestDepartureJourney(tuple =>
                         tuple.journeyStart - p.SearchLengthCalculator(tuple.journeyStart, tuple.journeyEnd));
                 if (!multipleOptions)
                 {
-                    return (new List<Journey<TransferMetric>> {latest},
+                    return (new List<Journey<TransferMetric>> {latest}, directRoute,
                         latest.Root.Time.FromUnixTime(), latest.Time.FromUnixTime());
                 }
             }
@@ -239,17 +255,17 @@ namespace Itinero.Transit.Api.Logic
                 // This scan is extended for some time, in order to have both
                 // - the automatically calculated latest arrival time
                 // - an isochrone line in order to optimize later on
-                var earliestArrivalJourney = calculator.EarliestArrivalJourney(
+                var earliestArrivalJourney = calculator.CalculateEarliestArrivalJourney(
                     tuple => tuple.journeyStart + p.SearchLengthCalculator(tuple.journeyStart, tuple.journeyEnd));
                 if (earliestArrivalJourney == null)
                 {
-                    return (new List<Journey<TransferMetric>>(),
+                    return (new List<Journey<TransferMetric>>(), directRoute,
                         DateTime.MaxValue, DateTime.MinValue);
                 }
 
                 if (!multipleOptions)
                 {
-                    return (new List<Journey<TransferMetric>> {earliestArrivalJourney},
+                    return (new List<Journey<TransferMetric>> {earliestArrivalJourney}, directRoute,
                         earliestArrivalJourney.Root.Time.FromUnixTime(), earliestArrivalJourney.Time.FromUnixTime());
                 }
             }
@@ -257,14 +273,35 @@ namespace Itinero.Transit.Api.Logic
             {
                 calculator = precalculator.SelectTimeFrame(departure.Value, arrival.Value);
                 // Perform isochrone to speed up 'all journeys'
-                calculator.IsochroneFrom();
+                calculator.CalculateIsochroneFrom();
             }
 
             // We lower the max number of transfers to speed up calculations
             p.ApplyMaxNumberOfTransfers();
 
 
-            return (calculator.AllJourneys(), calculator.Start, calculator.End);
+            return (calculator.CalculateAllJourneys(), directRoute, calculator.Start, calculator.End);
+        }
+
+        private static Segment CalculateDirectRoute(RealLifeProfile p, string @from, string to,
+            WithLocation<TransferMetric> precalculator,
+            Stop fromStop, Stop toStop)
+        {
+            var directJourneyTime = uint.MaxValue;
+            precalculator.CalculateDirectJourney()
+                ?.TryGetValue((fromStop.Id, toStop.Id), out directJourneyTime);
+
+            if (directJourneyTime == uint.MaxValue)
+            {
+                return null;
+            }
+
+
+            var (coordinates, generator) = JourneyTranslator.GetCoordinatesFor(p.WalksGenerator, fromStop, toStop);
+
+            var departure = new TimedLocation(new Location(fromStop), null, 0);
+            var arrival = new TimedLocation(new Location(toStop), null, 0);
+            return new Segment(departure, arrival, generator, coordinates, directJourneyTime);
         }
     }
 }

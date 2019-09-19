@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.SymbolStore;
 using System.Linq;
 
 namespace MicroserviceTest
@@ -57,9 +56,6 @@ namespace MicroserviceTest
                 return;
             }
 
-
-
-          
 
             if (args[0].Equals("--fail"))
             {

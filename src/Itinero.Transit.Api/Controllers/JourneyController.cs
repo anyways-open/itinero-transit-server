@@ -5,6 +5,7 @@ using Itinero.Transit.Api.Logic;
 using Itinero.Transit.Api.Logic.Itinero.Transit.Journey.Metric;
 using Itinero.Transit.Api.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Internal;
 using Serilog;
 
 namespace Itinero.Transit.Api.Controllers
@@ -98,41 +99,9 @@ namespace Itinero.Transit.Api.Controllers
                 logMessage.Add("to", to);
 
 
-                if (inBetweenOsmProfile != null)
-                {
-                    if (inBetweenOsmProfile.ToLower() == "crowsflight")
-                    {
-                        walksGeneratorDescription = $"crowsflight&maxDistance={inBetweenSearchDistance}";
-                    }
-                    else
-                    {
-                        walksGeneratorDescription =
-                            $"osm&maxDistance={inBetweenSearchDistance}&profile={inBetweenOsmProfile}";
-                    }
-                }
-
-                if (firstMileOsmProfile != null)
-                {
-                    firstMileOsmProfile =
-                        $"osm&maxDistance={firstMileSearchDistance}&profile={firstMileOsmProfile}";
-                }
-
-                if (lastMileOsmProfile != null)
-                {
-                    lastMileOsmProfile =
-                        $"osm&maxDistance={lastMileSearchDistance}&profile={lastMileOsmProfile}";
-                }
-
-                if (firstMileOsmProfile != null || lastMileOsmProfile != null)
-                {
-                    firstMileOsmProfile = firstMileOsmProfile ?? walksGeneratorDescription;
-                    lastMileOsmProfile = lastMileOsmProfile ?? walksGeneratorDescription;
-                    walksGeneratorDescription =
-                        "firstLastMile" +
-                        "&firstMile=" + Uri.EscapeDataString(firstMileOsmProfile) +
-                        "&default=" + Uri.EscapeDataString(walksGeneratorDescription) +
-                        "&lastMile=" + Uri.EscapeDataString(lastMileOsmProfile);
-                }
+                walksGeneratorDescription = CreateWalksGeneratorDescription(walksGeneratorDescription,
+                    inBetweenOsmProfile, inBetweenSearchDistance, firstMileOsmProfile, firstMileSearchDistance,
+                    lastMileOsmProfile, lastMileSearchDistance);
 
                 logMessage.Add("walksGenerator", walksGeneratorDescription);
 
@@ -142,20 +111,14 @@ namespace Itinero.Transit.Api.Controllers
                     internalTransferTime,
                     maxNumberOfTransfers: maxNumberOfTransfers);
 
-                var (journeys, queryStart, queryEnd) =
+                var (journeys, directWalk, queryStart, queryEnd) =
                     profile.BuildJourneys(from, to, departure, arrival, multipleOptions);
 
                 logMessage.Add("foundJourneys", (journeys?.Count ?? 0) + "");
-                // ReSharper disable once PossibleMultipleEnumeration
-                if (journeys == null || !journeys.Any())
-                {
-                    LogRequest(test, start, logMessage);
-                    return new QueryResult(null, start, DateTime.Now, queryStart, queryEnd,
-                        profile.WalksGenerator.OtherModeIdentifier());
-                }
+                logMessage.Add("directWalkFound", (directWalk != null) + "");
 
-
-                if (prune && State.GlobalState.ImportancesInternal != null)
+                if (journeys != null && journeys.Any() &&
+                    prune && State.GlobalState.ImportancesInternal != null)
                 {
                     journeys = journeys.PruneInAlternatives
                     (TravellingTimeMinimizer.Factory,
@@ -164,10 +127,11 @@ namespace Itinero.Transit.Api.Controllers
 
                 LogRequest(test, start, logMessage);
 
-                // ReSharper disable once PossibleMultipleEnumeration
-                return new QueryResult(State.GlobalState.Translate(journeys, profile.WalksGenerator),
+                return new QueryResult(
+                    State.GlobalState.Translate(journeys, profile.WalksGenerator),
                     start, DateTime.Now,
-                    queryStart, queryEnd, profile.WalksGenerator.OtherModeIdentifier());
+                    queryStart, queryEnd, profile.WalksGenerator.OtherModeIdentifier(),
+                    directWalk);
             }
             catch (ArgumentException e)
             {
@@ -191,6 +155,54 @@ namespace Itinero.Transit.Api.Controllers
                 LogRequest(test, start, logMessage);
                 return BadRequest(e.Message);
             }
+        }
+
+        private static string CreateWalksGeneratorDescription(
+            string walksGeneratorDescription,
+            string inBetweenOsmProfile,
+            uint inBetweenSearchDistance,
+            string firstMileOsmProfile,
+            uint firstMileSearchDistance,
+            string lastMileOsmProfile,
+            uint lastMileSearchDistance)
+        {
+            if (inBetweenOsmProfile != null)
+            {
+                if (inBetweenOsmProfile.ToLower() == "crowsflight")
+                {
+                    walksGeneratorDescription = $"crowsflight&maxDistance={inBetweenSearchDistance}";
+                }
+                else
+                {
+                    walksGeneratorDescription =
+                        $"osm&maxDistance={inBetweenSearchDistance}&profile={inBetweenOsmProfile}";
+                }
+            }
+
+            if (firstMileOsmProfile != null)
+            {
+                firstMileOsmProfile =
+                    $"osm&maxDistance={firstMileSearchDistance}&profile={firstMileOsmProfile}";
+            }
+
+            if (lastMileOsmProfile != null)
+            {
+                lastMileOsmProfile =
+                    $"osm&maxDistance={lastMileSearchDistance}&profile={lastMileOsmProfile}";
+            }
+
+            if (firstMileOsmProfile != null || lastMileOsmProfile != null)
+            {
+                firstMileOsmProfile = firstMileOsmProfile ?? walksGeneratorDescription;
+                lastMileOsmProfile = lastMileOsmProfile ?? walksGeneratorDescription;
+                walksGeneratorDescription =
+                    "firstLastMile" +
+                    "&firstMile=" + Uri.EscapeDataString(firstMileOsmProfile) +
+                    "&default=" + Uri.EscapeDataString(walksGeneratorDescription) +
+                    "&lastMile=" + Uri.EscapeDataString(lastMileOsmProfile);
+            }
+
+            return walksGeneratorDescription;
         }
 
 

@@ -15,12 +15,16 @@ namespace Itinero.Transit.Api.Models
             
         }
 
-        internal TimedLocation(Location location, DateTime time, uint delay)
+        internal TimedLocation(Location location, DateTime? time, uint delay)
         {
             Location = location;
             Time = time;
             Delay = delay;
-            PlannedTime = Time - TimeSpan.FromSeconds(delay);
+            PlannedTime = null;
+            if (time != null)
+            {
+              PlannedTime =  time - TimeSpan.FromSeconds(delay);
+            }
         }
         
         /// <summary>
@@ -31,12 +35,12 @@ namespace Itinero.Transit.Api.Models
         /// <summary>
         /// The time of departure/arrival.
         /// </summary>
-        public DateTime Time { get; }
+        public DateTime? Time { get; }
         
         /// <summary>
         /// The planned time of departure/arrival
         /// </summary>
-        public DateTime PlannedTime { get;  }
+        public DateTime? PlannedTime { get;  }
         
         
         /// <summary>

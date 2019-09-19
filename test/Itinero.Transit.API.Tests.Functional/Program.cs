@@ -4,14 +4,9 @@ namespace Itinero.Transit.API.Tests.Functional
 {
     static class Program
     {
-        private static string _host = "http://localhost:5000";
-
-        static void Main(string[] args)
+        static void Main(string[] _)
         {
             Startup.ConfigureLogging();
-
-
-            new PerfTest().Run(PerfTest.Sources);
         }
     }
 }

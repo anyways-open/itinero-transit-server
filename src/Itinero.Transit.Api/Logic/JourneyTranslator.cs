@@ -12,6 +12,8 @@ using Itinero.Transit.OtherMode;
 using Itinero.Transit.Utils;
 using Serilog;
 
+// ReSharper disable ImpureMethodCallOnReadonlyValueField
+
 namespace Itinero.Transit.Api.Logic
 {
     /// <summary>
@@ -19,7 +21,7 @@ namespace Itinero.Transit.Api.Logic
     /// </summary>
     public static class JourneyTranslator
     {
-        private static List<string> _colours = new List<string>
+        private static readonly List<string> _colours = new List<string>
         {
             "#002e63",
             "#2e3f57",
@@ -142,8 +144,8 @@ namespace Itinero.Transit.Api.Logic
         /// Can be null if unneeded
         /// </summary>
         /// <returns></returns>
-        private static Segment TranslateWalkSegment<T>(this State dbs,
-            Journey<T> j, IOtherModeGenerator walkgenerator) where T : IJourneyMetric<T>
+        public static Segment TranslateWalkSegment<T>(this State dbs,
+            Journey<T> j, IOtherModeGenerator walksgenerator) where T : IJourneyMetric<T>
         {
             var stops = StopsReaderAggregator.CreateFrom(dbs.All()).AddOsmReader();
             if (j.Location.Equals(j.PreviousLink.Location))
@@ -163,19 +165,37 @@ namespace Itinero.Transit.Api.Logic
             var arrivalTimed = new TimedLocation(
                 arrival, j.Time, 0);
 
+            stops.MoveTo(j.PreviousLink.Location);
+            var fromStop = new Stop(stops);
+            stops.MoveTo(j.Location);
+            var toStop = new Stop(stops);
+
+            var (coordinates, descriptor) =
+                walksgenerator.GetCoordinatesFor(fromStop, toStop);
+
+            return new Segment(
+                departureTimed, arrivalTimed,
+                descriptor,
+                coordinates,
+                (uint) (j.Time - j.PreviousLink.Time)
+            );
+        }
+
+        public static (List<Coordinate>, string identifier) GetCoordinatesFor(this IOtherModeGenerator walksgenerator,
+            Stop from, Stop to)
+        {
+            var walkGenerator = walksgenerator?.GetSource(from.Id, to.Id);
+
             List<Coordinate> coordinates = null;
-
-            var walkGenerator = walkgenerator?.GetSource(j.PreviousLink.Location, j.Location);
-
             if (walkGenerator is OsmTransferGenerator osm)
             {
                 var route = osm.CreateRoute(
-                    ((float) departure.Lat, (float) departure.Lon),
-                    ((float) arrival.Lat, (float) arrival.Lon), out _, out var errorMessage);
+                    ((float) from.Latitude, (float) from.Longitude),
+                    ((float) to.Latitude, (float) to.Longitude), out _, out var errorMessage);
                 if (route == null)
                 {
                     Log.Error(
-                        $"Weird: got a journey with an OSM-route from {departure.Id} to {arrival.Id}, with a timing of apparently {j.Time - j.PreviousLink.Time}, but now we can't calculate a route anymore... Error given is {errorMessage}");
+                        $"Weird: got a journey with an OSM-route from {from.GlobalId} to {to.GlobalId}, but now we can't calculate a route anymore... Error given is {errorMessage}");
                 }
                 else
                 {
@@ -184,11 +204,17 @@ namespace Itinero.Transit.Api.Logic
                 }
             }
 
-            return new Segment(
-                departureTimed, arrivalTimed,
-                walkGenerator?.OtherModeIdentifier() ?? "?",
-                coordinates
-            );
+            if (coordinates == null)
+            {
+                coordinates = new List<Coordinate>
+                {
+                    new Coordinate(from.Latitude, from.Longitude),
+                    new Coordinate(to.Latitude, to.Longitude)
+                };
+            }
+
+
+            return (coordinates, walksgenerator?.OtherModeIdentifier() ?? "?");
         }
 
         /// <summary>
@@ -240,6 +266,11 @@ namespace Itinero.Transit.Api.Logic
             where T : IJourneyMetric<T>
         {
             var list = new List<Models.Journey>();
+            if (journeys == null)
+            {
+                return list;
+            }
+
             foreach (var j in journeys)
             {
                 list.Add(dbs.Translate(j, walkGenerator));
@@ -269,12 +300,6 @@ namespace Itinero.Transit.Api.Logic
         /// <summary>
         /// Gives all the connections departing at the given location within the timewindow
         /// </summary>
-        /// <param name="dbs"></param>
-        /// <param name="globalId"></param>
-        /// <param name="time"></param>
-        /// <param name="window"></param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentNullException"></exception>
         internal static LocationSegmentsResult SegmentsForLocation
         (this State dbs,
             string globalId, DateTime time, DateTime windowEnd)

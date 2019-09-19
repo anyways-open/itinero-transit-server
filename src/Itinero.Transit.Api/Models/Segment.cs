@@ -26,6 +26,15 @@ namespace Itinero.Transit.Api.Models
             Generator = null;
             Coordinates = new List<Coordinate>();
             AllStops = intermediateStops;
+            if (Arrival.Time != null && Departure.Time != null)
+            {
+                TotalTime = (uint) (Arrival.Time.Value - Departure.Time.Value).TotalSeconds;
+            }
+            else
+            {
+                TotalTime = 0;
+            }
+
             if (intermediateStops != null)
             {
                 foreach (var intermediateStop in intermediateStops)
@@ -35,7 +44,8 @@ namespace Itinero.Transit.Api.Models
             }
         }
 
-        internal Segment(TimedLocation departure, TimedLocation arrival, string generator, List<Coordinate> coordinates)
+        internal Segment(TimedLocation departure, TimedLocation arrival, string generator, List<Coordinate> coordinates,
+            uint totalTime)
         {
             Departure = departure;
             Arrival = arrival;
@@ -43,6 +53,7 @@ namespace Itinero.Transit.Api.Models
             Headsign = null;
             Generator = generator;
             Coordinates = coordinates;
+            TotalTime = totalTime;
         }
 
         /// <summary>
@@ -89,5 +100,10 @@ namespace Itinero.Transit.Api.Models
         ///     IntermediateStops.Select(stop => (stop.Location.Lat, stop.Location.Lon))
         /// </summary>
         public List<Coordinate> Coordinates { get; }
+
+        /// <summary>
+        /// Indicates how much time (in seconds) is spent in this segment
+        /// </summary>
+        public uint TotalTime { get; }
     }
 }

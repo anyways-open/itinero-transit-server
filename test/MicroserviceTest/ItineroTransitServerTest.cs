@@ -7,7 +7,7 @@ namespace MicroserviceTest
 {
     public class ItineroTransitServerTest : ServerTest
     {
-        private static readonly Dictionary<string, string> knownUrls = new Dictionary<string, string>
+        private static readonly Dictionary<string, string> _knownUrls = new Dictionary<string, string>
         {
             {"localhost", "http://localhost:5000/"},
             {"dev", "http://localhost:5000/"},
@@ -20,7 +20,7 @@ namespace MicroserviceTest
         public ItineroTransitServerTest() : base(
             "Itinero-Transit Tester",
             "production",
-            knownUrls,
+            _knownUrls,
             defaultTimeout: 2000)
         {
         }
@@ -1152,6 +1152,28 @@ namespace MicroserviceTest
                     }
                 },
                 maxTimeAllowed: 4000);
+
+            TestChallenge("Journey", "Direct walk, no PT with PCS (cycle, crow, walk), Heidelberg -> Heidelberg",
+                new Dictionary<string, string>
+                {
+                    {"from", "https://www.openstreetmap.org/#map=18/49.42725/8.68574"},
+                    {"to", "https://www.openstreetmap.org/#map=17/49.41836/8.67349"},
+                    {"departure", TestDepartureTime()},
+                    {"inBetweenOsmProfile", "crowsflight"},
+                    {"inBetweenSearchDistance", "500"},
+                    {"firstMileOsmProfile", "bicycle"},
+                    {"firstMileSearchDistance", "10000"},
+                    {"lastMileOsmProfile", "pedestrian"},
+                    {"lastMileSearchDistance ", "10000"},
+                    {"multipleOptions", "true"}
+                },
+                jobj =>
+                {
+                    AssertEqual(0, jobj["journeys"].ToList().Count);
+                    AssertTrue(100 < jobj["directWalk"]["coordinates"].ToList().Count);
+                },
+                maxTimeAllowed: 5000
+            );
         }
     }
 }

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 
@@ -21,10 +22,18 @@ namespace Itinero.Transit.Api.Models
             var last = segments[segments.Count - 1];
             Arrival = last.Arrival;
 
-            TravelTime = (int) (last.Arrival.Time - segments[0].Departure.Time).TotalSeconds;
+            TravelTime = 0;
+
+            var depTime = segments[0].Departure.Time;
+            var arrTime = last.Arrival.Time;
+            if (depTime != null && arrTime != null)
+            {
+                TravelTime = (int) (arrTime.Value - depTime.Value).TotalSeconds;
+            }
+
             VehiclesTaken = vehiclesTaken;
         }
-        
+
         /// <summary>
         ///  All the individual segments:
         /// one segment for each train/bus/... the traveller takes
@@ -45,7 +54,7 @@ namespace Itinero.Transit.Api.Models
         /// The total travel time in seconds. Equals `arrival.time - departure.time
         /// </summary>
         public int TravelTime { get; }
-        
+
         /// <summary>
         /// The total number PT-vehicles taken. Often Segments.Count - 1
         /// </summary>

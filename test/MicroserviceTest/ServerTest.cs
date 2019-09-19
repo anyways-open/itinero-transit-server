@@ -102,10 +102,10 @@ namespace MicroserviceTest
                 Console.Write($"{(challenges.Count - count):D4} Running {challenge.Name}");
                 count++;
 
-                var startCH = DateTime.Now;
+                var startCh = DateTime.Now;
                 try
                 {
-                    var x = ChallengeAsync(host, challenge, ignoreTimouts ? 120000 : challenge.MaxTimeAllowed).Result;
+                    var _ = ChallengeAsync(host, challenge, ignoreTimouts ? 120000 : challenge.MaxTimeAllowed).Result;
                 }
                 catch (Exception e)
                 {
@@ -113,7 +113,7 @@ namespace MicroserviceTest
                 }
 
                 var endCh = DateTime.Now;
-                var timeNeeded = (int) (endCh - startCH).TotalMilliseconds;
+                var timeNeeded = (int) (endCh - startCh).TotalMilliseconds;
 
 
                 var secs = timeNeeded / 1000;
@@ -122,7 +122,6 @@ namespace MicroserviceTest
 
                 void WriteSeconds()
                 {
-                    Console.Write(" ");
                     var timing = $"{secs}.{ms:000}s";
 
                     var err = challenge.MaxTimeAllowed;
@@ -169,7 +168,7 @@ namespace MicroserviceTest
                 if (_errorMessages.Any())
                 {
                     failCount++;
-                    WriteErrHard("FAIL");
+                    WriteErrHard("FAIL ");
                 }
                 else if (timedOut)
                 {
@@ -178,11 +177,11 @@ namespace MicroserviceTest
                         failCount++;
                     }
 
-                    WriteWarnHard("TIME");
+                    WriteWarnHard("TIME ");
                 }
                 else
                 {
-                    WriteGood(" OK ");
+                    WriteGood(" OK  ");
                 }
 
                 WriteSeconds();

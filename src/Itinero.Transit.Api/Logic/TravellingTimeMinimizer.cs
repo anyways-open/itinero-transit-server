@@ -5,6 +5,7 @@ using Itinero.Transit.Journey;
 using Itinero.Transit.Journey.Metric;
 using static Itinero.Transit.Journey.Journey<
     Itinero.Transit.Api.Logic.Itinero.Transit.Journey.Metric.TravellingTimeMinimizer>;
+// ReSharper disable ImpureMethodCallOnReadonlyValueField
 
 namespace Itinero.Transit.Api.Logic
 {

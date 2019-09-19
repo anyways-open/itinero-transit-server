@@ -5,7 +5,6 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Itinero.Transit.Api.Logic;
-using Serilog;
 
 [assembly: InternalsVisibleTo("Itinero.Transit.API.Tests")]
 
@@ -29,7 +28,7 @@ namespace Itinero.Transit.Api.Logging
         }
 
 
-        internal async Task WriteLogEntryAsync(string category, Dictionary<string, string> toLog)
+        private void WriteLogEntryAsync(string category, Dictionary<string, string> toLog)
         {
             var path = ConstructPath(category);
             toLog.Add("timestamp", DateTime.Now.ToString("s"));
