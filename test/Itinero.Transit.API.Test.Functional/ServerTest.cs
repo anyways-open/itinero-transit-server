@@ -5,7 +5,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 
-namespace MicroserviceTest
+namespace Itinero.Transit.API.Tests.Functional
 {
     public struct Challenge
     {
@@ -47,7 +47,7 @@ namespace MicroserviceTest
 
         private List<string> _errorMessages;
 
-        public void RunTestsAgainst(string host = null, int? onlyRunThisTest = null)
+        public void RunTestsAgainst(string host = null, int? onlyRunThisTest = null, bool ignoreTimouts = false)
         {
             host = host ?? DefaultHost;
             if (KnownUrls.ContainsKey(host))
@@ -94,27 +94,27 @@ namespace MicroserviceTest
             Console.WriteLine(
                 $"Running {Name} with {challenges.Count} tests {tm} against default host '{host}'");
             var failCount = 0;
+            var timeOutCount = 0;
             var count = 0;
             foreach (var challenge in challenges)
             {
                 _errorMessages = new List<string>();
                 Console.Write($"{(challenges.Count - count):D4} Running {challenge.Name}");
                 count++;
-                var timeNeeded = 0;
 
+                var startCh = DateTime.Now;
                 try
                 {
-                    timeNeeded = ChallengeAsync(host, challenge).Result;
+                    var _ = ChallengeAsync(host, challenge, ignoreTimouts ? 120000 : challenge.MaxTimeAllowed).Result;
                 }
                 catch (Exception e)
                 {
                     _errorMessages.Add(e.Message);
                 }
 
-                if (challenge.MaxTimeAllowed != 0 && timeNeeded > challenge.MaxTimeAllowed)
-                {
-                    _errorMessages.Add($"Timeout: this test is only allowed to run for {challenge.MaxTimeAllowed}ms");
-                }
+                var endCh = DateTime.Now;
+                var timeNeeded = (int) (endCh - startCh).TotalMilliseconds;
+
 
                 var secs = timeNeeded / 1000;
                 var ms = timeNeeded % 1000;
@@ -122,7 +122,7 @@ namespace MicroserviceTest
 
                 void WriteSeconds()
                 {
-                    var timing = $" {secs}.{ms:000}s: ";
+                    var timing = $"{secs}.{ms:000}s";
 
                     var err = challenge.MaxTimeAllowed;
                     if (err == 0)
@@ -130,40 +130,68 @@ namespace MicroserviceTest
                         err = 5000;
                     }
 
-                    var warn = err * 3 / 4;
+                    var warnHard = err * 3 / 4;
+                    var warn = err / 2;
+                    var veryGood = err / 4;
 
                     if (timeNeeded > err)
                     {
-                        WriteErr(timing);
+                        WriteErrHard(timing);
+                    }
+                    else if (timeNeeded > warnHard)
+                    {
+                        WriteWarnHard(timing);
                     }
                     else if (timeNeeded > warn)
                     {
                         WriteWarn(timing);
                     }
-                    else if (challenge.MaxTimeAllowed == 0)
-                    {
-                        Console.Write(timing);
-                    }
-                    else
+                    else if(timeNeeded > veryGood)
                     {
                         WriteGood(timing);
                     }
+                    else
+                    {
+                        WriteGoodHard(timing);
+                    }
+                    Console.Write("  ");
                 }
 
+                var timedOut = challenge.MaxTimeAllowed != 0 &&
+                                timeNeeded > challenge.MaxTimeAllowed;
+                if (timedOut)
+                {
+                    timeOutCount++;
+                }
 
                 Console.Write("\r");
+                if (_errorMessages.Any())
+                {
+                    failCount++;
+                    WriteErrHard("FAIL ");
+                }
+                else if (timedOut)
+                {
+                    if (!ignoreTimouts)
+                    {
+                        failCount++;
+                    }
+
+                    WriteWarnHard("TIME ");
+                }
+                else
+                {
+                    WriteGood(" OK  ");
+                }
+
+                WriteSeconds();
+
                 if (!_errorMessages.Any())
                 {
-                    WriteGood(" OK ");
-                    WriteSeconds();
                     Console.WriteLine($"{challenge.Name}");
                 }
                 else
                 {
-                    failCount++;
-                    WriteErrHard("FAIL");
-                    WriteSeconds();
-
                     Console.WriteLine(
                         $"{challenge.Name}\n     An error occured while running test {count} against URL\n    {host}{challenge.Url}");
 
@@ -187,10 +215,22 @@ namespace MicroserviceTest
 
             if (failCount > 0)
             {
-                var msg = $"{failCount}/{challenges.Count} tests failed.";
+                var msg = $"{failCount}/{challenges.Count} tests failed - {timeOutCount} did time out.";
                 WriteErrHard(msg);
                 Console.WriteLine();
                 throw new Exception(msg);
+            }
+
+            if (timeOutCount > 0)
+            {
+                var msg = $"{timeOutCount}/{challenges.Count} tests did timeout.";
+
+                WriteWarnHard(msg);
+                Console.WriteLine();
+                if (!ignoreTimouts)
+                {
+                    throw new Exception(msg);
+                }
             }
             else
             {
@@ -205,11 +245,14 @@ namespace MicroserviceTest
         /// </summary>
         private async Task<int> ChallengeAsync(
             string host,
-            Challenge challenge)
+            Challenge challenge,
+            uint timoutInMillis)
         {
             var urlParams = challenge.Url;
-            var start = DateTime.Now;
-            var client = new HttpClient();
+            var client = new HttpClient
+            {
+                Timeout = TimeSpan.FromMilliseconds(timoutInMillis * 2)
+            };
             var uri = host + urlParams;
             var response = await client.GetAsync(uri).ConfigureAwait(false);
             if (response == null || !response.IsSuccessStatusCode)
@@ -229,8 +272,6 @@ namespace MicroserviceTest
                 throw new HttpRequestException("Result is not a valid JSON-file");
             }
 
-            var end = DateTime.Now;
-            var time = (int) (end - start).TotalMilliseconds;
 
             try
             {
@@ -241,7 +282,7 @@ namespace MicroserviceTest
                 _errorMessages.Add(e.Message);
             }
 
-            return time;
+            return 0;
         }
 
         protected abstract void RunTests();
@@ -336,7 +377,7 @@ namespace MicroserviceTest
             }
         }
 
-        private void WriteErrHard(string msg)
+        internal static void WriteErrHard(string msg)
         {
             Console.BackgroundColor = ConsoleColor.Red;
             Console.ForegroundColor = ConsoleColor.Black;
@@ -344,7 +385,7 @@ namespace MicroserviceTest
             Console.ResetColor();
         }
 
-        private void WriteErr(string msg)
+        internal static void WriteErr(string msg)
         {
             Console.ForegroundColor = ConsoleColor.Red;
             Console.BackgroundColor = ConsoleColor.Black;
@@ -352,7 +393,7 @@ namespace MicroserviceTest
             Console.ResetColor();
         }
 
-        private void WriteWarn(string msg)
+        internal static void WriteWarn(string msg)
         {
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.BackgroundColor = ConsoleColor.Black;
@@ -360,7 +401,17 @@ namespace MicroserviceTest
             Console.ResetColor();
         }
 
-        private void WriteGood(string msg)
+        internal static void WriteWarnHard(string msg)
+        {
+            Console.BackgroundColor
+                = ConsoleColor.Yellow;
+            Console.ForegroundColor
+                = ConsoleColor.Black;
+            Console.Write(msg);
+            Console.ResetColor();
+        }
+
+        internal static void WriteGood(string msg)
         {
             Console.ForegroundColor = ConsoleColor.Green;
             Console.BackgroundColor = ConsoleColor.Black;
@@ -368,7 +419,7 @@ namespace MicroserviceTest
             Console.ResetColor();
         }
 
-        private void WriteGoodHard(string msg)
+        internal static void WriteGoodHard(string msg)
         {
             Console.ForegroundColor = ConsoleColor.Black;
             Console.BackgroundColor = ConsoleColor.Green;

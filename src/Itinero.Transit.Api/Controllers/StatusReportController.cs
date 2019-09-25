@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Itinero.Transit.Api.Logic;
+using Itinero.Transit.Api.Logic.Transfers;
 using Itinero.Transit.Api.Models;
-using Itinero.Transit.IO.OSM;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Itinero.Transit.Api.Controllers
@@ -56,12 +56,12 @@ namespace Itinero.Transit.Api.Controllers
             {
                 foreach (var (name, (_, synchronizer)) in state.TransitDbs)
                 {
-                    if (synchronizer.LoadedTimeWindows != null)
+                    if (synchronizer?.LoadedTimeWindows != null)
                     {
                         loadedTimeWindows.Add(name, synchronizer.LoadedTimeWindows);
                     }
 
-                    if (synchronizer.CurrentlyRunning != null)
+                    if (synchronizer?.CurrentlyRunning != null)
                     {
                         tasks.Add(name, synchronizer.CurrentlyRunning.ToString());
                     }

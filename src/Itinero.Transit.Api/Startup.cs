@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Itinero.Transit.Api.Logging;
 using Itinero.Transit.Api.Logic;
+using Itinero.Transit.Api.Logic.Transfers;
 using Itinero.Transit.Logging;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -50,7 +52,11 @@ namespace Itinero.Transit.Api
             }
 
 
-            var state = new State(Configuration.CreateTransitDbs(), otherModeBuilder, otherModeBuilder.RouterDb)
+            var state = new State(
+                    Configuration.CreateTransitDbs(), 
+                    otherModeBuilder,
+                    otherModeBuilder.RouterDb,
+                    new FileLogger("logs"))
                 {FreeMessage = "Loading transitdbs"};
             State.GlobalState = state;
 

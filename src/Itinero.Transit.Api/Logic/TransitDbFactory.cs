@@ -6,6 +6,7 @@ using Itinero.Transit.Data;
 using Itinero.Transit.Data.Synchronization;
 using Itinero.Transit.IO.LC;
 using Itinero.Transit.IO.OSM.Data;
+using Itinero.Transit.Utils;
 using Microsoft.Extensions.Configuration;
 using Serilog;
 
@@ -13,14 +14,14 @@ namespace Itinero.Transit.Api.Logic
 {
     public static class TransitDbFactory
     {
-        public static Dictionary<string, (TransitDb tdb, Synchronizer synchronizer)> CreateTransitDbs(this IConfiguration configuration, bool dryRun = false)
+        public static Dictionary<string, (TransitDb tdb, Synchronizer synchronizer)> CreateTransitDbs(
+            this IConfiguration configuration, bool dryRun = false)
         {
             // First, we read the reusable reload windows
             var reloadingPolicies = configuration.GetSection("ReloadingPolicies");
             var policies = new Dictionary<string, List<ISynchronizationPolicy>>();
             foreach (var rp in reloadingPolicies.GetChildren())
             {
-                
                 policies.Add(rp.GetValue<string>("Name"), rp.GetSection("Windows").GetSynchronizedWindows());
             }
 
@@ -35,12 +36,11 @@ namespace Itinero.Transit.Api.Logic
             this IConfiguration configuration, Dictionary<string, List<ISynchronizationPolicy>> reusablePolicies,
             bool dryRun = false)
         {
-
             if (!configuration.GetChildren().Any())
             {
                 throw new ArgumentException("The 'transitDb'-element has no children, no transitdbs defined");
             }
-            
+
             var dbs = new Dictionary<string, (TransitDb tdb, Synchronizer synchronizer)>();
             uint id = 0;
             foreach (var config in configuration.GetChildren())
@@ -64,6 +64,7 @@ namespace Itinero.Transit.Api.Logic
             {
                 return null;
             }
+
             return dbs;
         }
 
@@ -88,7 +89,8 @@ namespace Itinero.Transit.Api.Logic
                 return reusable[nm].ToList(); // Make a copy
             }
 
-            throw new ArgumentException("No 'windows' or 'name' found in the reloadingPolicies");
+            Log.Warning("No reloading policies are given. Initial data will only be loaded from disk");
+            return new List<ISynchronizationPolicy>();
         }
 
         /// <summary>
@@ -101,7 +103,6 @@ namespace Itinero.Transit.Api.Logic
             var name = configuration.GetValue<string>("Name");
 
 
-            
             var reloadingPolicies =
                 configuration.GetSection("ReloadPolicy").GetReloadPolicy(reusablePolicies);
 
@@ -208,8 +209,8 @@ namespace Itinero.Transit.Api.Logic
             {
                 Log.Information($"Attempting to read a transitDB from {path}");
                 var db = TransitDb.ReadFrom(path, id);
-                Log.Information("All read! Trying to determine loaded period");
-
+                Log.Information(
+                    $"TransitDB loaded. Loaded times are {db.Latest.ConnectionsDb.EarliestDate.FromUnixTime():s} --> {db.Latest.ConnectionsDb.LatestDate.FromUnixTime():s}");
                 return db;
             }
             catch (Exception e)

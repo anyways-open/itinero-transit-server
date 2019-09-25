@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using Itinero.Transit.Api.Logic;
+using Itinero.Transit.Api.Logic.Transfers;
 using Itinero.Transit.Data.Core;
 using Itinero.Transit.OtherMode;
 using Xunit;

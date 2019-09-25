@@ -1,10 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Itinero.Transit.Api.Logic.Transfers;
+using Itinero.Transit.Api.Models;
 using Itinero.Transit.Data;
 using Itinero.Transit.Data.Aggregators;
 using Itinero.Transit.Data.Core;
-using Itinero.Transit.IO.OSM;
 using Itinero.Transit.IO.OSM.Data;
 using Itinero.Transit.Journey;
 using Itinero.Transit.Journey.Metric;
@@ -62,6 +63,9 @@ namespace Itinero.Transit.Api.Logic
             this Profile<T> p,
             IStopsReader stops, Stop stop, uint osmIndex, bool isLastMile, string name) where T : IJourneyMetric<T>
         {
+            var failIfNoneFound = stop.Id.DatabaseId == osmIndex;
+
+
             if (stop.Id.DatabaseId != osmIndex)
             {
                 // The location is already on the Public Transport network
@@ -77,69 +81,109 @@ namespace Itinero.Transit.Api.Logic
             }
 
             var inRange = stops.StopsAround(stop, p.WalksGenerator.Range()).ToList();
-            if (inRange == null 
-                || !inRange.Any() 
+            if (inRange == null
+                || !inRange.Any()
                 || inRange.Count == 1 && inRange[0].Id.Equals(stop.Id))
             {
+                if (!failIfNoneFound)
+                {
+                    return;
+                }
+
                 throw new ArgumentException(
                     $"Could not find a station that is range from the {name}-location {stop.GlobalId} within {p.WalksGenerator.Range()}m. This range is calculated 'as the  crows fly', try increasing the range of your walksGenerator");
             }
-            Dictionary<StopId, uint> foundRoutes;
-            if (isLastMile)
+
+            var foundRoutes = isLastMile
+                ? p.WalksGenerator.TimesBetween(inRange, stop)
+                : p.WalksGenerator.TimesBetween(stop, inRange);
+
+
+            if (!failIfNoneFound)
             {
-                foundRoutes = p.WalksGenerator.TimesBetween(inRange, stop);
+                return;
             }
-            else
+
+            if (foundRoutes == null)
             {
-                foundRoutes = p.WalksGenerator.TimesBetween(stop, inRange);
+                CreateAndThrowErrorMessage(p, stop, isLastMile, name, inRange);
             }
 
-            if (foundRoutes == null || !foundRoutes.Any())
+            if (!foundRoutes.Any())
             {
-                var w = p.WalksGenerator;
+                CreateAndThrowErrorMessage(p, stop, isLastMile, name, inRange);
+            }
 
-
-                var errors = new List<string>();
-                foreach (var stp in inRange)
+            foreach (var (_, distance) in foundRoutes)
+            {
+                if (distance != uint.MaxValue)
                 {
-                    var gen = w.GetSource(stop.Id, stp.Id);
-                    if (isLastMile)
-                    {
-                        gen = w.GetSource(stp.Id, stop.Id);
-                    }
-
-                    var errorMessage =
-                        $"A route from/to {stp} should have been calculated with {gen.OtherModeIdentifier()}";
-
-                    if (gen is OsmTransferGenerator osm)
-                    {
-                        // THIS IS ONLY THE ERROR CASE
-                        // NO, this isn't cached, I know that - it doesn't matter
-                        osm.CreateRoute((stop.Latitude, stop.Longitude), (stp.Latitude, stp.Longitude), out _,
-                            out var errMessage);
-                        errorMessage += " but it said " + errMessage;
-                    }
-
-                    if (gen is CrowsFlightTransferGenerator)
-                    {
-                        errorMessage += " 'Too Far'";
-                    }
-
-                    errors.Add(errorMessage);
+                    return;
                 }
-
-                var allErrs = string.Join("\n ", errors);
-
-                throw new ArgumentException(
-                    $"Could not find a route towards/from the {name}-location.\nThe used generator is {w.OtherModeIdentifier()}\n{inRange.Count} stations in range are known\n The location we couldn't reach is {stop.GlobalId}\n {allErrs}");
             }
+
+            CreateAndThrowErrorMessage(p, stop, isLastMile, name, inRange);
         }
 
-        public static (List<Journey<TransferMetric>>, DateTime start, DateTime end) BuildJourneys(
-            this RealLifeProfile p,
-            string from, string to, DateTime? departure,
-            DateTime? arrival,
-            bool multipleOptions)
+        private static void CreateAndThrowErrorMessage<T>(Profile<T> p, Stop stop, bool isLastMile,
+            string name, List<Stop> inRange)
+            where T : IJourneyMetric<T>
+        {
+            var w = p.WalksGenerator;
+
+
+            var errors = new List<string>();
+            foreach (var stp in inRange)
+            {
+                var gen = w.GetSource(stop.Id, stp.Id);
+                if (isLastMile)
+                {
+                    gen = w.GetSource(stp.Id, stop.Id);
+                }
+
+                var errorMessage =
+                    $"A route from/to {stp} should have been calculated with {gen.OtherModeIdentifier()}";
+
+                if (gen is OsmTransferGenerator osm)
+                {
+                    // THIS IS ONLY THE ERROR CASE
+                    // NO, this isn't cached, I know that - it doesn't matter
+                    osm.CreateRoute((stop.Latitude, stop.Longitude), (stp.Latitude, stp.Longitude), out _,
+                        out var errMessage);
+                    errorMessage += " but it said " + errMessage;
+                }
+
+                if (gen is CrowsFlightTransferGenerator)
+                {
+                    errorMessage += " 'Too Far'";
+                }
+
+                errors.Add(errorMessage);
+            }
+
+            var allErrs = string.Join("\n ", errors);
+
+            throw new ArgumentException(
+                $"Could not find a route towards/from the {name}-location.\nThe used generator is {w.OtherModeIdentifier()}\n{inRange.Count} stations in range are known\n The location we couldn't reach is {stop.GlobalId}\n {allErrs}");
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="p"></param>
+        /// <param name="from"></param>
+        /// <param name="to"></param>
+        /// <param name="departure"></param>
+        /// <param name="arrival"></param>
+        /// <param name="multipleOptions"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
+        public static (List<Journey<TransferMetric>>, Segment directJourneyTimeNeeded, DateTime start, DateTime end)
+            BuildJourneys(
+                this RealLifeProfile p,
+                string from, string to, DateTime? departure,
+                DateTime? arrival,
+                bool multipleOptions)
         {
             if (departure == null && arrival == null)
             {
@@ -169,13 +213,11 @@ namespace Itinero.Transit.Api.Logic
             stopsReader.MoveTo(to);
             var toStop = new Stop(stopsReader);
 
-            p.WalksGenerator.TimeBetween(fromStop, toStop);
-            
             p.DetectFirstMileWalks(stopsReader, fromStop, osmIndex, false, "departure");
             p.DetectFirstMileWalks(stopsReader, toStop, osmIndex, true, "arrival");
 
             stopsReader.MakeComplete();
-            
+
             // Close the cache, cross-calculate everything
             // Then, the 'SearchAround'-queries will not be run anymore.
 
@@ -184,8 +226,10 @@ namespace Itinero.Transit.Api.Logic
                 State.GlobalState.All()
                     .SelectProfile(p)
                     .SetStopsReader(stopsReader)
-                    .UseOsmLocations()
                     .SelectStops(from, to);
+
+            var directRoute = CalculateDirectRoute(p, precalculator, fromStop, toStop);
+
             WithTime<TransferMetric> calculator;
             if (departure == null)
             {
@@ -194,11 +238,11 @@ namespace Itinero.Transit.Api.Logic
                 calculator = precalculator.SelectTimeFrame(arrival.Value.AddDays(-1), arrival.Value);
                 // This will set the time frame correctly
                 var latest = calculator
-                    .LatestDepartureJourney(tuple =>
+                    .CalculateLatestDepartureJourney(tuple =>
                         tuple.journeyStart - p.SearchLengthCalculator(tuple.journeyStart, tuple.journeyEnd));
                 if (!multipleOptions)
                 {
-                    return (new List<Journey<TransferMetric>> {latest},
+                    return (new List<Journey<TransferMetric>> {latest}, directRoute,
                         latest.Root.Time.FromUnixTime(), latest.Time.FromUnixTime());
                 }
             }
@@ -207,18 +251,21 @@ namespace Itinero.Transit.Api.Logic
                 calculator = precalculator.SelectTimeFrame(departure.Value, departure.Value.AddDays(1));
 
 
-                // This will set the time frame correctly + install a filter
-                var earliestArrivalJourney = calculator.EarliestArrivalJourney(
+                // We do an earliest arrival search in a timewindow of departure time -> latest arrival time (eventually with arrival + 1 day)
+                // This scan is extended for some time, in order to have both
+                // - the automatically calculated latest arrival time
+                // - an isochrone line in order to optimize later on
+                var earliestArrivalJourney = calculator.CalculateEarliestArrivalJourney(
                     tuple => tuple.journeyStart + p.SearchLengthCalculator(tuple.journeyStart, tuple.journeyEnd));
                 if (earliestArrivalJourney == null)
                 {
-                    return (new List<Journey<TransferMetric>>(),
+                    return (new List<Journey<TransferMetric>>(), directRoute,
                         DateTime.MaxValue, DateTime.MinValue);
                 }
 
                 if (!multipleOptions)
                 {
-                    return (new List<Journey<TransferMetric>> {earliestArrivalJourney},
+                    return (new List<Journey<TransferMetric>> {earliestArrivalJourney}, directRoute,
                         earliestArrivalJourney.Root.Time.FromUnixTime(), earliestArrivalJourney.Time.FromUnixTime());
                 }
             }
@@ -226,14 +273,35 @@ namespace Itinero.Transit.Api.Logic
             {
                 calculator = precalculator.SelectTimeFrame(departure.Value, arrival.Value);
                 // Perform isochrone to speed up 'all journeys'
-                calculator.IsochroneFrom();
+                calculator.CalculateIsochroneFrom();
             }
 
             // We lower the max number of transfers to speed up calculations
             p.ApplyMaxNumberOfTransfers();
 
 
-            return (calculator.AllJourneys(), calculator.Start, calculator.End);
+            return (calculator.CalculateAllJourneys(), directRoute, calculator.Start, calculator.End);
+        }
+
+        private static Segment CalculateDirectRoute(RealLifeProfile p,
+            WithLocation<TransferMetric> precalculator,
+            Stop fromStop, Stop toStop)
+        {
+            var directJourneyTime = uint.MaxValue;
+            precalculator.CalculateDirectJourney()
+                ?.TryGetValue((fromStop.Id, toStop.Id), out directJourneyTime);
+
+            if (directJourneyTime == uint.MaxValue)
+            {
+                return null;
+            }
+
+
+            var (coordinates, generator) = JourneyTranslator.GetCoordinatesFor(p.WalksGenerator, fromStop, toStop);
+
+            var departure = new TimedLocation(new Location(fromStop), null, 0);
+            var arrival = new TimedLocation(new Location(toStop), null, 0);
+            return new Segment(departure, arrival, generator, coordinates, directJourneyTime);
         }
     }
 }

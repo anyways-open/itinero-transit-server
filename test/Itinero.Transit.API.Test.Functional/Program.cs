@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace MicroserviceTest
+namespace Itinero.Transit.API.Tests.Functional
 {
     class Program
     {
@@ -57,9 +57,6 @@ namespace MicroserviceTest
             }
 
 
-
-          
-
             if (args[0].Equals("--fail"))
             {
                 serverTest = new Failer();
@@ -72,11 +69,14 @@ namespace MicroserviceTest
                 serverTest.RunTestsAgainst(args[0], focus);
                 return;
             }
-            
-            
-           
 
-            serverTest.RunTestsAgainst(args[0], null);
+            var ignoreTimout = args.Length >= 2 && args[1].Equals("--ignore-timeout");
+            if (ignoreTimout)
+            {
+                ServerTest.WriteWarn("Running with elevated timeout of 2 minutes");
+                Console.WriteLine();
+            }
+            serverTest.RunTestsAgainst(args[0], null, ignoreTimout);
         }
     }
 

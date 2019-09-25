@@ -30,7 +30,7 @@ namespace Itinero.Transit.Api.Logic
             {
                 enumerator.MoveTo(start.ToUnixTime());
                 var connection = new Connection();
-                while (enumerator.HasNext() && enumerator.CurrentDateTime < end.ToUnixTime())
+                while (enumerator.MoveNext() && enumerator.CurrentDateTime < end.ToUnixTime())
                 {
                     enumerator.Current(connection);
                     _nowScanning = connection.DepartureTime;

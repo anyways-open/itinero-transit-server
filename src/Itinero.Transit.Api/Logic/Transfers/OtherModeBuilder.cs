@@ -1,22 +1,21 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text.RegularExpressions;
+using Itinero.Data.Graphs.Coders;
+using Itinero.IO.Osm.Tiles;
 using Itinero.Profiles;
-using Itinero.Transit.Data;
+using Itinero.Profiles.Lua;
 using Itinero.Profiles.Lua.Osm;
-using Itinero.Transit.IO.OSM;
+using Itinero.Transit.Data;
+using Itinero.Transit.Data.Core;
 using Itinero.Transit.OtherMode;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json.Linq;
-using Itinero.Profiles.Lua;
-using System.IO;
-using Itinero.Data.Graphs.Coders;
-using Itinero.IO.Osm.Tiles;
-using Itinero.Transit.Data.Core;
 using Serilog;
 
 
-namespace Itinero.Transit.Api.Logic
+namespace Itinero.Transit.Api.Logic.Transfers
 {
     public class OtherModeBuilder
     {
@@ -63,7 +62,7 @@ namespace Itinero.Transit.Api.Logic
                 Zoom = 14,
                 EdgeDataLayout = new EdgeDataLayout(edgeDataLayouts)
             });
-            RouterDb.DataProvider = new DataProvider(RouterDb);
+            RouterDb.DataProvider = new DataProvider();
 
             AddFactories();
         }

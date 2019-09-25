@@ -16,18 +16,28 @@ namespace Itinero.Transit.Api.Models
         /// The journeys which the traveller could take
         /// </summary>
         public List<Journey> Journeys { get; }
+        
+        /// <summary>
+        /// The route that the traveller should take if she'd go directly.
+        /// This route follows the constraints specified by the walksGenerator.
+        /// </summary>
+        public Segment DirectWalk { get;  }
+
+        /// <summary>
+        /// When the query was started
+        /// </summary>
+        public DateTime QueryStarted { get; }
 
         /// <summary>
         /// When the query was completed
         /// </summary>
-        public DateTime QueryStarted { get; }
-
         public DateTime QueryDone { get; }
 
         /// <summary>
         /// How much milliseconds the query took to run
         /// </summary>
         public uint RunningTime { get; }
+        
         /// <summary>
         /// Gives the description of how walking in between stops was interpreted
         /// </summary>
@@ -44,7 +54,7 @@ namespace Itinero.Transit.Api.Models
         public DateTime LatestArrival { get; }
 
         internal QueryResult(List<Journey> journeys, DateTime queryStarted, DateTime queryDone,
-            DateTime earliestDeparture, DateTime latestArrival, string walksDescription)
+            DateTime earliestDeparture, DateTime latestArrival, string walksDescription, Segment directWalk)
         {
             Journeys = journeys;
             QueryStarted = queryStarted;
@@ -52,6 +62,7 @@ namespace Itinero.Transit.Api.Models
             EarliestDeparture = earliestDeparture;
             LatestArrival = latestArrival;
             WalksDescription = walksDescription;
+            DirectWalk = directWalk;
             RunningTime = (uint) (queryDone - queryStarted).TotalMilliseconds;
         }
     }
