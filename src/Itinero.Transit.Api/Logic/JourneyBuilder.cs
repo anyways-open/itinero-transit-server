@@ -297,11 +297,11 @@ namespace Itinero.Transit.Api.Logic
             }
 
 
-            var (coordinates, generator) = JourneyTranslator.GetCoordinatesFor(p.WalksGenerator, fromStop, toStop);
+            var (coordinates, generator, license) = JourneyTranslator.GetCoordinatesFor(p.WalksGenerator, fromStop, toStop);
 
             var departure = new TimedLocation(new Location(fromStop), null, 0);
             var arrival = new TimedLocation(new Location(toStop), null, 0);
-            return new Segment(departure, arrival, generator, coordinates, directJourneyTime);
+            return new Segment(departure, arrival, generator, coordinates, directJourneyTime, license);
         }
     }
 }

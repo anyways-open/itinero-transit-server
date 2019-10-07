@@ -18,11 +18,6 @@ ProjectSection(SolutionItems) = preProject
 	.gitignore = .gitignore
 EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "deployment", "deployment", "{7CC9BC56-35EB-40F3-A620-DD6E2D4FA9C0}"
-ProjectSection(SolutionItems) = preProject
-	deployment\update-docker.sh = deployment\update-docker.sh
-EndProjectSection
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{BF5279C5-4E99-40D8-A0DB-5F5B37C0480F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Itinero.Transit.API.Tests", "test\Itinero.Transit.API.Tests\Itinero.Transit.API.Tests.csproj", "{E123A0C2-EA34-494F-9D11-BF0151B6C252}"

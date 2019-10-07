@@ -369,9 +369,7 @@ namespace Itinero.Transit.API.Tests.Functional
             if (val == null)
             {
                 _errorMessages.Add(errMessage);
-            }
-
-            if (!val.HasValues)
+            }else if (!val.HasValues)
             {
                 _errorMessages.Add(errMessage);
             }

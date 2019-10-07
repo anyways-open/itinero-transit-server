@@ -170,25 +170,29 @@ namespace Itinero.Transit.Api.Logic
             stops.MoveTo(j.Location);
             var toStop = new Stop(stops);
 
-            var (coordinates, descriptor) =
+            var (coordinates, descriptor, license) =
                 walksgenerator.GetCoordinatesFor(fromStop, toStop);
 
             return new Segment(
                 departureTimed, arrivalTimed,
                 descriptor,
                 coordinates,
-                (uint) (j.Time - j.PreviousLink.Time)
+                (uint) (j.Time - j.PreviousLink.Time),
+                license
             );
         }
 
-        public static (List<Coordinate>, string identifier) GetCoordinatesFor(this IOtherModeGenerator walksgenerator,
+        public static (List<Coordinate>, string identifier, string license) GetCoordinatesFor(this IOtherModeGenerator walksgenerator,
             Stop from, Stop to)
         {
             var walkGenerator = walksgenerator?.GetSource(from.Id, to.Id);
+            string license = null;
 
             List<Coordinate> coordinates = null;
             if (walkGenerator is OsmTransferGenerator osm)
             {
+                license = "(C) OpenStreetMap Contributors; http://openStreetMap.org/copyright";
+                
                 var route = osm.CreateRoute(
                     ((float) from.Latitude, (float) from.Longitude),
                     ((float) to.Latitude, (float) to.Longitude), out _, out var errorMessage);
@@ -214,7 +218,7 @@ namespace Itinero.Transit.Api.Logic
             }
 
 
-            return (coordinates, walksgenerator?.OtherModeIdentifier() ?? "?");
+            return (coordinates, walksgenerator?.OtherModeIdentifier() ?? "?", license);
         }
 
         /// <summary>
