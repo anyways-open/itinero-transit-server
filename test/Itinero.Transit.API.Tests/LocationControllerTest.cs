@@ -4,7 +4,6 @@ using Itinero.Transit.Api.Controllers;
 using Itinero.Transit.Api.Logic;
 using Itinero.Transit.Data;
 using Itinero.Transit.Data.Core;
-using Itinero.Transit.Data.Synchronization;
 using Xunit;
 using Attribute = Itinero.Transit.Data.Attributes.Attribute;
 
@@ -37,9 +36,9 @@ namespace Itinero.Transit.API.Tests
 
             wr.Close();
 
-            var transitDbs = new Dictionary<string, (TransitDb tdb, Synchronizer synchronizer)>
+            var transitDbs = new List<Operator>
             {
-                {"x", (tdb, null)}
+                {new Operator("", tdb, null, 0, null, null)}
             };
             State.GlobalState = new State(transitDbs, null, null, null);
             var lc = new LocationController();

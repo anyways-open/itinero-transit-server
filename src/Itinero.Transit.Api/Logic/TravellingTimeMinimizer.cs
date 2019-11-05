@@ -1,8 +1,6 @@
 using System;
-using System.Collections.Generic;
 using Itinero.Transit.Data.Core;
 using Itinero.Transit.Journey;
-using Itinero.Transit.Journey.Metric;
 using static Itinero.Transit.Journey.Journey<
     Itinero.Transit.Api.Logic.Itinero.Transit.Journey.Metric.TravellingTimeMinimizer>;
 // ReSharper disable ImpureMethodCallOnReadonlyValueField
@@ -33,10 +31,8 @@ namespace Itinero.Transit.Api.Logic
             private readonly uint _totalTimeWalking;
             private readonly uint _totalTimeInVehicle;
             private readonly uint _smallestTransfer = uint.MaxValue;
-
+            
             public static readonly TravellingTimeMinimizer Factory = new TravellingTimeMinimizer();
-
-            public static readonly Minimizer Minimize = new Minimizer();
 
             private TravellingTimeMinimizer()
             {
@@ -55,7 +51,8 @@ namespace Itinero.Transit.Api.Logic
                 return Factory;
             }
 
-            public TravellingTimeMinimizer Add(Journey<TravellingTimeMinimizer> journey)
+            public TravellingTimeMinimizer Add(Journey<TravellingTimeMinimizer> journey, StopId currentLocation, ulong currentTime, TripId currentTripId,
+                bool currentIsSpecial)
             {
                 var totalTimeWalking = _totalTimeWalking;
                 var totalTimeInVehicle = _totalTimeInVehicle;
@@ -81,52 +78,7 @@ namespace Itinero.Transit.Api.Logic
             }
 
 
-            public class Minimizer : MetricComparator<TravellingTimeMinimizer>
-            {
-                private readonly MaximizeStations<TravellingTimeMinimizer> _comparator;
-
-                public Minimizer() : this(null)
-                {
-                    _comparator = null;
-                }
-
-                // ReSharper disable once MemberCanBePrivate.Global
-                public Minimizer(Dictionary<StopId, uint> importances)
-                {
-                    _comparator = new MaximizeStations<TravellingTimeMinimizer>(importances);
-                }
-
-                public override int ADominatesB(Journey<TravellingTimeMinimizer> ja,
-                    Journey<TravellingTimeMinimizer> jb)
-                {
-                    var a = ja.Metric;
-                    var b = jb.Metric;
-
-                    if (a._totalTimeWalking != b._totalTimeWalking)
-                    {
-                        return a._totalTimeWalking.CompareTo(b._totalTimeWalking);
-                    }
-
-                    if (a._totalTimeInVehicle != b._totalTimeInVehicle)
-                    {
-                        return a._totalTimeInVehicle.CompareTo(b._totalTimeInVehicle);
-                    }
-
-                    if (a._smallestTransfer != b._smallestTransfer)
-                    {
-                        // SHOULD BE MAXIMIZED! 
-                        return b._smallestTransfer.CompareTo(a._smallestTransfer);
-                    }
-
-
-                    return _comparator?.Compare(ja, jb) ?? 0;
-                }
-
-                public override int NumberOfDimension()
-                {
-                    return 3;
-                }
-            }
+          
         }
     }
 }

@@ -52,7 +52,7 @@ namespace Itinero.Transit.Api.Logic
             return new Geojson(features);
         }
 
-        private static (Segment, int newIndex) TranslateSegment<T>(this State dbs, List<Journey<T>> parts, int i)
+        private static (Segment, int newIndex) TranslateSegment<T>(this OperatorSet dbs, List<Journey<T>> parts, int i)
             where T : IJourneyMetric<T>
         {
             var stops = dbs.GetStopsReader().AddOsmReader();
@@ -144,7 +144,7 @@ namespace Itinero.Transit.Api.Logic
         /// Can be null if unneeded
         /// </summary>
         /// <returns></returns>
-        public static Segment TranslateWalkSegment<T>(this State dbs,
+        public static Segment TranslateWalkSegment<T>(this OperatorSet dbs,
             Journey<T> j, IOtherModeGenerator walksgenerator) where T : IJourneyMetric<T>
         {
             var stops = StopsReaderAggregator.CreateFrom(dbs.All()).AddOsmReader();
@@ -226,7 +226,7 @@ namespace Itinero.Transit.Api.Logic
         /// </summary>
         /// <returns></returns>
         public static Models.Journey Translate<T>(
-            this State dbs, Journey<T> journey, IOtherModeGenerator walkGenerator) where T : IJourneyMetric<T>
+            this OperatorSet dbs, Journey<T> journey, IOtherModeGenerator walkGenerator) where T : IJourneyMetric<T>
         {
             var parts = journey.ToList(); //Creates a list of the journey
 
@@ -265,7 +265,7 @@ namespace Itinero.Transit.Api.Logic
             return new Models.Journey(segments, vehiclesTaken);
         }
 
-        public static List<Models.Journey> Translate<T>(this State dbs, IEnumerable<Journey<T>> journeys,
+        public static List<Models.Journey> Translate<T>(this OperatorSet dbs, IEnumerable<Journey<T>> journeys,
             IOtherModeGenerator walkGenerator)
             where T : IJourneyMetric<T>
         {
@@ -284,7 +284,7 @@ namespace Itinero.Transit.Api.Logic
         }
 
 
-        public static Location LocationOf(this State dbs, string globalId)
+        public static Location LocationOf(this OperatorSet dbs, string globalId)
         {
             var stops = dbs.GetStopsReader().AddOsmReader();
             return !stops.MoveTo(globalId) ? null : new Location(stops);
@@ -305,11 +305,24 @@ namespace Itinero.Transit.Api.Logic
         /// Gives all the connections departing at the given location within the timewindow
         /// </summary>
         internal static LocationSegmentsResult SegmentsForLocation
-        (this State dbs,
+        (this OperatorSet dbs,
             string globalId, DateTime time, DateTime windowEnd)
         {
+            
             if (dbs == null) throw new ArgumentNullException(nameof(dbs));
-            var stops = dbs.GetStopsReader().AddOsmReader();
+            
+            
+
+            if (time < dbs.EarliestLoadedTime() || dbs.LatestLoadedTime() > windowEnd)
+            {
+                var msg = $"The given time period is not loaded in the database: " +
+                          $"You can only query between {dbs.EarliestLoadedTime():s} and {dbs.LatestLoadedTime():s}, \n" +
+                          $"but you request connections between {time:s} and {windowEnd:s}";
+                throw new ArgumentException(msg);
+            } 
+            
+            
+            var stops = dbs.GetStopsReader();
             if (!stops.MoveTo(globalId))
             {
                 return null;
@@ -319,6 +332,8 @@ namespace Itinero.Transit.Api.Logic
             var stop = stops.Id;
 
             var departureEnumerator = dbs.GetConnections();
+            
+            
             departureEnumerator.MoveTo(time.ToUnixTime());
 
 

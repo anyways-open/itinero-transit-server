@@ -16,8 +16,11 @@ namespace Itinero.Transit.Api.Logic
         /// </summary>
         public Func<DateTime, DateTime, TimeSpan> SearchLengthCalculator { get; }
 
+        public OperatorSet OperatorSet;
+
 
         public RealLifeProfile(
+            OperatorSet operatorSet,
             IOtherModeGenerator internalTransferGenerator,
             IOtherModeGenerator walksGenerator,
             bool allowCancelled,
@@ -32,6 +35,7 @@ namespace Itinero.Transit.Api.Logic
                 allowCancelled ? null : new CancelledConnectionFilter(),
                 new ChangeableMaxNumberOfTransferFilter(uint.MaxValue))
         {
+            OperatorSet = operatorSet;
             _filter = (ChangeableMaxNumberOfTransferFilter) JourneyFilter;
             _maxNumberOfTransfers = maxNumberOfTransfers;
             SearchLengthCalculator = searchLengthCalculator;

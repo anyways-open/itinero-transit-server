@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 using Itinero.Transit.Data;
 using Serilog;
 
-namespace Itinero.Transit.Api.Logic
+namespace Itinero.Transit.Api.Logic.Search
 {
     /// <summary>
     /// Builds a suffix tree of all the names of the stopsReader
@@ -126,6 +126,7 @@ namespace Itinero.Transit.Api.Logic
                 var attr = stop.Attributes;
                 foreach (var key in _attributeKeysToUse)
                 {
+                    
                     if (attr.TryGetValue(key, out var v))
                     {
                         return v;

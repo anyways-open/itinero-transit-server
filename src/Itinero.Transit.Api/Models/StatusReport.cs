@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 // ReSharper disable NotAccessedField.Global
 
@@ -12,7 +13,6 @@ namespace Itinero.Transit.Api.Models
     /// </summary>
     public class StatusReport
     {
-       
         /// <summary>
         /// Indicates if the server is online
         /// </summary>
@@ -32,7 +32,7 @@ namespace Itinero.Transit.Api.Models
         /// Indicates what time fragments are loaded into the database.
         /// This is a list of (start, end) values
         /// </summary>
-        public readonly Dictionary<string, List<TimeWindow>> LoadedTimeWindows;
+        public readonly Dictionary<string, OperatorStatus> LoadedOperators;
 
 
         /// <summary>
@@ -45,55 +45,67 @@ namespace Itinero.Transit.Api.Models
         public readonly List<string> SupportedOsmProfiles;
 
         public readonly Dictionary<string, string> CurrentRunningTask;
-        
+
         /// <summary>
         /// Indicates how many routable tiles are cached on the disk. 
         /// </summary>
         public uint TilesOnDisk;
 
+        /// <summary>
+        /// Memory usage of the service, in bytes consumed
+        /// </summary>
+        public long BytesUsed;
+
+        public long MegabytesUsed;
 
         public StatusReport(DateTime onlineSince, long uptime,
-            Dictionary<string, IEnumerable<(DateTime start, DateTime end)>> loadedTimeWindows,
+            Dictionary<string, OperatorStatus> operatorStatuses,
             string version, Dictionary<string, string> currentRunningTask, List<string> supportedProfiles,
             List<string> supportedOsmProfiles, uint tilesOnDisk)
         {
             TilesOnDisk = tilesOnDisk;
             OnlineSince = onlineSince;
             Uptime = uptime;
-            LoadedTimeWindows = new Dictionary<string, List<TimeWindow>>();
-            if (loadedTimeWindows != null)
-            {
-                foreach (var (k, windows) in loadedTimeWindows)
-                {
-                    var ls = new List<TimeWindow>();
-                    foreach (var w in windows)
-                    {
-                        ls.Add(new TimeWindow(w));
-                    }
-
-                    LoadedTimeWindows.Add(k, ls);
-                }
-            }
+            LoadedOperators = operatorStatuses;
 
             Version = version;
             CurrentRunningTask = currentRunningTask;
             SupportedProfiles = supportedProfiles;
             SupportedOsmProfiles = supportedOsmProfiles;
+            using (var proc = Process.GetCurrentProcess())
+            {
+                BytesUsed = proc.WorkingSet64;
+            }
+
+            MegabytesUsed = BytesUsed / (1024 * 1024);
+        }
+    }
+
+    public class TimeWindow
+    {
+        public readonly DateTime Start, End;
+
+        public TimeWindow(DateTime start, DateTime end)
+        {
+            Start = start;
+            End = end;
         }
 
-        public class TimeWindow
+        public TimeWindow((DateTime, DateTime) t) : this(t.Item1, t.Item2)
         {
-            public readonly DateTime Start, End;
+        }
+    }
 
-            public TimeWindow(DateTime start, DateTime end)
-            {
-                Start = start;
-                End = end;
-            }
+    public class OperatorStatus
+    {
+        public readonly List<string> AltNames, Tags;
+        public readonly TimeWindow LoadedTimeWindows;
 
-            public TimeWindow((DateTime, DateTime) t) : this(t.Item1, t.Item2)
-            {
-            }
+        public OperatorStatus(List<string> altNames, List<string> tags, TimeWindow loadedTimeWindow)
+        {
+            AltNames = altNames;
+            Tags = tags;
+            LoadedTimeWindows = loadedTimeWindow;
         }
     }
 }

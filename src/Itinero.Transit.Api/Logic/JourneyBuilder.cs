@@ -19,7 +19,9 @@ namespace Itinero.Transit.Api.Logic
     /// </summary>
     public static class JourneyBuilder
     {
-        public static RealLifeProfile CreateProfile(string @from, string to,
+        public static RealLifeProfile CreateProfile(
+            this OperatorSet operatorSet,
+            string from, string to,
             string walksGeneratorDescription,
             uint internalTransferTime = 180,
             double searchFactor = 2.5,
@@ -28,7 +30,7 @@ namespace Itinero.Transit.Api.Logic
             uint maxNumberOfTransfers = uint.MaxValue
         )
         {
-            var stops = State.GlobalState.GetStopsReader().AddOsmReader();
+            var stops = operatorSet.GetStopsReader().AddOsmReader();
 
             stops.MoveTo(from);
             var fromId = stops.Id;
@@ -44,12 +46,24 @@ namespace Itinero.Transit.Api.Logic
 
 
             var internalTransferGenerator = new InternalTransferGenerator(internalTransferTime);
+            
+            var maxDistance = uint.MaxValue;
+            foreach (var op in operatorSet.Operators)
+            {
+                maxDistance = Math.Min(maxDistance, op.MaxSearch);
+            }
+
+            if (walksGenerator.Range() > maxDistance)
+            {
+                throw new ArgumentException($"Search range too high: with the chosen operators, at most {maxDistance}m is allowed");
+            }
 
             var searchFunction =
                 RealLifeProfile.DefaultSearchLengthSearcher(searchFactor,
                     TimeSpan.FromSeconds(minimalSearchTimeSeconds));
 
             return new RealLifeProfile(
+                operatorSet,
                 internalTransferGenerator,
                 walksGenerator,
                 allowCancelled,
@@ -91,7 +105,7 @@ namespace Itinero.Transit.Api.Logic
                 }
 
                 throw new ArgumentException(
-                    $"Could not find a station that is range from the {name}-location {stop.GlobalId} within {p.WalksGenerator.Range()}m. This range is calculated 'as the  crows fly', try increasing the range of your walksGenerator");
+                    $"Could not find a station that is in range from the {name}-location {stop.GlobalId} within {p.WalksGenerator.Range()}m. This range is calculated 'as the  crows fly', try increasing the range of your walksGenerator");
             }
 
             var foundRoutes = isLastMile
@@ -106,12 +120,12 @@ namespace Itinero.Transit.Api.Logic
 
             if (foundRoutes == null)
             {
-                CreateAndThrowErrorMessage(p, stop, isLastMile, name, inRange);
+                throw CreateException(p, stop, isLastMile, name, inRange);
             }
 
             if (!foundRoutes.Any())
             {
-                CreateAndThrowErrorMessage(p, stop, isLastMile, name, inRange);
+                throw CreateException(p, stop, isLastMile, name, inRange);
             }
 
             foreach (var (_, distance) in foundRoutes)
@@ -122,11 +136,11 @@ namespace Itinero.Transit.Api.Logic
                 }
             }
 
-            CreateAndThrowErrorMessage(p, stop, isLastMile, name, inRange);
+            throw CreateException(p, stop, isLastMile, name, inRange);
         }
 
-        private static void CreateAndThrowErrorMessage<T>(Profile<T> p, Stop stop, bool isLastMile,
-            string name, List<Stop> inRange)
+        private static ArgumentException CreateException<T>(Profile<T> p, IStop stop, bool isLastMile,
+            string name, IReadOnlyCollection<Stop> inRange)
             where T : IJourneyMetric<T>
         {
             var w = p.WalksGenerator;
@@ -163,7 +177,7 @@ namespace Itinero.Transit.Api.Logic
 
             var allErrs = string.Join("\n ", errors);
 
-            throw new ArgumentException(
+            return new ArgumentException(
                 $"Could not find a route towards/from the {name}-location.\nThe used generator is {w.OtherModeIdentifier()}\n{inRange.Count} stations in range are known\n The location we couldn't reach is {stop.GlobalId}\n {allErrs}");
         }
 
@@ -194,7 +208,7 @@ namespace Itinero.Transit.Api.Logic
             departure = departure?.ToUniversalTime();
             arrival = arrival?.ToUniversalTime();
 
-            var reader = State.GlobalState.GetStopsReader();
+            var reader = p.OperatorSet.GetStopsReader();
             var osmIndex = reader.DatabaseIndexes().Max() + 1u;
 
             var stopsReader = StopsReaderAggregator.CreateFrom(new List<IStopsReader>
@@ -216,14 +230,8 @@ namespace Itinero.Transit.Api.Logic
             p.DetectFirstMileWalks(stopsReader, fromStop, osmIndex, false, "departure");
             p.DetectFirstMileWalks(stopsReader, toStop, osmIndex, true, "arrival");
 
-            stopsReader.MakeComplete();
-
-            // Close the cache, cross-calculate everything
-            // Then, the 'SearchAround'-queries will not be run anymore.
-
-
             var precalculator =
-                State.GlobalState.All()
+                p.OperatorSet.All()
                     .SelectProfile(p)
                     .SetStopsReader(stopsReader)
                     .SelectStops(from, to);
@@ -288,6 +296,14 @@ namespace Itinero.Transit.Api.Logic
             Stop fromStop, Stop toStop)
         {
             var directJourneyTime = uint.MaxValue;
+
+            if (DistanceEstimate.DistanceEstimateInMeter(
+                    fromStop.Latitude, fromStop.Longitude,
+                    toStop.Latitude, toStop.Longitude) > p.WalksGenerator.Range())
+            {
+                return null;
+            }
+
             precalculator.CalculateDirectJourney()
                 ?.TryGetValue((fromStop.Id, toStop.Id), out directJourneyTime);
 
@@ -297,7 +313,8 @@ namespace Itinero.Transit.Api.Logic
             }
 
 
-            var (coordinates, generator, license) = JourneyTranslator.GetCoordinatesFor(p.WalksGenerator, fromStop, toStop);
+            var (coordinates, generator, license) =
+                JourneyTranslator.GetCoordinatesFor(p.WalksGenerator, fromStop, toStop);
 
             var departure = new TimedLocation(new Location(fromStop), null, 0);
             var arrival = new TimedLocation(new Location(toStop), null, 0);

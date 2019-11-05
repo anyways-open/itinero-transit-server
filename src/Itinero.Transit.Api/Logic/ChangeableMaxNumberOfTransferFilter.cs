@@ -19,12 +19,12 @@ namespace Itinero.Transit.Api.Logic
         
         public bool CanBeTaken(Journey<TransferMetric> journey)
         {
-            return journey.Metric.NumberOfTransfers <= MaxNumberOfTransfers;
+            return journey.Metric.NumberOfVehiclesTaken - 1 <= MaxNumberOfTransfers;
         }
 
         public bool CanBeTakenBackwards(Journey<TransferMetric> journey)
         {
-            return journey.Metric.NumberOfTransfers <= MaxNumberOfTransfers;
+            return journey.Metric.NumberOfVehiclesTaken <= MaxNumberOfTransfers;
         }
     }
 }

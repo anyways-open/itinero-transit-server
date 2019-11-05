@@ -24,6 +24,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Itinero.Transit.API.Tests",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Itinero.Transit.API.Test.Functional", "test\Itinero.Transit.API.Test.Functional\Itinero.Transit.API.Test.Functional.csproj", "{0E2FDA85-8080-4503-99DE-868C4CDD5C2A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Itinero.Transit.API.Test.Stress", "test\Itinero.Transit.API.Test.Stress\Itinero.Transit.API.Test.Stress.csproj", "{A94FC1C5-70F9-472E-B2B5-32E696B32605}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -42,10 +44,15 @@ Global
 		{0E2FDA85-8080-4503-99DE-868C4CDD5C2A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0E2FDA85-8080-4503-99DE-868C4CDD5C2A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0E2FDA85-8080-4503-99DE-868C4CDD5C2A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A94FC1C5-70F9-472E-B2B5-32E696B32605}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A94FC1C5-70F9-472E-B2B5-32E696B32605}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A94FC1C5-70F9-472E-B2B5-32E696B32605}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A94FC1C5-70F9-472E-B2B5-32E696B32605}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{1ED1FA27-8AED-4998-B121-39589A20E49D} = {5AD1023E-2A92-4CDC-951D-170B77AD9DB2}
 		{E123A0C2-EA34-494F-9D11-BF0151B6C252} = {BF5279C5-4E99-40D8-A0DB-5F5B37C0480F}
 		{0E2FDA85-8080-4503-99DE-868C4CDD5C2A} = {BF5279C5-4E99-40D8-A0DB-5F5B37C0480F}
+		{A94FC1C5-70F9-472E-B2B5-32E696B32605} = {BF5279C5-4E99-40D8-A0DB-5F5B37C0480F}
 	EndGlobalSection
 EndGlobal

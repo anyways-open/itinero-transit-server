@@ -6,7 +6,7 @@ namespace Itinero.Transit.API.Tests.Functional
 {
     class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             ServerTest serverTest = new ItineroTransitServerTest();
 

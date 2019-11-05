@@ -4,6 +4,7 @@ using System.Linq;
 using Itinero.Transit.Api.Logic;
 using Itinero.Transit.Api.Logic.Transfers;
 using Itinero.Transit.Api.Models;
+using Itinero.Transit.Utils;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Itinero.Transit.Api.Controllers
@@ -13,32 +14,25 @@ namespace Itinero.Transit.Api.Controllers
     [ProducesResponseType(200)]
     public class StatusController : ControllerBase
     {
-
-
-
         private uint _loadedTilesCount;
         private DateTime _lastTileIndexation = DateTime.MinValue;
-        
+
         /// <summary>
         /// Gives some insight in the database
         /// </summary>
         [HttpGet]
         public ActionResult<StatusReport> Get()
         {
-            var loadedTimeWindows = new Dictionary<string, IEnumerable<(DateTime start, DateTime end)>>();
-            var tasks = new Dictionary<string, string>();
-
-
             if ((DateTime.Now - _lastTileIndexation).TotalMinutes > 2)
             {
                 _loadedTilesCount = OsmTransferGenerator.LoadedTilesCount();
                 _lastTileIndexation = DateTime.Now;
             }
+
+
             var state = State.GlobalState;
             if (state == null)
             {
-                
-                
                 return new StatusReport(
                     DateTime.Now,
                     0,
@@ -46,37 +40,35 @@ namespace Itinero.Transit.Api.Controllers
                     State.Version,
                     new Dictionary<string, string>()
                         {{"statusmessage", "Still booting, hang on"}},
-                    new List<string>(), 
+                    new List<string>(),
                     new List<string>(),
                     _loadedTilesCount
                 );
             }
 
-            if (state.TransitDbs != null)
+            var tasks = new Dictionary<string, string>();
+            var reports = new Dictionary<string, OperatorStatus>();
+            foreach (var provider in state.Operators.All)
             {
-                foreach (var (name, (_, synchronizer)) in state.TransitDbs)
+                var connsDb = provider.Tdb.Latest.ConnectionsDb;
+                TimeWindow window = null;
+                if (connsDb != null && connsDb.EarliestDate != ulong.MaxValue && connsDb.LatestDate != ulong.MinValue)
                 {
-                    if (synchronizer?.LoadedTimeWindows != null)
-                    {
-                        loadedTimeWindows.Add(name, synchronizer.LoadedTimeWindows);
-                    }
-
-                    if (synchronizer?.CurrentlyRunning != null)
-                    {
-                        tasks.Add(name, synchronizer.CurrentlyRunning.ToString());
-                    }
+                    window = new TimeWindow(connsDb.EarliestDate.FromUnixTime(), connsDb.LatestDate.FromUnixTime());
                 }
+
+                var report = new OperatorStatus(provider.AltNames.ToList(), provider.Tags.ToList(), window);
+                reports.Add(provider.Name, report);
             }
 
-            
-            
+
             tasks.Add("statusmessage", state.FreeMessage);
 
 
             return new StatusReport(
                 state.BootTime,
                 (long) (DateTime.Now - state.BootTime).TotalSeconds,
-                loadedTimeWindows,
+                reports,
                 State.Version,
                 tasks,
                 state.OtherModeBuilder.SupportedUrls(),

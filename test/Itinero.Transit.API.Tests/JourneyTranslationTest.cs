@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Itinero.Transit.Api.Logic;
 using Itinero.Transit.Data;
 using Itinero.Transit.Data.Core;
-using Itinero.Transit.Data.Synchronization;
 using Itinero.Transit.Journey;
 using Itinero.Transit.Journey.Metric;
 using Itinero.Transit.Utils;
@@ -47,12 +46,12 @@ namespace Itinero.Transit.API.Tests
                 stop2, new TripId(uint.MaxValue, uint.MaxValue));
 
 
-            var state = new State(new Dictionary<string, (TransitDb tdb, Synchronizer synchronizer)>()
+            var state = new State(new List<Operator>
             {
-                {"test", (tdb, null)}
+                new Operator("test", tdb, null, 0,null, null)
             }, null, null, null);
 
-            var translated = state.Translate(journey1, null);
+            var translated = state.Operators.GetFullView().Translate(journey1, null);
             Assert.Equal("https://example.org/stop0", translated.Segments[0].Departure.Location.Id);
             Assert.Equal("https://example.org/stop1", translated.Segments[0].Arrival.Location.Id);
             Assert.Equal("https://example.org/trip0", translated.Segments[0].Vehicle);

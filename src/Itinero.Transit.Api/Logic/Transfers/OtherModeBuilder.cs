@@ -292,7 +292,7 @@ namespace Itinero.Transit.Api.Logic.Transfers
             throw new NotImplementedException();
         }
 
-        public Dictionary<StopId, uint> TimesBetween(IEnumerable<IStop> @from, IStop to)
+        public Dictionary<StopId, uint> TimesBetween(IEnumerable<IStop> from, IStop to)
         {
             throw new NotImplementedException();
         }
@@ -307,7 +307,7 @@ namespace Itinero.Transit.Api.Logic.Transfers
             return "<some other mode identifier>";
         }
 
-        public IOtherModeGenerator GetSource(StopId @from, StopId to)
+        public IOtherModeGenerator GetSource(StopId from, StopId to)
         {
             throw new NotImplementedException();
         }

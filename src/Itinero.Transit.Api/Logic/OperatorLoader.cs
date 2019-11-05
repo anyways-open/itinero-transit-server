@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Itinero.Transit.Api.Logic.Importance;
 using Itinero.Transit.Data;
 using Itinero.Transit.Data.Synchronization;
 using Itinero.Transit.IO.LC;
@@ -12,9 +13,9 @@ using Serilog;
 
 namespace Itinero.Transit.Api.Logic
 {
-    public static class TransitDbFactory
+    public static class OperatorLoader
     {
-        public static Dictionary<string, (TransitDb tdb, Synchronizer synchronizer)> CreateTransitDbs(
+        public static IEnumerable<Operator> LoadOperators(
             this IConfiguration configuration, bool dryRun = false)
         {
             // First, we read the reusable reload windows
@@ -25,15 +26,16 @@ namespace Itinero.Transit.Api.Logic
                 policies.Add(rp.GetValue<string>("Name"), rp.GetSection("Windows").GetSynchronizedWindows());
             }
 
-            return configuration.GetSection("TransitDb").CreateTransitDbsFromConfig(policies, dryRun);
+            return configuration.GetSection("TransitDb").LoadOperatorFromConfig(policies, dryRun);
         }
 
 
         /// <summary>
         /// Builds the entire transitDB based on the relevant configuration section
         /// </summary>
-        private static Dictionary<string, (TransitDb tdb, Synchronizer synchronizer)> CreateTransitDbsFromConfig(
-            this IConfiguration configuration, Dictionary<string, List<ISynchronizationPolicy>> reusablePolicies,
+        private static IEnumerable<Operator> LoadOperatorFromConfig(
+            this IConfiguration configuration,
+            IReadOnlyDictionary<string, List<ISynchronizationPolicy>> reusablePolicies,
             bool dryRun = false)
         {
             if (!configuration.GetChildren().Any())
@@ -41,21 +43,50 @@ namespace Itinero.Transit.Api.Logic
                 throw new ArgumentException("The 'transitDb'-element has no children, no transitdbs defined");
             }
 
-            var dbs = new Dictionary<string, (TransitDb tdb, Synchronizer synchronizer)>();
+            var dbs = new List<Operator>();
             uint id = 0;
             foreach (var config in configuration.GetChildren())
             {
                 try
                 {
-                    var (name, db, sync) = config.CreateTransitDb(id, reusablePolicies, dryRun);
-                    dbs.Add(name, (db, sync));
+                    var provider = config.LoadOperator(id, reusablePolicies, dryRun);
                     id++;
+                    dbs.Add(provider);
                 }
                 catch (Exception e)
                 {
                     Log.Error($"Could not load database with config {config}\n" +
                               $"Probable cause: upstream server is offline (or internet is down)\n" +
                               $"{e}");
+                }
+            }
+
+            var names = new HashSet<string>();
+
+            foreach (var @operator in dbs)
+            {
+                if (names.Contains(@operator.Name))
+                {
+                    throw new ArgumentException($"The name {@operator.Name} is used multiple times");
+                }
+
+                names.Add(@operator.Name);
+                foreach (var altname in @operator.AltNames)
+                {
+                    if (names.Contains(altname))
+                    {
+                        throw new ArgumentException($"The altname {altname} is used multiple times");
+                    }
+
+                    names.Add(altname);
+                }
+
+                foreach (var tag in @operator.Tags)
+                {
+                    if (names.Contains(tag))
+                    {
+                        throw new ArgumentException($"The tag {tag} is used as name as well");
+                    }
                 }
             }
 
@@ -69,7 +100,7 @@ namespace Itinero.Transit.Api.Logic
         }
 
         private static List<ISynchronizationPolicy> GetReloadPolicy(this IConfiguration rp,
-            Dictionary<string, List<ISynchronizationPolicy>> reusable)
+            IReadOnlyDictionary<string, List<ISynchronizationPolicy>> reusable)
         {
             if (rp.GetSection("Windows").Value != null)
             {
@@ -96,9 +127,9 @@ namespace Itinero.Transit.Api.Logic
         /// <summary>
         /// Builds the entire transitDB based on the relevant configuration section
         /// </summary>
-        private static (String name, TransitDb db, Synchronizer synchronizer) CreateTransitDb(
+        private static Operator LoadOperator(
             this IConfiguration configuration, uint id,
-            Dictionary<string, List<ISynchronizationPolicy>> reusablePolicies, bool dryRun = false)
+            IReadOnlyDictionary<string, List<ISynchronizationPolicy>> reusablePolicies, bool dryRun = false)
         {
             var name = configuration.GetValue<string>("Name");
 
@@ -112,7 +143,7 @@ namespace Itinero.Transit.Api.Logic
             if (dryRun)
             {
                 // Only test config file
-                return ("", null, null);
+                return new Operator("", null, null, 0, null, null);
             }
 
 
@@ -123,7 +154,6 @@ namespace Itinero.Transit.Api.Logic
             }
 
             db = db ?? new TransitDb(id);
-
 
             Synchronizer synchronizer = null;
 
@@ -150,8 +180,15 @@ namespace Itinero.Transit.Api.Logic
                 Log.Information($"Found LC data source {connections}, {locations}");
                 if (reloadingPolicies.Any())
                 {
-                    (synchronizer, _) =
-                        db.UseLinkedConnections(connections, locations, reloadingPolicies);
+                    try
+                    {
+                        (synchronizer, _) =
+                            db.UseLinkedConnections(connections, locations, reloadingPolicies);
+                    }
+                    catch (ArgumentException e)
+                    {
+                        Log.Error($"Could not initiate the automatic reloading. A stale cache version will be used. Error is:\n{e}");
+                    }
                 }
                 else
                 {
@@ -168,7 +205,16 @@ namespace Itinero.Transit.Api.Logic
             }
 
 
-            return (name, db, synchronizer);
+            var altNames = configuration
+                .GetSection("AltNames")
+                ?.GetChildren()
+                ?.Select(x => x.Value).ToList();
+            var tags = configuration
+                .GetSection("Tags")
+                ?.GetChildren()
+                ?.Select(x => x.Value).ToList();
+            var maxSearch = configuration.GetValue<uint>("MaxSearch");
+            return new Operator(name, db, synchronizer, maxSearch, altNames, tags);
         }
 
         private static string GetDataSourceOsm(this IConfiguration config)
