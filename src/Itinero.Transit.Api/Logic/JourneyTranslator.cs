@@ -313,7 +313,7 @@ namespace Itinero.Transit.Api.Logic
             
             
 
-            if (time < dbs.EarliestLoadedTime() || dbs.LatestLoadedTime() > windowEnd)
+            if (!(dbs.EarliestLoadedTime() < time && windowEnd < dbs.LatestLoadedTime()))
             {
                 var msg = $"The given time period is not loaded in the database: " +
                           $"You can only query between {dbs.EarliestLoadedTime():s} and {dbs.LatestLoadedTime():s}, \n" +

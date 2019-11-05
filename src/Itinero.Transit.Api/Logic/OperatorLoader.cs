@@ -133,17 +133,32 @@ namespace Itinero.Transit.Api.Logic
         {
             var name = configuration.GetValue<string>("Name");
 
+           
+
 
             var reloadingPolicies =
                 configuration.GetSection("ReloadPolicy").GetReloadPolicy(reusablePolicies);
 
             var cacheLocation = configuration.GetValue<string>("Cache");
             var cacheReload = configuration.GetValue("CacheUpdateEvery", long.MaxValue);
-
+            
+            var altNames = configuration
+                .GetSection("AltNames")
+                ?.GetChildren()
+                ?.Select(x => x.Value).ToList();
+            var tags = configuration
+                .GetSection("Tags")
+                ?.GetChildren()
+                ?.Select(x => x.Value).ToList();
+            var maxSearch = configuration.GetValue<uint>("MaxSearch");
+            if (string.IsNullOrEmpty(name))
+            {
+                throw new ArgumentException("No name is given for an operator-entry in the config file");
+            }
             if (dryRun)
             {
                 // Only test config file
-                return new Operator("", null, null, 0, null, null);
+                return new Operator(name, null, null, maxSearch, altNames, tags);
             }
 
 
@@ -205,15 +220,7 @@ namespace Itinero.Transit.Api.Logic
             }
 
 
-            var altNames = configuration
-                .GetSection("AltNames")
-                ?.GetChildren()
-                ?.Select(x => x.Value).ToList();
-            var tags = configuration
-                .GetSection("Tags")
-                ?.GetChildren()
-                ?.Select(x => x.Value).ToList();
-            var maxSearch = configuration.GetValue<uint>("MaxSearch");
+           
             return new Operator(name, db, synchronizer, maxSearch, altNames, tags);
         }
 

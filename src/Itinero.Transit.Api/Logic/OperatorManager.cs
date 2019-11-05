@@ -24,6 +24,14 @@ namespace Itinero.Transit.Api.Logic
         {
             All = operators.OrderBy(op => op.Tdb.DatabaseId).ToList();
 
+            for (var i = 0; i < All.Count; i++)
+            {
+                if (i != All[i].Tdb.DatabaseId)
+                {
+                    throw new Exception("PANIC: incorrect databaseID: either duplicates are gaps are passed into the operator manager");
+                }
+            }
+
             foreach (var @operator in All)
             {
                 _operatorsByName[@operator.Name.ToLower()] = @operator;
