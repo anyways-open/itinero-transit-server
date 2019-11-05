@@ -312,7 +312,6 @@ namespace Itinero.Transit.Api.Logic
                 return null;
             }
 
-
             var (coordinates, generator, license) =
                 JourneyTranslator.GetCoordinatesFor(p.WalksGenerator, fromStop, toStop);
 

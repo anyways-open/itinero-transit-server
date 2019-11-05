@@ -44,7 +44,7 @@ namespace Itinero.Transit.API.Tests.Functional
             keyValues?.Add("test", "true");
             keyValues?.Add("operators", "nmbs");
 
-            
+
             Challenge(
                 endpoint,
                 name,
@@ -52,7 +52,7 @@ namespace Itinero.Transit.API.Tests.Functional
                 property,
                 maxTimeAllowed);
         }
-        
+
         private void DeLijnChallenge(
             string endpoint,
             string name,
@@ -63,7 +63,7 @@ namespace Itinero.Transit.API.Tests.Functional
             keyValues?.Add("test", "true");
             keyValues?.Add("operators", "DeLijn");
 
-            
+
             Challenge(
                 endpoint,
                 name,
@@ -90,9 +90,9 @@ namespace Itinero.Transit.API.Tests.Functional
                     }
                 }
             );
-            
-            // SncbTestSet();
-            DeLijnTestSet();
+
+            SncbTestSet();
+          //  DeLijnTestSet();
         }
 
         private void DeLijnTestSet()
@@ -114,24 +114,21 @@ namespace Itinero.Transit.API.Tests.Functional
                     );
                 }
             );
-            
+
             DeLijnChallenge("Location", "Load information about stop Gombertstraat",
                 new Dictionary<string, string>
                 {
                     {"id", "https://data.delijn.be/stops/507130"},
                 },
-                jobj =>
-                {
-                    AssertEqual("https://data.delijn.be/stops/507130", jobj["id"]);
-                }
+                jobj => { AssertEqual("https://data.delijn.be/stops/507130", jobj["id"]); }
             );
-            
+
             DeLijnChallenge("Location/Connections", "Load connections of station Brugge",
                 new Dictionary<string, string>
                 {
                     {"id", "https://data.delijn.be/stops/507130"},
                     {"windowStart", TestDepartureTime()}
-                },    
+                },
                 jobj =>
                 {
                     AssertEqual("https://data.delijn.be/stops/507130", jobj["location"]["id"]);
@@ -142,7 +139,6 @@ namespace Itinero.Transit.API.Tests.Functional
 
         private void SncbTestSet()
         {
-           
             SncbChallenge("LocationsByName", "Search for station 'Bruges'",
                 new Dictionary<string, string>
                 {
@@ -467,7 +463,6 @@ namespace Itinero.Transit.API.Tests.Functional
                     {"from", "https://www.openstreetmap.org/#map=17/51.21577/3.21823"},
                     {"to", "http://irail.be/stations/NMBS/008892007"},
                     {"departure", TestDepartureTime()},
-                    {"operators", "nmbs"},
                     {
                         "walksGeneratorDescription",
                         "firstLastMile&" +
@@ -545,7 +540,6 @@ namespace Itinero.Transit.API.Tests.Functional
                     {"from", "https://www.openstreetmap.org/#map=17/51.21577/3.21823"},
                     {"to", "https://www.openstreetmap.org/#map=14/51.0250/3.7129"}, // To Ghent: De Sterre
                     {"departure", TestDepartureTime()},
-                    {"operators", "nmbs"},
                     {
                         "walksGeneratorDescription",
                         "firstLastMile&" +
@@ -586,7 +580,6 @@ namespace Itinero.Transit.API.Tests.Functional
                     {"to", "https://www.openstreetmap.org/#map=14/51.0250/3.7129"},
                     {"departure", TestDepartureTime()},
                     {"multipleOptions", "true"},
-                    {"operators", "nmbs"},
                     {
                         "walksGeneratorDescription",
                         "firstLastMile&" +
@@ -627,7 +620,6 @@ namespace Itinero.Transit.API.Tests.Functional
                     {"from", "https://www.openstreetmap.org/#map=17/51.21577/3.21823"},
                     {"to", "https://www.openstreetmap.org/#map=16/51.0374/3.7151"},
                     {"departure", TestDepartureTime()},
-                    {"operators", "nmbs"},
                     {
                         "walksGeneratorDescription",
                         "firstLastMile&" +
@@ -668,7 +660,6 @@ namespace Itinero.Transit.API.Tests.Functional
                     {"to", "https://www.openstreetmap.org/#map=16/51.0374/3.7151"},
                     {"departure", TestDepartureTime()},
                     {"multipleOptions", "true"},
-                    {"operators", "nmbs"},
                     {
                         "walksGeneratorDescription",
                         "firstLastMile&" +
@@ -707,7 +698,6 @@ namespace Itinero.Transit.API.Tests.Functional
                     {"from", "https://www.openstreetmap.org/#map=15/51.0858/2.6017"},
                     {"to", "https://www.openstreetmap.org/#map=14/50.1886/5.9543"}, // Gouvy
                     {"departure", TestDepartureTime()},
-                    {"operators", "nmbs"},
                     {
                         "walksGeneratorDescription",
                         "firstLastMile&" +
@@ -747,7 +737,6 @@ namespace Itinero.Transit.API.Tests.Functional
                     {"to", "https://www.openstreetmap.org/#map=14/50.1886/5.9543"}, // Gouvy
                     {"departure", TestDepartureTime()},
                     {"multipleOptions", "true"},
-                    {"operators", "nmbs"},
                     {
                         "walksGeneratorDescription",
                         "firstLastMile&" +
@@ -787,7 +776,6 @@ namespace Itinero.Transit.API.Tests.Functional
                     {"from", "http://irail.be/stations/NMBS/008896735"},
                     {"to", "https://www.openstreetmap.org/#map=11/50.8469/4.2249"},
                     {"departure", TestDepartureTime()},
-                    {"operators", "nmbs"},
                     {
                         "walksGeneratorDescription",
                         "firstLastMile&" +
@@ -827,7 +815,6 @@ namespace Itinero.Transit.API.Tests.Functional
                     {"to", "https://www.openstreetmap.org/#map=14/50.8430/4.3279"},
                     {"departure", TestDepartureTime()},
                     {"multipleOptions", "true"},
-                    {"operators", "nmbs"},
                     {
                         "walksGeneratorDescription",
                         "firstLastMile&" +
@@ -866,7 +853,6 @@ namespace Itinero.Transit.API.Tests.Functional
                     {"to", "https://www.openstreetmap.org/#map=19/50.86044/4.35865"},
 
                     {"departure", TestDepartureTime()},
-                    {"operators", "nmbs"},
                     {
                         "walksGeneratorDescription",
                         "firstLastMile&" +
@@ -905,7 +891,6 @@ namespace Itinero.Transit.API.Tests.Functional
                     {"to", "https://www.openstreetmap.org/#map=19/50.86044/4.35865"},
                     {"multipleOptions", "true"},
                     {"departure", TestDepartureTime()},
-                    {"operators", "nmbs"},
                     {
                         "walksGeneratorDescription",
                         "firstLastMile&" +
@@ -947,7 +932,6 @@ namespace Itinero.Transit.API.Tests.Functional
                     {"to", "https://www.openstreetmap.org/#map=19/50.86044/4.35865"},
                     {"departure", TestDepartureTime()},
                     {"multipleOptions", "true"},
-                    {"operators", "nmbs"},
                     {
                         "walksGeneratorDescription",
                         "firstLastMile&" +
@@ -985,7 +969,6 @@ namespace Itinero.Transit.API.Tests.Functional
                     {"from", "https://www.openstreetmap.org/#map=19/51.17236/4.14396"},
                     {"to", "https://www.openstreetmap.org/#map=19/50.86044/4.35865"},
                     {"departure", TestDepartureTime()},
-                    {"operators", "nmbs"},
                     {
                         "walksGeneratorDescription",
                         "firstLastMile&" +
@@ -1025,7 +1008,6 @@ namespace Itinero.Transit.API.Tests.Functional
                     {"to", "https://www.openstreetmap.org/#map=19/50.942586962931955/4.038028645195254"},
                     {"multipleOptions", "true"},
                     {"departure", TestDepartureTime()},
-                    {"operators", "nmbs"},
                     {
                         "walksGeneratorDescription",
                         "firstLastMile&" +
@@ -1063,7 +1045,6 @@ namespace Itinero.Transit.API.Tests.Functional
                     {"from", "https://www.openstreetmap.org/#map=19/50.86051035579558/4.358399302117419"},
                     {"to", "https://www.openstreetmap.org/#map=19/50.942586962931955/4.038028645195254"},
                     {"departure", TestDepartureTime()},
-                    {"operators", "nmbs"},
                     {
                         "walksGeneratorDescription",
                         "firstLastMile&" +
@@ -1102,7 +1083,6 @@ namespace Itinero.Transit.API.Tests.Functional
                     {"to", "https://www.openstreetmap.org/#map=19/51.03465/3.70832"},
                     {"departure", TestDepartureTime()},
                     {"multipleOptions", "true"},
-                    {"operators", "nmbs"},
                     {
                         "walksGeneratorDescription",
                         "firstLastMile&" +
@@ -1142,7 +1122,6 @@ namespace Itinero.Transit.API.Tests.Functional
                 {
                     {"from", "https://www.openstreetmap.org/#map=19/51.1951297895458/3.214899786053735"},
                     {"to", "https://www.openstreetmap.org/#map=19/50.84388967236137/4.354740038815095"},
-                    {"operators", "nmbs"},
                     {"departure", TestDepartureTime()},
                     {"inBetweenOsmProfile", "pedestrian"},
                     {"inBetweenSearchDistance", "500"},
@@ -1160,7 +1139,6 @@ namespace Itinero.Transit.API.Tests.Functional
                 {
                     {"from", "https://www.openstreetmap.org/#map=19/51.1951297895458/3.214899786053735"},
                     {"to", "https://www.openstreetmap.org/#map=19/50.84388967236137/4.354740038815095"},
-                    {"operators", "nmbs"},
                     {"departure", TestDepartureTime()},
                     {"multipleOptions", "true"},
                     {"inBetweenOsmProfile", "pedestrian"},
@@ -1179,7 +1157,6 @@ namespace Itinero.Transit.API.Tests.Functional
                 {
                     {"from", "https://www.openstreetmap.org/#map=19/51.21523909670509/4.268520576417103"},
                     {"to", "https://www.openstreetmap.org/#map=19/51.16509172615645/4.135866853010015"},
-                    {"operators", "nmbs"},
                     {"departure", TestDepartureTime()},
                     {"inBetweenOsmProfile", "crowsflight"},
                     {"inBetweenSearchDistance", "500"},
@@ -1195,7 +1172,6 @@ namespace Itinero.Transit.API.Tests.Functional
                 {
                     {"from", "https://www.openstreetmap.org/#map=19/51.21523909670509/4.268520576417103"},
                     {"to", "https://www.openstreetmap.org/#map=19/51.16509172615645/4.135866853010015"},
-                    {"operators", "nmbs"},
                     {"departure", TestDepartureTime()},
                     {"multipleOptions", "true"},
                     {"inBetweenOsmProfile", "crowsflight"},
@@ -1213,7 +1189,6 @@ namespace Itinero.Transit.API.Tests.Functional
                 {
                     {"from", "https://www.openstreetmap.org/#map=19/51.199993/4.431101"},
                     {"to", "https://www.openstreetmap.org/#map=19/50.843183/4.371755"},
-                    {"operators", "nmbs"},
                     {"departure", TestDepartureTime()},
                     {"inBetweenOsmProfile", "crowsflight"},
                     {"inBetweenSearchDistance", "500"},
@@ -1230,7 +1205,6 @@ namespace Itinero.Transit.API.Tests.Functional
                 {
                     {"from", "https://www.openstreetmap.org/#map=19/51.199993/4.431101"},
                     {"to", "https://www.openstreetmap.org/#map=19/50.843183/4.371755"},
-                    {"operators", "nmbs"},
                     {"departure", TestDepartureTime()},
                     {"inBetweenOsmProfile", "crowsflight"},
                     {"inBetweenSearchDistance", "500"},
@@ -1252,7 +1226,6 @@ namespace Itinero.Transit.API.Tests.Functional
                         "from", "https://www.openstreetmap.org/#map=19/51.270256567260844/3.0617134555123755"
                     }, // Nieuwmunster
                     {"to", "https://www.openstreetmap.org/#map=16/51.2646/3.1546"}, // Zuienkerke
-                    {"operators", "nmbs"},
                     {"departure", TestDepartureTime()},
                     {"inBetweenOsmProfile", "crowsflight"},
                     {"inBetweenSearchDistance", "0"}, {"firstMileOsmProfile", "bicycle"},
@@ -1275,7 +1248,6 @@ namespace Itinero.Transit.API.Tests.Functional
                 {
                     {"from", "https://www.openstreetmap.org/#map=18/49.42725/8.68574"},
                     {"to", "https://www.openstreetmap.org/#map=17/49.41836/8.67349"},
-                    {"operators", "nmbs"},
                     {"departure", TestDepartureTime()},
                     {"inBetweenOsmProfile", "crowsflight"},
                     {"inBetweenSearchDistance", "500"},
@@ -1322,7 +1294,7 @@ namespace Itinero.Transit.API.Tests.Functional
                     {"test", "true"},
                     {"from", $"https://www.openstreetmap.org/#map=17/{RandomLat()}/{RandomLon()}"},
                     {"to", $"https://www.openstreetmap.org/#map=14/{RandomLat()}/{RandomLon()}"},
-                    {"operators", "nmbs"},
+                    {"operators","sncb"},
                     {"departure", TestDepartureTime()},
                     {
                         "walksGeneratorDescription",

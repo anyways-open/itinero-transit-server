@@ -5,6 +5,7 @@ using Itinero.Transit.Data;
 using Itinero.Transit.Data.Core;
 using Itinero.Transit.Journey;
 using Itinero.Transit.Journey.Metric;
+using Itinero.Transit.OtherMode;
 using Itinero.Transit.Utils;
 using Xunit;
 using Attribute = Itinero.Transit.Data.Attributes.Attribute;
@@ -51,7 +52,9 @@ namespace Itinero.Transit.API.Tests
                 new Operator("test", tdb, null, 0,null, null)
             }, null, null, null);
 
-            var translated = state.Operators.GetFullView().Translate(journey1, null);
+            var cache = new CoordinatesCache(new CrowsFlightTransferGenerator(), false);
+            
+            var translated = state.Operators.GetFullView().Translate(journey1, cache);
             Assert.Equal("https://example.org/stop0", translated.Segments[0].Departure.Location.Id);
             Assert.Equal("https://example.org/stop1", translated.Segments[0].Arrival.Location.Id);
             Assert.Equal("https://example.org/trip0", translated.Segments[0].Vehicle);

@@ -60,7 +60,7 @@ namespace Itinero.Transit.Api.Models
         public DateTime LatestArrival { get; }
 
         internal QueryResult(List<Journey> journeys, DateTime queryStarted, DateTime queryDone,
-            DateTime earliestDeparture, DateTime latestArrival, string walksDescription, Segment directWalk)
+            DateTime earliestDeparture, DateTime latestArrival, string walksDescription, Segment directWalk, List<List<Coordinate>> commonCoordinates)
         {
             Journeys = journeys;
             QueryStarted = queryStarted;
@@ -69,6 +69,7 @@ namespace Itinero.Transit.Api.Models
             LatestArrival = latestArrival;
             WalksDescription = walksDescription;
             DirectWalk = directWalk;
+            CommonCoordinates = commonCoordinates;
             RunningTime = (uint) (queryDone - queryStarted).TotalMilliseconds;
         }
     }
