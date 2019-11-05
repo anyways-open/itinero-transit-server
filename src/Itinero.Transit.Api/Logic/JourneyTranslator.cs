@@ -249,10 +249,15 @@ namespace Itinero.Transit.Api.Logic
             }
 
 
-            CoordinatesCache coordinatesCache = new CoordinatesCache(walkGenerator, compress);
+            var coordinatesCache = new CoordinatesCache(walkGenerator, compress);
             foreach (var j in journeys)
             {
                 list.Add(dbs.Translate(j, coordinatesCache));
+            }
+
+            if (compress)
+            {
+                commonCoordinates = coordinatesCache.CommonCoordinates.Select(c => c.Item1).ToList();
             }
 
             return (list, commonCoordinates);
@@ -401,14 +406,14 @@ namespace Itinero.Transit.Api.Logic
         public readonly bool Compress;
         private readonly IOtherModeGenerator _walksGenerator;
         public readonly List<(List<Coordinate>, string license, string generator)> CommonCoordinates;
-        private readonly Dictionary<(Coordinate, Coordinate), int> _index;
+        private readonly Dictionary<string, int> _index;
 
         public CoordinatesCache(IOtherModeGenerator walksGenerator, bool compress)
         {
             _walksGenerator = walksGenerator;
             Compress = compress;
 
-            _index = new Dictionary<(Coordinate, Coordinate), int>();
+            _index = new Dictionary<string, int>();
             CommonCoordinates = new List<(List<Coordinate>, string license, string generator)>();
         }
 
@@ -418,8 +423,8 @@ namespace Itinero.Transit.Api.Logic
             var coorFrom = new Coordinate(fromStop.Latitude, fromStop.Longitude);
             var coorTo = new Coordinate(toStop.Latitude, toStop.Longitude);
 
-
-            if (_index.TryGetValue((coorFrom, coorTo), out var index))
+            var key = $"{coorFrom.Lat},{coorFrom.Lon},{coorTo.Lat},{coorTo.Lon}";
+            if (_index.TryGetValue(key, out var index))
             {
                 // Already done!
                 return index;
@@ -430,7 +435,7 @@ namespace Itinero.Transit.Api.Logic
             var (coordinates, generator, license) = _walksGenerator.GetCoordinatesFor(fromStop, toStop);
 
             CommonCoordinates.Add((coordinates, generator, license));
-            _index.Add((coorFrom, coorTo), index);
+            _index.Add(key, index);
 
             return index;
         }
