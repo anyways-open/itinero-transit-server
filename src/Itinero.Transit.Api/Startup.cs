@@ -243,7 +243,7 @@ namespace Itinero.Transit.Api
             var logFile = Path.Combine("logs", $"log-itinero-{date}.txt");
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Debug()
-//.MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Information)
+.MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Verbose)
                 .Enrich.FromLogContext()
                 .WriteTo.File(new JsonFormatter(), logFile)
                 .WriteTo.Console()

@@ -25,33 +25,14 @@ namespace Itinero.Transit.API.Tests.Functional
         {
         }
 
-        private string TestDepartureTime()
+        public static string TestDepartureTime()
         {
             var testMoment = DateTime.Now.Date.AddDays(1).AddHours(10);
             return testMoment.ToString("s");
         }
-
-        /// <summary>
-        /// Same as 'challenge', but adds 'test=true' parameter
-        /// </summary>
-        private void SncbChallenge(
-            string endpoint,
-            string name,
-            Dictionary<string, string> keyValues = null,
-            Action<JToken> property = null,
-            uint maxTimeAllowed = 0)
-        {
-            keyValues?.Add("test", "true");
-            keyValues?.Add("operators", "nmbs");
-
-
-            Challenge(
-                endpoint,
-                name,
-                keyValues,
-                property,
-                maxTimeAllowed);
-        }
+        
+      
+ 
 
         private void DeLijnChallenge(
             string endpoint,
@@ -137,6 +118,26 @@ namespace Itinero.Transit.API.Tests.Functional
             );
         }
 
+        
+        # region SNCB  
+        private void SncbChallenge(
+            string endpoint,
+            string name,
+            Dictionary<string, string> keyValues = null,
+            Action<JToken> property = null,
+            uint maxTimeAllowed = 0)
+        {
+            keyValues?.Add("test", "true");
+            keyValues?.Add("operators", "nmbs");
+
+
+            Challenge(
+                endpoint,
+                name,
+                keyValues,
+                property,
+                maxTimeAllowed);
+        }
         private void SncbTestSet()
         {
             SncbChallenge("LocationsByName", "Search for station 'Bruges'",
@@ -1334,5 +1335,7 @@ namespace Itinero.Transit.API.Tests.Functional
                 }
             );
         }
+
+        #endregion
     }
 }
