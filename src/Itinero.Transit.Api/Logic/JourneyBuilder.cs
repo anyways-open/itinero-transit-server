@@ -46,7 +46,7 @@ namespace Itinero.Transit.Api.Logic
 
 
             var internalTransferGenerator = new InternalTransferGenerator(internalTransferTime);
-            
+
             var maxDistance = uint.MaxValue;
             foreach (var op in operatorSet.Operators)
             {
@@ -55,7 +55,8 @@ namespace Itinero.Transit.Api.Logic
 
             if (walksGenerator.Range() > maxDistance)
             {
-                throw new ArgumentException($"Search range too high: with the chosen operators, at most {maxDistance}m is allowed");
+                throw new ArgumentException(
+                    $"Search range too high: with the chosen operators, at most {maxDistance}m is allowed");
             }
 
             var searchFunction =
@@ -190,14 +191,14 @@ namespace Itinero.Transit.Api.Logic
         /// <param name="departure"></param>
         /// <param name="arrival"></param>
         /// <param name="multipleOptions"></param>
+        /// <param name="logMessage"></param>
         /// <returns></returns>
         /// <exception cref="ArgumentException"></exception>
         public static (List<Journey<TransferMetric>>, Segment directJourneyTimeNeeded, DateTime start, DateTime end)
-            BuildJourneys(
-                this RealLifeProfile p,
-                string from, string to, DateTime? departure,
+            BuildJourneys(this RealLifeProfile p,
+                string @from, string to, DateTime? departure,
                 DateTime? arrival,
-                bool multipleOptions)
+                bool multipleOptions, Dictionary<string, string> logMessage)
         {
             if (departure == null && arrival == null)
             {
@@ -271,6 +272,10 @@ namespace Itinero.Transit.Api.Logic
                         DateTime.MaxValue, DateTime.MinValue);
                 }
 
+                logMessage.Add("earliestArrivalJourney:departure",
+                    earliestArrivalJourney.Root.Time.FromUnixTime().ToString("s"));
+                logMessage.Add("earliestArrivalJourney:arrival",
+                    earliestArrivalJourney.Time.FromUnixTime().ToString("s"));
                 if (!multipleOptions)
                 {
                     return (new List<Journey<TransferMetric>> {earliestArrivalJourney}, directRoute,
@@ -285,8 +290,11 @@ namespace Itinero.Transit.Api.Logic
             }
 
             // We lower the max number of transfers to speed up calculations
-            p.ApplyMaxNumberOfTransfers();
+            //  p.ApplyMaxNumberOfTransfers();
 
+            logMessage.Add("searchTime:pcs:start", calculator.Start.ToString("s"));
+            logMessage.Add("searchTime:pcs:end", calculator.End.ToString("s"));
+            
 
             return (calculator.CalculateAllJourneys(), directRoute, calculator.Start, calculator.End);
         }

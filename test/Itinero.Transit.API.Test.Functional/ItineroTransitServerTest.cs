@@ -27,7 +27,7 @@ namespace Itinero.Transit.API.Tests.Functional
 
         public static string TestDepartureTime()
         {
-            var testMoment = DateTime.Now.Date.AddDays(1).AddHours(10);
+            var testMoment = DateTime.Now.Date.AddHours(10);
             return testMoment.ToString("s");
         }
         
@@ -62,7 +62,7 @@ namespace Itinero.Transit.API.Tests.Functional
                     try
                     {
                         AssertTrue(jobj["online"].Value<bool>(), "Not online");
-                        var loadedWindows = jobj["LoadedOperators"].Count();
+                        var loadedWindows = jobj["loadedOperators"].Count();
                         AssertTrue(loadedWindows > 0, "Not all operators are loaded");
                     }
                     catch (Exception e)
