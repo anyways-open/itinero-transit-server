@@ -67,6 +67,13 @@ namespace Itinero.Transit.Api.Logic.Importance
                     return _yWins;
                 }
 
+                if (xi == yi)
+                {
+                    x = x.PreviousLink;
+                    y = y.PreviousLink;
+                }
+
+
             } while (x.PreviousLink != null && y.PreviousLink != null);
 
             return _xWins;
