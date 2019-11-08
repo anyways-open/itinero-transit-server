@@ -292,7 +292,7 @@ namespace Itinero.Transit.Api.Logic
 
             if (dbs.EarliestLoadedTime() == DateTime.MaxValue || dbs.LatestLoadedTime() == DateTime.MaxValue)
             {
-                var msg = $"No data is loaded in the database yet. Please come back later";
+                var msg = $"No data is loaded in the database yet. Please come back later ";
                 throw new ArgumentException(msg);
             }
 

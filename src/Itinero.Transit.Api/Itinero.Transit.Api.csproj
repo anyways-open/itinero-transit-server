@@ -2,8 +2,7 @@
 
     <PropertyGroup>
         <TargetFramework>netcoreapp2.2</TargetFramework>
-        <LangVersion>latestmajor</LangVersion>
-        <RuntimeIdentifiers>linux-x64</RuntimeIdentifiers>
+        <LangVersion>default</LangVersion>
     </PropertyGroup>
 
     <PropertyGroup>
