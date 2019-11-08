@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using Itinero.Data.Graphs.Coders;
 using Itinero.IO.Osm.Tiles;
@@ -32,8 +33,7 @@ namespace Itinero.Transit.Api.Logic.Transfers
         // First profile is the default profile
         public readonly List<Profile> OsmVehicleProfiles = new List<Profile>
         {
-            OsmProfiles.Pedestrian,
-            OsmProfiles.Bicycle
+            OsmProfiles.Pedestrian
         };
 
         public OtherModeBuilder(
@@ -49,6 +49,11 @@ namespace Itinero.Transit.Api.Logic.Transfers
 
 
             AddProfilesFromConfig(configuration);
+
+            if (!OsmVehicleProfiles.Any())
+            {
+                Log.Warning("WARN: no vehicle profiles are loaded. This means the server will only be usable for station-to-station queries or with crows flight");
+            }
 
             foreach (var profile in OsmVehicleProfiles)
             {

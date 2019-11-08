@@ -1,28 +1,30 @@
-name = "ebike"
+name = "bicycle"
 vehicle_types = { "vehicle", "bicycle" }
 
+speed = 15
+
 speed_profile = {
-    ["primary"] = { speed = 25, access = true },
-    ["primary_link"] = { speed = 25, access = true },
-    ["secondary"] = { speed = 25, access = true },
-    ["secondary_link"] = { speed = 25, access = true },
-    ["tertiary"] = { speed = 25, access = true },
-    ["tertiary_link"] = { speed = 25, access = true },
-    ["unclassified"] = { speed = 25, access = true },
-    ["residential"] = { speed = 25, access = true },
-    ["service"] = { speed = 25, access = true },
-    ["services"] = { speed = 25, access = true },
-    ["road"] = { speed = 25, access = true },
-    ["track"] = { speed = 25, access = true },
-    ["cycleway"] = { speed = 25, access = true },
-    ["footway"] = { speed = 25, access = false },
-    ["pedestrian"] = { speed = 25, access = false },
-    ["path"] = { speed = 25, access = true },
-    ["living_street"] = { speed = 25, access = true },
-    ["ferry"] = { speed = 25, access = true },
-    ["movable"] = { speed = 25, access = true },
-    ["shuttle_train"] = { speed = 25, access = true },
-    ["default"] = { speed = 25, access = true }
+    ["primary"] = { speed = speed, access = true },
+    ["primary_link"] = { speed = speed, access = true },
+    ["secondary"] = { speed = speed, access = true },
+    ["secondary_link"] = { speed = speed, access = true },
+    ["tertiary"] = { speed = speed, access = true },
+    ["tertiary_link"] = { speed = speed, access = true },
+    ["unclassified"] = { speed = speed, access = true },
+    ["residential"] = { speed = speed, access = true },
+    ["service"] = { speed = speed, access = true },
+    ["services"] = { speed = speed, access = true },
+    ["road"] = { speed = speed, access = true },
+    ["track"] = { speed = speed, access = true },
+    ["cycleway"] = { speed = speed, access = true },
+    ["footway"] = { speed = speed, access = false },
+    ["pedestrian"] = { speed = speed, access = false },
+    ["path"] = { speed = speed, access = true },
+    ["living_street"] = { speed = speed, access = true },
+    ["ferry"] = { speed = speed, access = true },
+    ["movable"] = { speed = speed, access = true },
+    ["shuttle_train"] = { speed = speed, access = true },
+    ["default"] = { speed = speed, access = true }
 }
 
 access_values = {
@@ -91,6 +93,11 @@ function factor(attributes, result)
     -- get speed and access per highway type.
     local highway_speed = speed_profile[highway]
     if highway_speed then
+        -- set speeds.
+        result.forward_speed = (highway_speed.speed / 3.6)
+        result.backward_speed = result.forward_speed
+
+        -- set factors.
         result.forward = 1 / (highway_speed.speed / 3.6)
         result.backward = result.forward
         result.access = highway_speed.access
@@ -98,6 +105,14 @@ function factor(attributes, result)
         return
     end
 
+    -- favour dedicated cycling infrastructure.
+    local class_factor = classification_factors[attributes.highway]
+    if class_factor ~= nil then
+        result.forward = result.forward / class_factor
+        result.backward = result.backward / class_factor
+    end
+
+    -- determine access.
     local access = can_access(attributes, result)
     if not access == nil then
         result.access = access
@@ -124,10 +139,33 @@ function factor(attributes, result)
     if direction != nil then
         result.direction = direction
     end
-        
+
     if result.direction == 1 then
         result.backward = 0
     elseif result.direction == 2 then
         result.forward = 0
-    end    
+    end
 end
+
+highest_avoid_factor = 0.5
+avoid_factor = 0.7
+prefer_factor = 2
+highest_prefer_factor = 3
+
+-- multiplication factors per classification
+-- avoid higher classified roads
+-- prefer dedicated cycling things
+classification_factors = {
+    ["primary"] = highest_avoid_factor,
+    ["primary_link"] = highest_avoid_factor,
+    ["secondary"] = avoid_factor,
+    ["secondary_link"] = avoid_factor,
+    ["tertiary"] = avoid_factor,
+    ["tertiary_link"] = avoid_factor,
+    ["residential"] = 1,
+    ["path"] = prefer_factor,
+    ["cycleway"] = prefer_factor,
+    ["footway"] = prefer_factor,
+    ["pedestrian"] = avoid_factor,
+    ["steps"] = avoid_factor
+}
