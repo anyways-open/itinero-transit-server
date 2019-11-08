@@ -28,7 +28,8 @@ namespace Itinero.Transit.Api.Logic
             {
                 if (i != All[i].Tdb.DatabaseId)
                 {
-                    throw new Exception("PANIC: incorrect databaseID: either duplicates are gaps are passed into the operator manager");
+                    throw new Exception(
+                        "PANIC: incorrect databaseID: either duplicates are gaps are passed into the operator manager");
                 }
             }
 
@@ -183,12 +184,24 @@ namespace Itinero.Transit.Api.Logic
 
         public DateTime EarliestLoadedTime()
         {
-            return All().Select(tdb => tdb.ConnectionsDb.EarliestDate).Max().FromUnixTime();
+            var unixTime = All().Select(tdb => tdb.ConnectionsDb.EarliestDate).Max();
+            if (unixTime == ulong.MaxValue || unixTime == 0)
+            {
+                return DateTime.MaxValue;
+            }
+
+            return unixTime.FromUnixTime();
         }
 
         public DateTime LatestLoadedTime()
         {
-            return All().Select(tdb => tdb.ConnectionsDb.LatestDate).Min().FromUnixTime();
+            var unixTime = All().Select(tdb => tdb.ConnectionsDb.LatestDate).Min();
+            if (unixTime == ulong.MaxValue || unixTime == 0)
+            {
+                return DateTime.MaxValue;
+            }
+
+            return unixTime.FromUnixTime();
         }
     }
 }

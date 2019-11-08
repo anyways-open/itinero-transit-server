@@ -290,6 +290,11 @@ namespace Itinero.Transit.Api.Logic
         {
             if (dbs == null) throw new ArgumentNullException(nameof(dbs));
 
+            if (dbs.EarliestLoadedTime() == DateTime.MaxValue || dbs.LatestLoadedTime() == DateTime.MaxValue)
+            {
+                var msg = $"No data is loaded in the database yet. Please come back later";
+                throw new ArgumentException(msg);
+            }
 
             if (!(dbs.EarliestLoadedTime() < time && windowEnd < dbs.LatestLoadedTime()))
             {
@@ -364,8 +369,9 @@ namespace Itinero.Transit.Api.Logic
                 Segments = segments.ToArray()
             };
         }
-        
-        public static (List<Coordinate> coordinates, string generator, string license) GetCoordinatesFor(this IOtherModeGenerator walksGenerator, IStop fromStop,
+
+        public static (List<Coordinate> coordinates, string generator, string license) GetCoordinatesFor(
+            this IOtherModeGenerator walksGenerator, IStop fromStop,
             IStop toStop)
         {
             var coorFrom = new Coordinate(fromStop.Latitude, fromStop.Longitude);
@@ -379,7 +385,7 @@ namespace Itinero.Transit.Api.Logic
             var gen = walksGenerator.GetSource(fromStop.Id, toStop.Id);
 
             var license = "";
-          
+
             if (gen is OsmTransferGenerator osm)
             {
                 license = "openstreetmap.org/copyright";
@@ -439,7 +445,5 @@ namespace Itinero.Transit.Api.Logic
 
             return index;
         }
-
-       
     }
 }
