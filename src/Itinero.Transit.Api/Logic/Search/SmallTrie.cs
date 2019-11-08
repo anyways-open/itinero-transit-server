@@ -51,7 +51,7 @@ namespace Itinero.Transit.Api.Logic.Search
 
             if (!_children.ContainsKey(firstChar))
             {
-                return default;
+                return default(T);
             }
 
             var subKey = key.GetRange(1, key.Count - 1);

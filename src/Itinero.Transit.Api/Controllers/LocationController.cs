@@ -52,7 +52,7 @@ namespace Itinero.Transit.Api.Controllers
                 return BadRequest("The server is still booting. Come back later");
             }
 
-            if (windowStart == default)
+            if (windowStart == default(DateTime))
             {
                 windowStart = DateTime.Now;
             }
