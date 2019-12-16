@@ -1102,15 +1102,17 @@ namespace Itinero.Transit.API.Tests.Functional
                 {
                     AssertNotNullOrEmpty(jobj["journeys"], "Journeys are null");
                     AssertTrue(jobj["journeys"].Any(), "No journeys found");
+                    var i = 0;
                     foreach (var j in jobj["journeys"])
                     {
                         AssertEqual("https://www.openstreetmap.org/#map=19/50.86094/4.35405",
                             j["departure"]["location"]["id"],
-                            "Wrong departure stations");
+                            $"Wrong departure station in journey number {i}");
 
                         AssertEqual("https://www.openstreetmap.org/#map=19/51.03465/3.70831999999999",
                             j["arrival"]["location"]["id"],
-                            "Wrong arrival stations");
+                            $"Wrong arrival station in journey number {i}");
+                        i++;
                     }
                 },
                 maxTimeAllowed: 3000
