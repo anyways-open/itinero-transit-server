@@ -52,7 +52,7 @@ namespace Itinero.Transit.Api.Logic
             return new Geojson(features);
         }
 
-        private static (Segment, int newIndex) TranslateSegment<T>(this OperatorSet dbs, List<Journey<T>> parts, int i)
+        internal static (Segment, int newIndex) TranslateSegment<T>(this OperatorSet dbs, List<Journey<T>> parts, int i)
             where T : IJourneyMetric<T>
         {
             var stops = dbs.GetStopsReader().AddOsmReader();
@@ -60,14 +60,18 @@ namespace Itinero.Transit.Api.Logic
             var j = parts[i];
             var connectionReader = dbs.GetConnectionsReader();
             var connection = connectionReader.Get(j.Connection);
-
+            if (connection == null)
+            {
+                throw new ArgumentException($"Connection not found: {j.Connection}");
+            }
 
             // Get all the trip info for this segment
             var tripReader = dbs.GetTripsReader();
             var trip = new Trip();
             tripReader.Get(j.TripId, trip);
             var vehicleId = trip.GlobalId ?? "";
-            if (!trip.Attributes.TryGetValue("headsign", out var headsign))
+            string headsign = "";
+            if (trip.Attributes != null && !trip.Attributes.TryGetValue("headsign", out headsign))
             {
                 headsign = "";
             }
@@ -144,7 +148,7 @@ namespace Itinero.Transit.Api.Logic
         /// Can be null if unneeded
         /// </summary>
         /// <returns></returns>
-        private static Segment TranslateWalkSegment<T>(this OperatorSet dbs,
+        internal static Segment TranslateWalkSegment<T>(this OperatorSet dbs,
             Journey<T> j, CoordinatesCache coordinatesCache) where T : IJourneyMetric<T>
         {
             var stops = StopsReaderAggregator.CreateFrom(dbs.All()).AddOsmReader();
@@ -250,9 +254,20 @@ namespace Itinero.Transit.Api.Logic
 
 
             var coordinatesCache = new CoordinatesCache(walkGenerator, compress);
+            string firstDeparture = null;
             foreach (var j in journeys)
             {
-                list.Add(dbs.Translate(j, coordinatesCache));
+                var translated = dbs.Translate(j, coordinatesCache);
+                list.Add(translated);
+                if (firstDeparture == null)
+                {
+                    firstDeparture = translated.Departure.Location.Id;
+                }
+
+                if (!translated.Departure.Location.Id.Equals(firstDeparture))
+                {
+                    throw new Exception("Weird: not all the departure locations are the same");
+                }
             }
 
             if (compress)
@@ -438,7 +453,7 @@ namespace Itinero.Transit.Api.Logic
 
 
             index = CommonCoordinates.Count;
-            var (coordinates, generator, license) = _walksGenerator.GetCoordinatesFor(fromStop, toStop);
+            var (coordinates, license, generator) = _walksGenerator.GetCoordinatesFor(fromStop, toStop);
 
             CommonCoordinates.Add((coordinates, generator, license));
             _index.Add(key, index);

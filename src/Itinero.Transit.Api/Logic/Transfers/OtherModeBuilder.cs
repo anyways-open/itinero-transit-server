@@ -314,7 +314,7 @@ namespace Itinero.Transit.Api.Logic.Transfers
 
         public IOtherModeGenerator GetSource(StopId from, StopId to)
         {
-            throw new NotImplementedException();
+            return this;
         }
     }
 }
