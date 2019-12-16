@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Itinero.Transit.Api.Logic;
+using Itinero.Transit.Api.Logic.Transfers;
 using Itinero.Transit.Data;
 using Itinero.Transit.Data.Core;
 using Itinero.Transit.Journey;
@@ -15,7 +16,7 @@ namespace Itinero.Transit.API.Tests
     public class JourneyTranslationTest
     {
         [Fact]
-        public void TestTranslation()
+        public void TranslateJourney_SimpleJourney_CorrectTranslation()
         {
             var depDate = new DateTime(2019, 06, 19, 10, 00, 00).ToUniversalTime();
             var tdb = new TransitDb(0);
@@ -34,7 +35,7 @@ namespace Itinero.Transit.API.Tests
             writer.Close();
 
             var con = tdb.Latest.ConnectionsDb;
-           var connection = con.Get(conn0);
+            var connection = con.Get(conn0);
 
             var genesis = new Journey<TransferMetric>(stop0,
                 depDate.ToUnixTime(), TransferMetric.Factory,
@@ -49,11 +50,11 @@ namespace Itinero.Transit.API.Tests
 
             var state = new State(new List<Operator>
             {
-                new Operator("test", tdb, null, 0,null, null)
+                new Operator("test", tdb, null, 0, null, null)
             }, null, null, null);
 
             var cache = new CoordinatesCache(new CrowsFlightTransferGenerator(), false);
-            
+
             var translated = state.Operators.GetFullView().Translate(journey1, cache);
             Assert.Equal("https://example.org/stop0", translated.Segments[0].Departure.Location.Id);
             Assert.Equal("https://example.org/stop1", translated.Segments[0].Arrival.Location.Id);
@@ -63,11 +64,35 @@ namespace Itinero.Transit.API.Tests
             Assert.Equal("https://example.org/stop1", translated.Segments[1].Departure.Location.Id);
             Assert.Equal("https://example.org/stop2", translated.Segments[1].Arrival.Location.Id);
             Assert.Null(translated.Segments[1].Vehicle);
+        }
+
+        [Fact]
+        public void Translate_Journey_CorrectTranslation()
+        {
+            const ulong time = 15761461220ul;
+            const ulong previousTime = 15761454920ul;
             
+           
             
-            
-            
-            
+            var tdb = new TransitDb(0);
+            var wr = tdb.GetWriter();
+            var l = wr.AddOrUpdateStop("Some Station", 4.123, 51.789, null);
+
+            var rootL = new StopId(1, 140860940, 184354050); // Supposed to be an OSM-location
+            var connection = new Connection(new ConnectionId(0, 1),
+                "testConnection", rootL, l, previousTime, (ushort) (time - previousTime), new TripId(0, 0));
+
+            var connId = wr.AddOrUpdateConnection(connection);
+            wr.Close();
+            var genesis = new Journey<TransferMetric>(rootL, previousTime, TransferMetric.Factory);
+            var j = genesis.ChainSpecial(connId, previousTime, l, new TripId(3, 3));
+
+            var op = new Operator("Op", tdb, null, 500, new string[] { }, new string[] { });
+            var operators = new OperatorSet(new List<Operator> {op});
+            var translatedSegment =
+                operators.TranslateWalkSegment(j, new CoordinatesCache(new DummyOtherMode(), false));
+            Assert.Contains("openstreetmap.org", translatedSegment.Departure.Location.Id);
+            Assert.DoesNotContain("openstreetmap.org", translatedSegment.Arrival.Location.Id);
         }
     }
 }
