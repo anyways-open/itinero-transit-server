@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
-        <TargetFramework>netcoreapp2.2</TargetFramework>
+        <TargetFramework>netcoreapp3.1</TargetFramework>
         <LangVersion>7</LangVersion>
     </PropertyGroup>
 
@@ -13,7 +13,7 @@
     <ItemGroup>
         <PackageReference Include="Itinero.Transit.IO.LC" Version="1.0.0-pre95" />
         <PackageReference Include="Itinero.Transit.IO.OSM" Version="1.0.0-pre95" />
-        <PackageReference Include="Microsoft.AspNetCore.All" />
+        <PackageReference Include="Microsoft.AspNetCore.App" />
         <PackageReference Include="NSwag.AspNetCore" Version="12.0.10" />
         <PackageReference Include="NSwag.Core" Version="12.0.10" />
         <PackageReference Include="openplannerteam.Itinero.IO.Osm.Tiles" Version="2.0.0-pre034" />

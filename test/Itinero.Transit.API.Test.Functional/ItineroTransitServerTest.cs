@@ -218,7 +218,7 @@ namespace Itinero.Transit.API.Tests.Functional
                 },
                 jobj =>
                 {
-                    AssertEqual("51.1972329165256", jobj["lat"].Value<string>());
+                    AssertEqual(51.19723291652555, jobj["lat"].Value<double>());
                     AssertEqual(3.216724991798401, jobj["lon"].Value<double>());
                     AssertEqual("http://irail.be/stations/NMBS/008891009", jobj["id"].Value<string>());
                     AssertEqual("Bruges", jobj["name"].Value<string>());
@@ -292,7 +292,7 @@ namespace Itinero.Transit.API.Tests.Functional
             SncbChallenge("Journey", "EAS, Brugge (OSM) -> Gent",
                 new Dictionary<string, string>
                 {
-                    {"from", "https://www.openstreetmap.org/#map=19/51.19764/3.21847"},
+                    {"from", "https://www.openstreetmap.org/#map=19/51.19764000000001/3.2184699999999964"},
                     {"to", "http://irail.be/stations/NMBS/008892007"},
                     {"departure", TestDepartureTime()}
                 },
@@ -303,7 +303,7 @@ namespace Itinero.Transit.API.Tests.Functional
                     AssertTrue(jobj["journeys"].Any(), "No journeys found");
                     foreach (var j in jobj["journeys"])
                     {
-                        AssertEqual("https://www.openstreetmap.org/#map=19/51.19764/3.21847",
+                        AssertEqual("https://www.openstreetmap.org/#map=19/51.19764000000001/3.2184699999999964",
                             j["departure"]["location"]["id"],
                             "Wrong departure stations");
 
@@ -316,7 +316,7 @@ namespace Itinero.Transit.API.Tests.Functional
             SncbChallenge("Journey", "PCS, Brugge (OSM) -> Gent",
                 new Dictionary<string, string>
                 {
-                    {"from", "https://www.openstreetmap.org/#map=19/51.19764/3.21847"},
+                    {"from", "https://www.openstreetmap.org/#map=19/51.19764000000001/3.2184699999999964"},
                     {"to", "http://irail.be/stations/NMBS/008892007"},
                     {"departure", TestDepartureTime()},
                     {"multipleOptions", "true"}
@@ -328,7 +328,7 @@ namespace Itinero.Transit.API.Tests.Functional
                     AssertTrue(jobj["journeys"].Any(), "No journeys found");
                     foreach (var j in jobj["journeys"])
                     {
-                        AssertEqual("https://www.openstreetmap.org/#map=19/51.19764/3.21847",
+                        AssertEqual("https://www.openstreetmap.org/#map=19/51.19764000000001/3.2184699999999964",
                             j["departure"]["location"]["id"],
                             "Wrong departure stations");
 
@@ -342,7 +342,7 @@ namespace Itinero.Transit.API.Tests.Functional
                 new Dictionary<string, string>
                 {
                     {"from", "http://irail.be/stations/NMBS/008892007"},
-                    {"to", "https://www.openstreetmap.org/#map=19/51.19764/3.21847"},
+                    {"to", "https://www.openstreetmap.org/#map=19/51.19764000000001/3.2184699999999964"},
                     {"departure", TestDepartureTime()}
                 },
                 jobj =>
@@ -350,7 +350,7 @@ namespace Itinero.Transit.API.Tests.Functional
                     AssertTrue(jobj["journeys"].Any(), "No journeys found");
                     foreach (var j in jobj["journeys"])
                     {
-                        AssertEqual("https://www.openstreetmap.org/#map=19/51.19764/3.21847",
+                        AssertEqual("https://www.openstreetmap.org/#map=19/51.19764000000001/3.2184699999999964",
                             j["arrival"]["location"]["id"],
                             "Wrong arrival stations");
 
@@ -364,7 +364,7 @@ namespace Itinero.Transit.API.Tests.Functional
                 new Dictionary<string, string>
                 {
                     {"from", "http://irail.be/stations/NMBS/008892007"},
-                    {"to", "https://www.openstreetmap.org/#map=19/51.19764/3.21847"},
+                    {"to", "https://www.openstreetmap.org/#map=19/51.19764000000001/3.2184699999999964"},
                     {"departure", TestDepartureTime()},
                     {"multipleOptions", "true"}
                 },
@@ -373,7 +373,7 @@ namespace Itinero.Transit.API.Tests.Functional
                     AssertTrue(jobj["journeys"].Any(), "No journeys found");
                     foreach (var j in jobj["journeys"])
                     {
-                        AssertEqual("https://www.openstreetmap.org/#map=19/51.19764/3.21847",
+                        AssertEqual("https://www.openstreetmap.org/#map=19/51.19764000000001/3.2184699999999964",
                             j["arrival"]["location"]["id"],
                             "Wrong arrival stations");
 
@@ -387,7 +387,7 @@ namespace Itinero.Transit.API.Tests.Functional
                 new Dictionary<string, string>
                 {
                     {"from", "https://www.openstreetmap.org/#map=15/51.0359/3.7108"},
-                    {"to", "https://www.openstreetmap.org/#map=19/51.19764/3.21847"},
+                    {"to", "https://www.openstreetmap.org/#map=19/51.19764000000001/3.2184699999999964"},
                     {"departure", TestDepartureTime()}
                 },
                 jobj =>
@@ -397,10 +397,10 @@ namespace Itinero.Transit.API.Tests.Functional
                     AssertTrue(jobj["journeys"].Any(), "No journeys found");
                     foreach (var j in jobj["journeys"])
                     {
-                        AssertEqual("https://www.openstreetmap.org/#map=19/51.0359/3.71080000000001",
+                        AssertEqual("https://www.openstreetmap.org/#map=19/51.0359/3.710800000000006",
                             j["departure"]["location"]["id"],
                             "Wrong departure stations");
-                        AssertEqual("https://www.openstreetmap.org/#map=19/51.19764/3.21847",
+                        AssertEqual("https://www.openstreetmap.org/#map=19/51.19764000000001/3.2184699999999964",
                             j["arrival"]["location"]["id"],
                             "Wrong arrival stations");
                     }
@@ -411,7 +411,7 @@ namespace Itinero.Transit.API.Tests.Functional
                 new Dictionary<string, string>
                 {
                     {"from", "https://www.openstreetmap.org/#map=15/51.0359/3.7108"},
-                    {"to", "https://www.openstreetmap.org/#map=19/51.19764/3.21847"}, // Close to bruges station
+                    {"to", "https://www.openstreetmap.org/#map=19/51.19764000000001/3.2184699999999964"}, // Close to bruges station
                     {"departure", TestDepartureTime()},
                     {"multipleOptions", "true"}
                 },
@@ -422,10 +422,10 @@ namespace Itinero.Transit.API.Tests.Functional
                     AssertTrue(jobj["journeys"].Any(), "No journeys found");
                     foreach (var j in jobj["journeys"])
                     {
-                        AssertEqual("https://www.openstreetmap.org/#map=19/51.0359/3.71080000000001",
+                        AssertEqual("https://www.openstreetmap.org/#map=19/51.0359/3.710800000000006",
                             j["departure"]["location"]["id"],
                             "Wrong departure stations");
-                        AssertEqual("https://www.openstreetmap.org/#map=19/51.19764/3.21847",
+                        AssertEqual("https://www.openstreetmap.org/#map=19/51.19764000000001/3.2184699999999964",
                             j["arrival"]["location"]["id"],
                             "Wrong arrival stations");
                     }
@@ -436,7 +436,7 @@ namespace Itinero.Transit.API.Tests.Functional
             SncbChallenge("Journey", "Walk [EAS], Brugge (OSM) to Brugge (NMBS)",
                 new Dictionary<string, string>
                 {
-                    {"from", "https://www.openstreetmap.org/#map=19/51.19764/3.21847"}, // Close to bruges
+                    {"from", "https://www.openstreetmap.org/#map=19/51.19764000000001/3.2184699999999964"}, // Close to bruges
                     {"to", "http://irail.be/stations/NMBS/008891009"}, // station of bruges
                     {"departure", TestDepartureTime()}
                 },
@@ -447,7 +447,7 @@ namespace Itinero.Transit.API.Tests.Functional
                     AssertTrue(jobj["journeys"].Any(), "No journeys found");
                     foreach (var j in jobj["journeys"])
                     {
-                        AssertEqual("https://www.openstreetmap.org/#map=19/51.19764/3.21847",
+                        AssertEqual("https://www.openstreetmap.org/#map=19/51.19764000000001/3.2184699999999964",
                             j["departure"]["location"]["id"],
                             "Wrong departure stations");
 
@@ -485,7 +485,7 @@ namespace Itinero.Transit.API.Tests.Functional
                     AssertTrue(jobj["journeys"].Any(), "No journeys found");
                     foreach (var j in jobj["journeys"])
                     {
-                        AssertEqual("https://www.openstreetmap.org/#map=19/51.21577/3.21823000000001",
+                        AssertEqual("https://www.openstreetmap.org/#map=19/51.21576999999999/3.2182300000000055",
                             j["departure"]["location"]["id"],
                             "Wrong departure stations");
 
@@ -524,7 +524,7 @@ namespace Itinero.Transit.API.Tests.Functional
                     AssertTrue(jobj["journeys"].Any(), "No journeys found");
                     foreach (var j in jobj["journeys"])
                     {
-                        AssertEqual("https://www.openstreetmap.org/#map=19/51.21577/3.21823000000001",
+                        AssertEqual("https://www.openstreetmap.org/#map=19/51.21576999999999/3.2182300000000055",
                             j["departure"]["location"]["id"],
                             "Wrong departure stations");
 
@@ -563,11 +563,11 @@ namespace Itinero.Transit.API.Tests.Functional
 
                     foreach (var j in jobj["journeys"])
                     {
-                        AssertEqual("https://www.openstreetmap.org/#map=19/51.21577/3.21823000000001",
+                        AssertEqual("https://www.openstreetmap.org/#map=19/51.21576999999999/3.2182300000000055",
                             j["departure"]["location"]["id"],
                             "Wrong departure stations");
 
-                        AssertEqual("https://www.openstreetmap.org/#map=19/51.025/3.71289999999999",
+                        AssertEqual("https://www.openstreetmap.org/#map=19/51.025000000000006/3.7128999999999905",
                             j["arrival"]["location"]["id"],
                             "Wrong arrival stations");
                     }
@@ -603,11 +603,11 @@ namespace Itinero.Transit.API.Tests.Functional
 
                     foreach (var j in jobj["journeys"])
                     {
-                        AssertEqual("https://www.openstreetmap.org/#map=19/51.21577/3.21823000000001",
+                        AssertEqual("https://www.openstreetmap.org/#map=19/51.21576999999999/3.2182300000000055",
                             j["departure"]["location"]["id"],
                             "Wrong departure stations");
 
-                        AssertEqual("https://www.openstreetmap.org/#map=19/51.025/3.71289999999999",
+                        AssertEqual("https://www.openstreetmap.org/#map=19/51.025000000000006/3.7128999999999905",
                             j["arrival"]["location"]["id"],
                             "Wrong arrival stations");
                     }
@@ -642,11 +642,11 @@ namespace Itinero.Transit.API.Tests.Functional
                     AssertTrue(jobj["journeys"].Any(), "No journeys found");
                     foreach (var j in jobj["journeys"])
                     {
-                        AssertEqual("https://www.openstreetmap.org/#map=19/51.21577/3.21823000000001",
+                        AssertEqual("https://www.openstreetmap.org/#map=19/51.21576999999999/3.2182300000000055",
                             j["departure"]["location"]["id"],
                             "Wrong departure stations");
 
-                        AssertEqual("https://www.openstreetmap.org/#map=19/51.0374/3.71510000000001",
+                        AssertEqual("https://www.openstreetmap.org/#map=19/51.03739999999999/3.7151000000000067",
                             j["arrival"]["location"]["id"],
                             "Wrong arrival stations");
                     }
@@ -682,11 +682,11 @@ namespace Itinero.Transit.API.Tests.Functional
                     AssertTrue(jobj["journeys"].Any(), "No journeys found");
                     foreach (var j in jobj["journeys"])
                     {
-                        AssertEqual("https://www.openstreetmap.org/#map=19/51.21577/3.21823000000001",
+                        AssertEqual("https://www.openstreetmap.org/#map=19/51.21576999999999/3.2182300000000055",
                             j["departure"]["location"]["id"],
                             "Wrong departure stations");
 
-                        AssertEqual("https://www.openstreetmap.org/#map=19/51.0374/3.71510000000001",
+                        AssertEqual("https://www.openstreetmap.org/#map=19/51.03739999999999/3.7151000000000067",
                             j["arrival"]["location"]["id"],
                             "Wrong arrival stations");
                     }
@@ -720,11 +720,11 @@ namespace Itinero.Transit.API.Tests.Functional
                     AssertTrue(jobj["journeys"].Any(), "No journeys found");
                     foreach (var j in jobj["journeys"])
                     {
-                        AssertEqual("https://www.openstreetmap.org/#map=19/51.0858/2.60169999999999",
+                        AssertEqual("https://www.openstreetmap.org/#map=19/51.085800000000006/2.601699999999994",
                             j["departure"]["location"]["id"],
                             "Wrong departure stations");
 
-                        AssertEqual("https://www.openstreetmap.org/#map=19/50.1886/5.95429999999999",
+                        AssertEqual("https://www.openstreetmap.org/#map=19/50.18860000000001/5.954299999999989",
                             j["arrival"]["location"]["id"],
                             "Wrong arrival stations");
                     }
@@ -759,11 +759,11 @@ namespace Itinero.Transit.API.Tests.Functional
                     AssertTrue(jobj["journeys"].Any(), "No journeys found");
                     foreach (var j in jobj["journeys"])
                     {
-                        AssertEqual("https://www.openstreetmap.org/#map=19/51.0858/2.60169999999999",
+                        AssertEqual("https://www.openstreetmap.org/#map=19/51.085800000000006/2.601699999999994",
                             j["departure"]["location"]["id"],
                             "Wrong departure stations");
 
-                        AssertEqual("https://www.openstreetmap.org/#map=19/50.1886/5.95429999999999",
+                        AssertEqual("https://www.openstreetmap.org/#map=19/50.18860000000001/5.954299999999989",
                             j["arrival"]["location"]["id"],
                             "Wrong arrival stations");
                     }
@@ -802,7 +802,7 @@ namespace Itinero.Transit.API.Tests.Functional
                             j["departure"]["location"]["id"],
                             "Wrong departure stations");
 
-                        AssertEqual("https://www.openstreetmap.org/#map=19/50.8469/4.22489999999999",
+                        AssertEqual("https://www.openstreetmap.org/#map=19/50.846900000000005/4.224899999999991",
                             j["arrival"]["location"]["id"],
                             "Wrong arrival stations");
                     }
@@ -841,7 +841,7 @@ namespace Itinero.Transit.API.Tests.Functional
                             j["departure"]["location"]["id"],
                             "Wrong departure stations");
 
-                        AssertEqual("https://www.openstreetmap.org/#map=19/50.843/4.3279",
+                        AssertEqual("https://www.openstreetmap.org/#map=19/50.84299999999999/4.3279",
                             j["arrival"]["location"]["id"],
                             "Wrong arrival stations");
                     }
@@ -875,11 +875,11 @@ namespace Itinero.Transit.API.Tests.Functional
                     AssertTrue(jobj["journeys"].Any(), "No journeys found");
                     foreach (var j in jobj["journeys"])
                     {
-                        AssertEqual("https://www.openstreetmap.org/#map=19/51.17236/4.14395999999999",
+                        AssertEqual("https://www.openstreetmap.org/#map=19/51.17236/4.143959999999993",
                             j["departure"]["location"]["id"],
                             "Wrong departure stations");
 
-                        AssertEqual("https://www.openstreetmap.org/#map=19/50.860439/4.35865000000001",
+                        AssertEqual("https://www.openstreetmap.org/#map=19/50.860439000000014/4.3586500000000115",
                             j["arrival"]["location"]["id"],
                             "Wrong arrival stations");
                     }
@@ -913,11 +913,11 @@ namespace Itinero.Transit.API.Tests.Functional
                     AssertTrue(jobj["journeys"].Any(), "No journeys found");
                     foreach (var j in jobj["journeys"])
                     {
-                        AssertEqual("https://www.openstreetmap.org/#map=19/51.17236/4.14395999999999",
+                        AssertEqual("https://www.openstreetmap.org/#map=19/51.17236/4.143959999999993",
                             j["departure"]["location"]["id"],
                             "Wrong departure stations");
 
-                        AssertEqual("https://www.openstreetmap.org/#map=19/50.860439/4.35865000000001",
+                        AssertEqual("https://www.openstreetmap.org/#map=19/50.860439000000014/4.3586500000000115",
                             j["arrival"]["location"]["id"],
                             "Wrong arrival stations");
                     }
@@ -953,11 +953,11 @@ namespace Itinero.Transit.API.Tests.Functional
                     AssertTrue(jobj["journeys"].Any(), "No journeys found");
                     foreach (var j in jobj["journeys"])
                     {
-                        AssertEqual("https://www.openstreetmap.org/#map=19/51.17236/4.14395999999999",
+                        AssertEqual("https://www.openstreetmap.org/#map=19/51.17236/4.143959999999993",
                             j["departure"]["location"]["id"],
                             "Wrong departure stations");
 
-                        AssertEqual("https://www.openstreetmap.org/#map=19/50.860439/4.35865000000001",
+                        AssertEqual("https://www.openstreetmap.org/#map=19/50.860439000000014/4.3586500000000115",
                             j["arrival"]["location"]["id"],
                             "Wrong arrival stations");
                     }
@@ -990,11 +990,11 @@ namespace Itinero.Transit.API.Tests.Functional
                     AssertTrue(jobj["journeys"].Any(), "No journeys found");
                     foreach (var j in jobj["journeys"])
                     {
-                        AssertEqual("https://www.openstreetmap.org/#map=19/51.17236/4.14395999999999",
+                        AssertEqual("https://www.openstreetmap.org/#map=19/51.17236/4.143959999999993",
                             j["departure"]["location"]["id"],
                             "Wrong departure stations");
 
-                        AssertEqual("https://www.openstreetmap.org/#map=19/50.860439/4.35865000000001",
+                        AssertEqual("https://www.openstreetmap.org/#map=19/50.860439000000014/4.3586500000000115",
                             j["arrival"]["location"]["id"],
                             "Wrong arrival stations");
                     }
@@ -1029,11 +1029,11 @@ namespace Itinero.Transit.API.Tests.Functional
                     AssertTrue(jobj["journeys"].Any(), "No journeys found");
                     foreach (var j in jobj["journeys"])
                     {
-                        AssertEqual("https://www.openstreetmap.org/#map=19/50.86051/4.35839899999999",
+                        AssertEqual("https://www.openstreetmap.org/#map=19/50.860510000000005/4.3583989999999915",
                             j["departure"]["location"]["id"],
                             "Wrong departure stations");
 
-                        AssertEqual("https://www.openstreetmap.org/#map=19/50.942586/4.038028",
+                        AssertEqual("https://www.openstreetmap.org/#map=19/50.942586000000006/4.038027999999997",
                             j["arrival"]["location"]["id"],
                             "Wrong arrival stations");
                     }
@@ -1066,11 +1066,11 @@ namespace Itinero.Transit.API.Tests.Functional
                     AssertTrue(jobj["journeys"].Any(), "No journeys found");
                     foreach (var j in jobj["journeys"])
                     {
-                        AssertEqual("https://www.openstreetmap.org/#map=19/50.86051/4.35839899999999",
+                        AssertEqual("https://www.openstreetmap.org/#map=19/50.860510000000005/4.3583989999999915",
                             j["departure"]["location"]["id"],
                             "Wrong departure stations");
 
-                        AssertEqual("https://www.openstreetmap.org/#map=19/50.942586/4.038028",
+                        AssertEqual("https://www.openstreetmap.org/#map=19/50.942586000000006/4.038027999999997",
                             j["arrival"]["location"]["id"],
                             "Wrong arrival stations");
                     }
@@ -1105,11 +1105,11 @@ namespace Itinero.Transit.API.Tests.Functional
                     var i = 0;
                     foreach (var j in jobj["journeys"])
                     {
-                        AssertEqual("https://www.openstreetmap.org/#map=19/50.86094/4.35405",
+                        AssertEqual("https://www.openstreetmap.org/#map=19/50.86094/4.354050000000001",
                             j["departure"]["location"]["id"],
                             $"Wrong departure station in journey number {i}");
 
-                        AssertEqual("https://www.openstreetmap.org/#map=19/51.03465/3.70831999999999",
+                        AssertEqual("https://www.openstreetmap.org/#map=19/51.03465/3.7083199999999863",
                             j["arrival"]["location"]["id"],
                             $"Wrong arrival station in journey number {i}");
                         i++;

@@ -113,7 +113,9 @@ namespace Itinero.Transit.Api
         {
             ConfigureLogging();
 
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+            services.AddMvc(options => { options.EnableEndpointRouting = false; })
+                .SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
+
             services.AddCors(options =>
             {
                 options.AddPolicy("AllowAnyOrigin",
@@ -243,7 +245,7 @@ namespace Itinero.Transit.Api
             var logFile = Path.Combine("logs", $"log-itinero-{date}.txt");
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Debug()
-.MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Verbose)
+                .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Verbose)
                 .Enrich.FromLogContext()
                 .WriteTo.File(new JsonFormatter(), logFile)
                 .WriteTo.Console()
