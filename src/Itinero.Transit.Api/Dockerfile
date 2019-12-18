@@ -5,7 +5,7 @@
 ############################################################
 
 # Set the base image to Ubuntu
-FROM microsoft/dotnet:2.1-sdk
+FROM microsoft/dotnet:3.1-sdk
 
 # File Author / Maintainer
 MAINTAINER Anyways BVBA
