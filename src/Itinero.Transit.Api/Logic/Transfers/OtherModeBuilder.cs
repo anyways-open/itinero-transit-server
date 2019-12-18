@@ -116,7 +116,7 @@ namespace Itinero.Transit.Api.Logic.Transfers
                     var profile = GetOsmProfile(profileName);
                     if (profile == null)
                     {
-                        throw new KeyNotFoundException($"The profile {profileName} was not found");
+                        throw new ArgumentException($"The profile {profileName} was not found");
                     }
 
                     var gen = new OsmTransferGenerator(RouterDb,

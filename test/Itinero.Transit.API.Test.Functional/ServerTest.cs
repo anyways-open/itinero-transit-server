@@ -234,7 +234,7 @@ namespace Itinero.Transit.API.Tests.Functional
             else
             {
                 Console.WriteLine(
-                    $"{challenge.Name}\n     An error occured while running test {count} against URL\n    {host}{challenge.Url}");
+                    $"{challenge.Name}\n     An error occured while running test {count} against URL\n    {host}/{challenge.Url}");
 
                 foreach (var err in _errorMessages)
                 {
