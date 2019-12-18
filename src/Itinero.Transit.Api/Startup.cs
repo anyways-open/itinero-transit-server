@@ -199,7 +199,7 @@ namespace Itinero.Transit.Api
                                                 "" + "<h1>Deploying the server</h1>" + "" +
                                                 "<p>To deploy your own Transit-server, use <code>appsettings.json</code> to specify the connection URLs of the operator which you want to load. An example can be found <a href='https://github.com/anyways-open/itinero-transit-server/blob/master/src/Itinero.Transit.Api/appsettings.json'>here</a></p>";
                     document.Info.TermsOfService = "None";
-                    document.Info.Contact = new SwaggerContact
+                    document.Info.Contact = new OpenApiContact
                     {
                         Name = "Anyways",
                         Email = "info@anyways.eu",
@@ -207,14 +207,14 @@ namespace Itinero.Transit.Api
                     };
                     document.BasePath = req.PathBase;
                     document.Host = req.Host.Value;
-                    document.Schemes = new List<SwaggerSchema>(new[]
+                    document.Schemes = new List<OpenApiSchema>(new[]
                     {
-                        SwaggerSchema.Https
+                        OpenApiSchema.Https
                     });
 #if DEBUG
-                    document.Schemes = new List<SwaggerSchema>(new[]
+                    document.Schemes = new List<OpenApiSchema>(new[]
                     {
-                        SwaggerSchema.Http
+                        OpenApiSchema.Http
                     });
 #endif
                 };
