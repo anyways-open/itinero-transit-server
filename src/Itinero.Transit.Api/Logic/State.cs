@@ -23,14 +23,14 @@ namespace Itinero.Transit.Api.Logic
 
         public readonly RouterDb RouterDb;
 
-        public const string VersionNr = "1.0.0-pre91";
+        public const string VersionNr = "1.0.0-pre95";
 
         /// <summary>
         /// A version information string - useful to see what version is in production.
         /// The first letter of the word is increased alphabetically
         /// </summary>
         public const string Version =
-            "Questioning multiple operators (Itinero-transit 1.0.0-pre91, Routable-Tiles pre33, server " +
+            "Removing Rot (Itinero-transit 1.0.0-pre95, Routable-Tiles pre34, server " +
             VersionNr + ")";
 
 

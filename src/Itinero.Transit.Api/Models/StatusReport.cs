@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using Newtonsoft.Json;
 
 // ReSharper disable NotAccessedField.Global
 
@@ -11,17 +12,18 @@ namespace Itinero.Transit.Api.Models
     /// <summary>
     /// The status report gives some insight in the server.
     /// </summary>
+    [JsonObject(ItemNullValueHandling = NullValueHandling.Ignore)]
     public class StatusReport
     {
         /// <summary>
         /// Indicates if the server is online
         /// </summary>
-        public readonly bool Online = true;
+        public bool Online => true;
 
         /// <summary>
         /// When the server got online
         /// </summary>
-        public readonly DateTime OnlineSince;
+        public DateTime OnlineSince { get; }
 
         /// <summary>
         /// The time (in seconds) that the server has been running
@@ -32,31 +34,31 @@ namespace Itinero.Transit.Api.Models
         /// Indicates what time fragments are loaded into the database.
         /// This is a list of (start, end) values
         /// </summary>
-        public readonly Dictionary<string, OperatorStatus> LoadedOperators;
+        public Dictionary<string, OperatorStatus> LoadedOperators { get; }
 
 
         /// <summary>
         /// A small string so that the programmer knows a little what version is running.
         /// Should be taken with a grain of salt
         /// </summary>
-        public readonly string Version;
+        public string Version { get; }
 
-        public readonly List<string> SupportedProfiles;
-        public readonly List<string> SupportedOsmProfiles;
+        public List<string> SupportedProfiles { get; }
+        public List<string> SupportedOsmProfiles { get; }
 
-        public readonly Dictionary<string, string> CurrentRunningTask;
+        public Dictionary<string, string> CurrentRunningTask { get; }
 
         /// <summary>
         /// Indicates how many routable tiles are cached on the disk. 
         /// </summary>
-        public uint TilesOnDisk;
+        public uint TilesOnDisk { get; }
 
         /// <summary>
         /// Memory usage of the service, in bytes consumed
         /// </summary>
-        public long BytesUsed;
+        public long BytesUsed { get; }
 
-        public long MegabytesUsed;
+        public long MegabytesUsed { get; }
 
         public StatusReport(DateTime onlineSince, long uptime,
             Dictionary<string, OperatorStatus> operatorStatuses,
@@ -89,10 +91,6 @@ namespace Itinero.Transit.Api.Models
         {
             Start = start;
             End = end;
-        }
-
-        public TimeWindow((DateTime, DateTime) t) : this(t.Item1, t.Item2)
-        {
         }
     }
 

@@ -2,7 +2,6 @@ using System;
 using Itinero.Transit.Api.Logic;
 using Itinero.Transit.Api.Models;
 using Microsoft.AspNetCore.Mvc;
-using Serilog;
 
 namespace Itinero.Transit.Api.Controllers
 {

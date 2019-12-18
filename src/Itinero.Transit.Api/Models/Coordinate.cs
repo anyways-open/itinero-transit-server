@@ -2,7 +2,8 @@ namespace Itinero.Transit.Api.Models
 {
     public class Coordinate
     {
-        public readonly double Lat, Lon;
+        public double Lat { get; }
+        public double Lon { get; }
 
         public Coordinate(double lat, double lon)
         {

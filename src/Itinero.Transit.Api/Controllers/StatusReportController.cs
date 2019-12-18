@@ -64,7 +64,8 @@ namespace Itinero.Transit.Api.Controllers
 
             tasks.Add("statusmessage", state.FreeMessage);
 
-
+            
+            
             return new StatusReport(
                 state.BootTime,
                 (long) (DateTime.Now - state.BootTime).TotalSeconds,
