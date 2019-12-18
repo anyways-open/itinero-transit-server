@@ -9,7 +9,7 @@ namespace Itinero.Transit.Api
     {
         public static void Main(string[] args)
         {
-            if (args[0].Equals("--killing-allowed"))
+            if (args.Length > 0 && args[0].Equals("--killing-allowed"))
             {
                 args = args.ToList().GetRange(1, args.Length - 1).ToArray();
                 State.KillingAllowed = true;
