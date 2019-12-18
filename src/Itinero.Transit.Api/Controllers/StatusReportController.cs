@@ -1,11 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Net.Mime;
 using Itinero.Transit.Api.Logic;
 using Itinero.Transit.Api.Logic.Transfers;
 using Itinero.Transit.Api.Models;
 using Itinero.Transit.Utils;
 using Microsoft.AspNetCore.Mvc;
+using Serilog;
 
 namespace Itinero.Transit.Api.Controllers
 {
@@ -21,8 +24,14 @@ namespace Itinero.Transit.Api.Controllers
         /// Gives some insight in the database
         /// </summary>
         [HttpGet]
-        public ActionResult<StatusReport> Get()
+        public ActionResult<StatusReport> Get(bool kill = false)
         {
+            if (State.KillingAllowed && kill)
+            {
+                Log.Error("Instant death through killswitch");
+                Environment.Exit(0);
+            }
+
             if ((DateTime.Now - _lastTileIndexation).TotalMinutes > 2)
             {
                 _loadedTilesCount = OsmTransferGenerator.LoadedTilesCount();
@@ -64,8 +73,7 @@ namespace Itinero.Transit.Api.Controllers
 
             tasks.Add("statusmessage", state.FreeMessage);
 
-            
-            
+
             return new StatusReport(
                 state.BootTime,
                 (long) (DateTime.Now - state.BootTime).TotalSeconds,

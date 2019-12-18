@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using NSwag;
 using Serilog;
 using Serilog.Formatting.Json;
@@ -140,7 +141,7 @@ namespace Itinero.Transit.Api
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
             {
@@ -182,7 +183,7 @@ namespace Itinero.Transit.Api
 
                 return next();
             });
-            app.UseSwagger(settings =>
+            app.UseOpenApi(settings =>
             {
                 settings.PostProcess = (document, req) =>
                 {

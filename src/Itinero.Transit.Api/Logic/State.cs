@@ -87,6 +87,8 @@ namespace Itinero.Transit.Api.Logic
             Logger = logger;
             BootTime = DateTime.Now;
         }
+
+        public static bool KillingAllowed { get; set; }
     }
 
     public struct Operator
