@@ -28,7 +28,7 @@ namespace Itinero.Transit.Api.Models
         /// <summary>
         /// The time (in seconds) that the server has been running
         /// </summary>
-        public long Uptime { get;  };
+        public long Uptime { get;  }
 
         /// <summary>
         /// Indicates what time fragments are loaded into the database.
