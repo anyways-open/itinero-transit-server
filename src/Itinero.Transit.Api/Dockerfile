@@ -15,6 +15,7 @@ RUN mkdir /var/app
 RUN mkdir /var/app/data
 RUN mkdir /var/app/logs
 COPY ./bin/Release/netcoreapp3.1/linux-x64/publish /var/app
+COPY profiles /var/app/profiles
 COPY appsettings.Docker.json /var/app/appsettings.json
 
 # couple data folder data volume.
