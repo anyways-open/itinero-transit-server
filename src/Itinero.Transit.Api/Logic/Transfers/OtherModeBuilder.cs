@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using Itinero.Data.Graphs.Coders;
 using Itinero.IO.Osm.Tiles;
@@ -32,8 +33,7 @@ namespace Itinero.Transit.Api.Logic.Transfers
         // First profile is the default profile
         public readonly List<Profile> OsmVehicleProfiles = new List<Profile>
         {
-            OsmProfiles.Pedestrian,
-            OsmProfiles.Bicycle
+            OsmProfiles.Pedestrian
         };
 
         public OtherModeBuilder(
@@ -49,6 +49,11 @@ namespace Itinero.Transit.Api.Logic.Transfers
 
 
             AddProfilesFromConfig(configuration);
+
+            if (!OsmVehicleProfiles.Any())
+            {
+                Log.Warning("WARN: no vehicle profiles are loaded. This means the server will only be usable for station-to-station queries or with crows flight");
+            }
 
             foreach (var profile in OsmVehicleProfiles)
             {
@@ -111,7 +116,7 @@ namespace Itinero.Transit.Api.Logic.Transfers
                     var profile = GetOsmProfile(profileName);
                     if (profile == null)
                     {
-                        throw new KeyNotFoundException($"The profile {profileName} was not found");
+                        throw new ArgumentException($"The profile {profileName} was not found");
                     }
 
                     var gen = new OsmTransferGenerator(RouterDb,
@@ -292,7 +297,7 @@ namespace Itinero.Transit.Api.Logic.Transfers
             throw new NotImplementedException();
         }
 
-        public Dictionary<StopId, uint> TimesBetween(IEnumerable<IStop> @from, IStop to)
+        public Dictionary<StopId, uint> TimesBetween(IEnumerable<IStop> from, IStop to)
         {
             throw new NotImplementedException();
         }
@@ -307,9 +312,9 @@ namespace Itinero.Transit.Api.Logic.Transfers
             return "<some other mode identifier>";
         }
 
-        public IOtherModeGenerator GetSource(StopId @from, StopId to)
+        public IOtherModeGenerator GetSource(StopId from, StopId to)
         {
-            throw new NotImplementedException();
+            return this;
         }
     }
 }

@@ -39,7 +39,7 @@ namespace Itinero.Transit.API.Tests
                         .AddJsonFile(path);
                     configuration.Build();
 
-                    configuration.Build().CreateTransitDbs(true);
+                    configuration.Build().LoadOperators(true);
                 }
                 catch (Exception e)
                 {

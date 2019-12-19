@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Itinero.Transit.Api.Logging;
+using Itinero.Transit.Api.Logic.Search;
 using Itinero.Transit.Api.Logic.Transfers;
 using Itinero.Transit.Data;
-using Itinero.Transit.Data.Aggregators;
 using Itinero.Transit.Data.Core;
 using Itinero.Transit.Data.Synchronization;
 
@@ -23,19 +23,16 @@ namespace Itinero.Transit.Api.Logic
 
         public readonly RouterDb RouterDb;
 
-        public const string VersionNr = "1.0.0-pre88";
+        public const string VersionNr = "1.0.0-pre95";
 
         /// <summary>
         /// A version information string - useful to see what version is in production.
         /// The first letter of the word is increased alphabetically
         /// </summary>
-        public const string Version = "Pretty Speedy (Itinero-transit 1.0.0-pre88, Routable-Tiles pre33, server "+ VersionNr +")";
+        public const string Version =
+            "Removing Rot (Itinero-transit 1.0.0-pre95, Routable-Tiles pre34, server " +
+            VersionNr + ")";
 
-        /// <summary>
-        /// This dictionary contains all the loaded transitDbs, indexed on their name.
-        /// The object responsible of regularly reloading them is included too
-        /// </summary>
-        public readonly Dictionary<string, (TransitDb tdb, Synchronizer synchronizer)> TransitDbs;
 
         /// <summary>
         /// A log message. Startup can assign this message freely.
@@ -43,7 +40,6 @@ namespace Itinero.Transit.Api.Logic
         public string FreeMessage;
 
         public readonly FileLogger Logger;
-
 
 
         /// <summary>
@@ -74,67 +70,48 @@ namespace Itinero.Transit.Api.Logic
         /// </summary>
         public readonly OtherModeBuilder OtherModeBuilder;
 
+        public readonly OperatorManager Operators;
 
-        public State(Dictionary<string, (TransitDb tdb, Synchronizer synchronizer)> transitDbs,
+        public State(IEnumerable<Operator> operators,
             OtherModeBuilder otherModeBuilder, RouterDb routerDb, FileLogger logger)
         {
-            if (transitDbs.Count == 0)
+            Operators = new OperatorManager(operators);
+            if (!Operators.All.Any())
             {
-                throw new ArgumentException("No databases loaded. Is the internet connected?");
+                throw new ArgumentException(
+                    "No databases loaded. Is the internet connected? Is the configuration correct?");
             }
 
-            TransitDbs = transitDbs;
             OtherModeBuilder = otherModeBuilder;
             RouterDb = routerDb;
             Logger = logger;
             BootTime = DateTime.Now;
         }
 
-        private StopSearchCache _cachedStopsReader;
-        
-        /// <summary>
-        /// Get a stops reader for all the loaded databases.
-        /// </summary>
-        /// <returns></returns>
-        public IStopsReader GetStopsReader()
+        public static bool KillingAllowed { get; set; }
+    }
+
+    public struct Operator
+    {
+        public readonly uint MaxSearch;
+        public readonly TransitDb Tdb;
+        public readonly Synchronizer Synchronizer;
+        public readonly string Name;
+        public readonly HashSet<string> AltNames;
+        public readonly HashSet<string> Tags;
+
+        public Operator(string name, TransitDb tdb, Synchronizer synchronizer,
+            uint maxSearch,
+            IEnumerable<string> altNames,
+            IEnumerable<string> tags)
         {
-            var newReader = StopsReaderAggregator.CreateFrom(
-                All().Select(tdb => (IStopsReader) tdb.StopsDb.GetReader()).ToList());
-            if (_cachedStopsReader == null)
-            {
-                _cachedStopsReader = newReader.UseCache();
-                return _cachedStopsReader;
-            }
-            // Return a new stospReader which shares the cache with the already existing cache
-            return new StopSearchCache(newReader, _cachedStopsReader);
+            MaxSearch = maxSearch;
+            Name = name;
+            Tdb = tdb;
+            Synchronizer = synchronizer;
+            AltNames = altNames?.ToHashSet() ?? new HashSet<string>();
+            Tags = tags?.ToHashSet() ?? new HashSet<string>();
         }
 
-        public IDatabaseReader<ConnectionId, Connection> GetConnectionsReader()
-        {
-            var readers = All().Select(tdb => tdb.ConnectionsDb).ToList();
-
-            return DatabaseEnumeratorAggregator<ConnectionId, Connection>.CreateFrom(readers);
-        }
-
-        public IConnectionEnumerator GetConnections()
-        {
-            var readers = All().Select(tdb =>
-                (IConnectionEnumerator) tdb.ConnectionsDb.GetDepartureEnumerator()).ToList();
-
-            return ConnectionEnumeratorAggregator.CreateFrom(readers);
-        }
-
-
-        public IDatabaseReader<TripId, Trip> GetTripsReader()
-        {
-            var readers =
-                All().Select(tdb => tdb.TripsDb);
-            return DatabaseEnumeratorAggregator<TripId, Trip>.CreateFrom(readers);
-        }
-
-        public IEnumerable<TransitDb.TransitDbSnapShot> All()
-        {
-            return TransitDbs.Select(v => v.Value.tdb.Latest);
-        }
     }
 }

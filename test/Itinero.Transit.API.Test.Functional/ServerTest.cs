@@ -13,13 +13,17 @@ namespace Itinero.Transit.API.Tests.Functional
         public string Name { get; }
         public string Url { get; }
         public Action<JToken> Property { get; }
+        
+        public Action<string> HandleErrorMessage { get;  }
 
-        public Challenge(string name, string url, Action<JToken> property, uint maxTimeAllowed)
+        public Challenge(string name, string url, Action<JToken> property, uint maxTimeAllowed, Action<string> handleErrorMessage = null)
         {
             MaxTimeAllowed = maxTimeAllowed;
+            HandleErrorMessage = handleErrorMessage ?? (msg => throw new Exception($"Got error message: {msg}"));
             Name = name;
             Url = url;
             Property = property;
+            
         }
     }
 
@@ -53,11 +57,6 @@ namespace Itinero.Transit.API.Tests.Functional
             if (KnownUrls.ContainsKey(host))
             {
                 host = KnownUrls[host];
-            }
-
-            if (!host.EndsWith('/'))
-            {
-                host += "/";
             }
 
 
@@ -105,7 +104,7 @@ namespace Itinero.Transit.API.Tests.Functional
                 var startCh = DateTime.Now;
                 try
                 {
-                    var _ = ChallengeAsync(host, challenge, ignoreTimouts ? 120000 : challenge.MaxTimeAllowed).Result;
+                    ChallengeAsync(host, challenge, ignoreTimouts ? 120000 : challenge.MaxTimeAllowed).GetAwaiter().GetResult();
                 }
                 catch (Exception e)
                 {
@@ -116,103 +115,18 @@ namespace Itinero.Transit.API.Tests.Functional
                 var timeNeeded = (int) (endCh - startCh).TotalMilliseconds;
 
 
-                var secs = timeNeeded / 1000;
-                var ms = timeNeeded % 1000;
-
-
-                void WriteSeconds()
-                {
-                    var timing = $"{secs}.{ms:000}s";
-
-                    var err = challenge.MaxTimeAllowed;
-                    if (err == 0)
-                    {
-                        err = 5000;
-                    }
-
-                    var warnHard = err * 3 / 4;
-                    var warn = err / 2;
-                    var veryGood = err / 4;
-
-                    if (timeNeeded > err)
-                    {
-                        WriteErrHard(timing);
-                    }
-                    else if (timeNeeded > warnHard)
-                    {
-                        WriteWarnHard(timing);
-                    }
-                    else if (timeNeeded > warn)
-                    {
-                        WriteWarn(timing);
-                    }
-                    else if(timeNeeded > veryGood)
-                    {
-                        WriteGood(timing);
-                    }
-                    else
-                    {
-                        WriteGoodHard(timing);
-                    }
-                    Console.Write("  ");
-                }
-
-                var timedOut = challenge.MaxTimeAllowed != 0 &&
-                                timeNeeded > challenge.MaxTimeAllowed;
-                if (timedOut)
+                var didTimeout = PrintOutput(host, ignoreTimouts, timeNeeded, challenge, count,
+                    ref failCount);
+                if (didTimeout)
                 {
                     timeOutCount++;
-                }
-
-                Console.Write("\r");
-                if (_errorMessages.Any())
-                {
-                    failCount++;
-                    WriteErrHard("FAIL ");
-                }
-                else if (timedOut)
-                {
-                    if (!ignoreTimouts)
-                    {
-                        failCount++;
-                    }
-
-                    WriteWarnHard("TIME ");
-                }
-                else
-                {
-                    WriteGood(" OK  ");
-                }
-
-                WriteSeconds();
-
-                if (!_errorMessages.Any())
-                {
-                    Console.WriteLine($"{challenge.Name}");
-                }
-                else
-                {
-                    Console.WriteLine(
-                        $"{challenge.Name}\n     An error occured while running test {count} against URL\n    {host}{challenge.Url}");
-
-                    foreach (var err in _errorMessages)
-                    {
-                        Console.WriteLine("     " + err);
-                    }
-
-                    Console.WriteLine();
-
-                    if (FailFast)
-                    {
-                        var errMsg = string.Join(", ", _errorMessages);
-                        throw new Exception(errMsg);
-                    }
                 }
             }
 
             var end = DateTime.Now;
             Console.WriteLine($"Testing took {(end - start).Seconds} seconds");
 
+            
             if (failCount > 0)
             {
                 var msg = $"{failCount}/{challenges.Count} tests failed - {timeOutCount} did time out.";
@@ -240,14 +154,119 @@ namespace Itinero.Transit.API.Tests.Functional
         }
 
         /// <summary>
+        /// Print output, returns true if it did timeout
+        /// </summary>
+        private bool PrintOutput(string host, bool ignoreTimouts, int timeNeeded, Challenge challenge,
+            int count, ref int failCount)
+        {
+            var secs = timeNeeded / 1000;
+            var ms = timeNeeded % 1000;
+
+
+            void WriteSeconds()
+            {
+                var timing = $"{secs}.{ms:000}s";
+
+                var err = challenge.MaxTimeAllowed;
+                if (err == 0)
+                {
+                    err = 5000;
+                }
+
+                var warnHard = err * 3 / 4;
+                var warn = err / 2;
+                var veryGood = err / 4;
+
+                if (timeNeeded > err)
+                {
+                    WriteErrHard(timing);
+                }
+                else if (timeNeeded > warnHard)
+                {
+                    WriteWarnHard(timing);
+                }
+                else if (timeNeeded > warn)
+                {
+                    WriteWarn(timing);
+                }
+                else if (timeNeeded > veryGood)
+                {
+                    WriteGood(timing);
+                }
+                else
+                {
+                    WriteGoodHard(timing);
+                }
+
+                Console.Write("  ");
+            }
+
+            var timedOut = challenge.MaxTimeAllowed != 0 &&
+                           timeNeeded > challenge.MaxTimeAllowed;
+
+
+            Console.Write("\r");
+            if (_errorMessages.Any())
+            {
+                failCount++;
+                WriteErrHard("FAIL ");
+            }
+            else if (timedOut)
+            {
+                if (!ignoreTimouts)
+                {
+                    failCount++;
+                }
+
+                WriteWarnHard("TIME ");
+            }
+            else
+            {
+                WriteGood(" OK  ");
+            }
+
+            WriteSeconds();
+
+            if (!_errorMessages.Any())
+            {
+                Console.WriteLine($"{challenge.Name}");
+            }
+            else
+            {
+                Console.WriteLine(
+                    $"{challenge.Name}\n     An error occured while running test {count} against URL\n    {host}/{challenge.Url}");
+
+                foreach (var err in _errorMessages)
+                {
+                    Console.WriteLine("     " + err);
+                }
+
+                Console.WriteLine();
+
+                if (FailFast)
+                {
+                    var errMsg = string.Join(", ", _errorMessages);
+                    throw new Exception(errMsg);
+                }
+            }
+
+            return timedOut;
+        }
+
+        /// <summary>
         /// Executes the challenge against the given host.
         /// Returns the needed milliseconds
         /// </summary>
-        private async Task<int> ChallengeAsync(
+        public async Task ChallengeAsync(
             string host,
             Challenge challenge,
             uint timoutInMillis)
         {
+            if (!host.EndsWith('/'))
+            {
+                host += "/";
+            }
+
             var urlParams = challenge.Url;
             var client = new HttpClient
             {
@@ -255,9 +274,17 @@ namespace Itinero.Transit.API.Tests.Functional
             };
             var uri = host + urlParams;
             var response = await client.GetAsync(uri).ConfigureAwait(false);
-            if (response == null || !response.IsSuccessStatusCode)
+
+            if (response == null)
             {
-                throw new HttpRequestException("Could not open " + uri);
+                throw new HttpRequestException("No response on " + uri);
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                challenge.HandleErrorMessage("Upstream server error: "+content);
+                return ;
             }
 
             var data = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
@@ -281,8 +308,6 @@ namespace Itinero.Transit.API.Tests.Functional
             {
                 _errorMessages.Add(e.Message);
             }
-
-            return 0;
         }
 
         protected abstract void RunTests();
@@ -299,20 +324,12 @@ namespace Itinero.Transit.API.Tests.Functional
             return _challenges;
         }
 
-
-        /// <summary>
-        /// Execute or create a challenge
-        /// </summary>
-        /// <param name="endpoint"></param>
-        /// <param name="name"></param>
-        /// <param name="keyValues"></param>
-        /// <param name="property"></param>
-        /// <param name="maxTimeAllowed">In seconds</param>
-        internal void Challenge(string endpoint,
+        protected Challenge Challenge(string endpoint,
             string name,
             Dictionary<string, string> keyValues = null,
             Action<JToken> property = null,
-            uint maxTimeAllowed = 0)
+            uint maxTimeAllowed = 0,
+            Action<string> handleError = null)
         {
             keyValues = keyValues ?? new Dictionary<string, string>();
             property = property ?? (jobj => { });
@@ -325,8 +342,9 @@ namespace Itinero.Transit.API.Tests.Functional
                 url = endpoint + "?" + parameters;
             }
 
-            var challenge = new Challenge(name, url, property, maxTimeAllowed);
-            _challenges.Add(challenge);
+            var challenge = new Challenge(name, url, property, maxTimeAllowed, handleError);
+            _challenges?.Add(challenge);
+            return challenge;
         }
 
         // ------------------ Boring 'Asserts' down here --------------- //
@@ -338,7 +356,7 @@ namespace Itinero.Transit.API.Tests.Functional
          * The '_errorMessages'-list is where all errors are gathered
          */
 
-        internal void AssertEqual<T>(T expected, T val, string errMessage = "")
+        public void AssertEqual<T>(T expected, T val, string errMessage = "")
         {
             if (!expected.Equals(val))
             {
@@ -348,7 +366,7 @@ namespace Itinero.Transit.API.Tests.Functional
 
 
         // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
-        internal void AssertTrue(bool val, string errMessage = "Expected True")
+        public void AssertTrue(bool val, string errMessage = "Expected True")
         {
             if (!val)
             {
@@ -356,7 +374,7 @@ namespace Itinero.Transit.API.Tests.Functional
             }
         }
 
-        internal void AssertNotNull(object val, string errMessage = "Value is null")
+        public void AssertNotNull(object val, string errMessage = "Value is null")
         {
             if (val == null)
             {
@@ -370,8 +388,7 @@ namespace Itinero.Transit.API.Tests.Functional
             {
                 _errorMessages.Add(errMessage);
             }
-
-            if (!val.HasValues)
+            else if (!val.HasValues)
             {
                 _errorMessages.Add(errMessage);
             }

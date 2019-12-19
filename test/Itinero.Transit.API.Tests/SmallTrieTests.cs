@@ -1,4 +1,4 @@
-using Itinero.Transit.Api.Logic;
+using Itinero.Transit.Api.Logic.Search;
 using Xunit;
 
 namespace Itinero.Transit.API.Tests

@@ -3,7 +3,7 @@ using System.Linq;
 using Itinero.Transit.Api.Models;
 using Itinero.Transit.Data;
 
-namespace Itinero.Transit.Api.Logic
+namespace Itinero.Transit.Api.Logic.Search
 {
     public class NameIndex
     {

@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using Itinero.IO.Osm.Tiles.Parsers;
 using Itinero.LocalGeo;
 using Itinero.Profiles;
 using Itinero.Profiles.Lua.Osm;
@@ -8,7 +10,6 @@ using Itinero.Transit.Data;
 using Itinero.Transit.Data.Core;
 using Itinero.Transit.Logging;
 using Itinero.Transit.OtherMode;
-using Itinero.IO.Osm.Tiles.Parsers;
 
 namespace Itinero.Transit.Api.Logic.Transfers
 {
@@ -72,7 +73,7 @@ namespace Itinero.Transit.Api.Logic.Transfers
             }
 
             var distance =
-                Coordinate.DistanceEstimateInMeter(@from.Longitude, @from.Latitude, to.Longitude, to.Latitude);
+                Coordinate.DistanceEstimateInMeter(from.Longitude, from.Latitude, to.Longitude, to.Latitude);
             // Small patch for small distances...
             if (distance < 20)
             {
@@ -84,16 +85,13 @@ namespace Itinero.Transit.Api.Logic.Transfers
                 return uint.MaxValue;
             }
 
-            Log.Information("From: " + from.GlobalId + " to: " + to.GlobalId);
+            Log.Verbose("From: " + from.GlobalId + " to: " + to.GlobalId);
             var route = CreateRoute(((float) from.Latitude, (float) from.Longitude),
                 ((float) to.Latitude, (float) to.Longitude), out var isEmpty, out var errMessage);
-            var msg = "Success!";
             if (route == null)
             {
-                msg = "Failed with " + errMessage;
+                Log.Error($"Could not calculate a route between  {from.Longitude},{from.Latitude} and {to.Longitude},{to.Longitude} because {errMessage}");
             }
-
-            Log.Information($"From: {@from.GlobalId} to: {to.GlobalId} finished. {msg}");
 
             if (isEmpty)
             {
@@ -116,7 +114,7 @@ namespace Itinero.Transit.Api.Logic.Transfers
             try
             {
                 var startPoint = _routerDb.Snap(
-                    @from.lon, @from.lat, profile: _profile);
+                    from.lon, from.lat, profile: _profile);
                 var endPoint = _routerDb.Snap(to.lon, to.lat, profile: _profile);
                 if (startPoint.IsError || endPoint.IsError)
                 {
@@ -183,7 +181,7 @@ namespace Itinero.Transit.Api.Logic.Transfers
                 foreach (var t in to)
                 {
                     var distance =
-                        Coordinate.DistanceEstimateInMeter(@from.Latitude, @from.Longitude, t.Latitude, t.Longitude);
+                        Coordinate.DistanceEstimateInMeter(from.Latitude, from.Longitude, t.Latitude, t.Longitude);
                     // Small patch for small distances...
                     if (distance < 20)
                     {
@@ -202,12 +200,12 @@ namespace Itinero.Transit.Api.Logic.Transfers
                 }
 
                 if (targets.Count == 0) return times;
-                Log.Information(
-                    $"TimesBetween: from {from.GlobalId} one-to-{targets.Count} within {Range()}m. Targets are: {string.Join("\n", to.Select(t => t.GlobalId))}");
+                Log.Verbose(
+                    $"TimesBetween: from {from.GlobalId} one-to-{targets.Count} within {Range()}m.");
 
                 // resolve source only if we have targets.
                 var source = _routerDb.Snap(
-                    @from.Longitude, @from.Latitude, profile: _profile);
+                    from.Longitude, from.Latitude, profile: _profile);
 
                 // calculate all routes using one-to-many search.
                 var config = new RoutingSettings
@@ -236,12 +234,22 @@ namespace Itinero.Transit.Api.Logic.Transfers
             catch (Exception e)
             {
                 var arrivalPoints = string.Join("\n",
-                    to.Select(t => $"{t.GlobalId} {(t.Longitude,t.Latitude)}"));
-                Log.Error(
-                    $"Could not calculate one-to-many route: weird exception: {e.Message}\n" +
-                    $"Departure point is {@from.GlobalId} {(@from.Longitude, @from.Latitude)}\n" +
-                    $"Arrival points are {arrivalPoints}\n" +
-                    $"Stack trace is {e}");
+                    to.Select(t => $"{t.GlobalId} {(t.Longitude, t.Latitude)}"));
+                var msg = $"Could not calculate one-to-many route: weird exception: {e.Message}\n" +
+                          $"Departure point is {from.GlobalId} {(from.Longitude, from.Latitude)}\n" +
+                          $"Arrival points are {arrivalPoints}\n" +
+                          $"Stack trace is {e}";
+                File.WriteAllText("error" + DateTime.Now.Ticks + ".log",
+                    string.Join("\n", new[]
+                        {
+                            e.Message,
+                            e.StackTrace,
+                           $"" +
+                           $"Departure lon lat: {(from.Longitude, from.Latitude)}",
+                           "Arrival lon lats:",
+                        }.Concat(to.Select(t => $"{(t.Longitude, t.Latitude)}"))
+                    ));
+                Log.Error(msg);
                 throw;
             }
         }
@@ -258,7 +266,7 @@ namespace Itinero.Transit.Api.Logic.Transfers
                 foreach (var f in from)
                 {
                     var distance =
-                        Coordinate.DistanceEstimateInMeter(@f.Latitude, @f.Longitude, to.Latitude, to.Longitude);
+                        Coordinate.DistanceEstimateInMeter(f.Latitude, f.Longitude, to.Latitude, to.Longitude);
                     // Small patch for small distances...
                     if (distance < 20)
                     {
@@ -282,7 +290,7 @@ namespace Itinero.Transit.Api.Logic.Transfers
 
                 // resolve source only if we have targets.
                 var source = _routerDb.Snap(
-                    @to.Longitude, @to.Latitude, profile: _profile);
+                    to.Longitude, to.Latitude, profile: _profile);
 
                 // calculate all routes using one-to-many search.
                 var config = new RoutingSettings
@@ -295,7 +303,7 @@ namespace Itinero.Transit.Api.Logic.Transfers
                 {
                     var (_, stop) = sources[i];
                     var result = routes[i];
-                    if (result.IsError  || result.Value.TotalDistance > Range())
+                    if (result.IsError || result.Value.TotalDistance > Range())
                     {
                         times[stop.Id] = uint.MaxValue;
                     }
@@ -310,7 +318,17 @@ namespace Itinero.Transit.Api.Logic.Transfers
             catch (Exception e)
             {
                 var departurePoints = string.Join("\n",
-                    from.Select(t => $"{t.GlobalId} {(t.Longitude,t.Latitude)}"));
+                    from.Select(t => $"{t.GlobalId} {(t.Longitude, t.Latitude)}"));
+                File.WriteAllText("error" + DateTime.Now.Ticks + ".log",
+                    string.Join("\n", new[]
+                        {
+                            e.Message,
+                            e.StackTrace,
+                            $"" +
+                            $"ARRIVAL lon lat: {(to.Longitude, to.Latitude)}",
+                            "DEPARTURE lon lats:",
+                        }.Concat(from.Select(t => $"{(t.Longitude, t.Latitude)}"))
+                    ));
                 Log.Error(
                     $"Could not calculate many-to-to route: weird exception: {e.Message}\n" +
                     $"Departure points are {departurePoints}\n" +
@@ -331,7 +349,7 @@ namespace Itinero.Transit.Api.Logic.Transfers
                 $"osm&maxDistance={_searchDistance}&profile={_profile.Name}";
         }
 
-        public IOtherModeGenerator GetSource(StopId @from, StopId to)
+        public IOtherModeGenerator GetSource(StopId from, StopId to)
         {
             return this;
         }

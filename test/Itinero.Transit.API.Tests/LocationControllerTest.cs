@@ -4,7 +4,6 @@ using Itinero.Transit.Api.Controllers;
 using Itinero.Transit.Api.Logic;
 using Itinero.Transit.Data;
 using Itinero.Transit.Data.Core;
-using Itinero.Transit.Data.Synchronization;
 using Xunit;
 using Attribute = Itinero.Transit.Data.Attributes.Attribute;
 
@@ -26,6 +25,8 @@ namespace Itinero.Transit.API.Tests
             {
                 new Attribute("name", "def")
             });
+            // To early
+            wr.AddOrUpdateConnection(stop0, stop1, "conn3", dt.AddMinutes(-15), 1000, 0, 0, new TripId(0, 0), 0);
             // This one we are searching for
             wr.AddOrUpdateConnection(stop0, stop1, "conn0", dt.AddMinutes(5), 1000, 0, 0, new TripId(0, 0), 0);
 
@@ -35,15 +36,19 @@ namespace Itinero.Transit.API.Tests
             // To late: falls out of the window of 1hr
             wr.AddOrUpdateConnection(stop0, stop1, "conn2", dt.AddMinutes(65), 1000, 0, 0, new TripId(0, 0), 0);
 
+
+            
             wr.Close();
 
-            var transitDbs = new Dictionary<string, (TransitDb tdb, Synchronizer synchronizer)>
+            var transitDbs = new List<Operator>
             {
-                {"x", (tdb, null)}
+                {new Operator("", tdb, null, 0, null, null)}
             };
             State.GlobalState = new State(transitDbs, null, null, null);
             var lc = new LocationController();
             var result = lc.GetConnections("abc", dt);
+            
+            
             var returnedSegments = result.Value.Segments;
             Assert.NotNull(returnedSegments);
             Assert.Single(returnedSegments);

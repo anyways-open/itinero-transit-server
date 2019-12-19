@@ -1,3 +1,4 @@
+// ReSharper disable UnusedAutoPropertyAccessor.Global
 namespace Itinero.Transit.Api.Models
 {
     /// <summary>

@@ -4,7 +4,7 @@ using Itinero.Transit.Data.Core;
 using Itinero.Transit.Data.Synchronization;
 using Itinero.Transit.Utils;
 
-namespace Itinero.Transit.Api.Logic
+namespace Itinero.Transit.Api.Logic.Importance
 {
     public class ImportanceCounter : ISynchronizationPolicy
     {

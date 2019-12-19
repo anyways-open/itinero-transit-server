@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
 
-namespace Itinero.Transit.Api.Logic
+namespace Itinero.Transit.Api.Logic.Search
 {
     public class SmallTrie<T>
     {
@@ -51,7 +51,7 @@ namespace Itinero.Transit.Api.Logic
 
             if (!_children.ContainsKey(firstChar))
             {
-                return default;
+                return default(T);
             }
 
             var subKey = key.GetRange(1, key.Count - 1);

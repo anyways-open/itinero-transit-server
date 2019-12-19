@@ -28,6 +28,7 @@ namespace Itinero.Transit.Api.Controllers
             uint lastMileSearchDistance = 1500,
             DateTime? departure = null,
             DateTime? arrival = null,
+            string operators = "nbms",
             uint internalTransferTime = 180,
             uint maxNumberOfTransfers = 4,
             bool prune = true
@@ -46,6 +47,7 @@ namespace Itinero.Transit.Api.Controllers
                 lastMileSearchDistance,
                 departure,
                 arrival,
+                operators,
                 internalTransferTime,
                 maxNumberOfTransfers,
                 prune

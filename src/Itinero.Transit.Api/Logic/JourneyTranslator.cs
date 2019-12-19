@@ -8,9 +8,9 @@ using Itinero.Transit.Data.Aggregators;
 using Itinero.Transit.Data.Core;
 using Itinero.Transit.IO.OSM.Data;
 using Itinero.Transit.Journey;
+using Itinero.Transit.Logging;
 using Itinero.Transit.OtherMode;
 using Itinero.Transit.Utils;
-using Serilog;
 
 // ReSharper disable ImpureMethodCallOnReadonlyValueField
 
@@ -52,7 +52,7 @@ namespace Itinero.Transit.Api.Logic
             return new Geojson(features);
         }
 
-        private static (Segment, int newIndex) TranslateSegment<T>(this State dbs, List<Journey<T>> parts, int i)
+        internal static (Segment, int newIndex) TranslateSegment<T>(this OperatorSet dbs, List<Journey<T>> parts, int i)
             where T : IJourneyMetric<T>
         {
             var stops = dbs.GetStopsReader().AddOsmReader();
@@ -60,14 +60,18 @@ namespace Itinero.Transit.Api.Logic
             var j = parts[i];
             var connectionReader = dbs.GetConnectionsReader();
             var connection = connectionReader.Get(j.Connection);
-
+            if (connection == null)
+            {
+                throw new ArgumentException($"Connection not found: {j.Connection}");
+            }
 
             // Get all the trip info for this segment
             var tripReader = dbs.GetTripsReader();
             var trip = new Trip();
             tripReader.Get(j.TripId, trip);
             var vehicleId = trip.GlobalId ?? "";
-            if (!trip.Attributes.TryGetValue("headsign", out var headsign))
+            string headsign = "";
+            if (trip.Attributes != null && !trip.Attributes.TryGetValue("headsign", out headsign))
             {
                 headsign = "";
             }
@@ -144,8 +148,8 @@ namespace Itinero.Transit.Api.Logic
         /// Can be null if unneeded
         /// </summary>
         /// <returns></returns>
-        public static Segment TranslateWalkSegment<T>(this State dbs,
-            Journey<T> j, IOtherModeGenerator walksgenerator) where T : IJourneyMetric<T>
+        internal static Segment TranslateWalkSegment<T>(this OperatorSet dbs,
+            Journey<T> j, CoordinatesCache coordinatesCache) where T : IJourneyMetric<T>
         {
             var stops = StopsReaderAggregator.CreateFrom(dbs.All()).AddOsmReader();
             if (j.Location.Equals(j.PreviousLink.Location))
@@ -170,59 +174,34 @@ namespace Itinero.Transit.Api.Logic
             stops.MoveTo(j.Location);
             var toStop = new Stop(stops);
 
-            var (coordinates, descriptor) =
-                walksgenerator.GetCoordinatesFor(fromStop, toStop);
+            var index = coordinatesCache.IndexFor<T>(fromStop, toStop);
+            var (coordinates, license, description) = coordinatesCache.CommonCoordinates[index];
+
+            if (coordinatesCache.Compress)
+            {
+                return new Segment(departureTimed, arrivalTimed,
+                    description,
+                    (uint) index,
+                    (uint) (j.Time - j.PreviousLink.Time),
+                    license);
+            }
 
             return new Segment(
                 departureTimed, arrivalTimed,
-                descriptor,
+                description,
                 coordinates,
-                (uint) (j.Time - j.PreviousLink.Time)
+                (uint) (j.Time - j.PreviousLink.Time),
+                license
             );
         }
 
-        public static (List<Coordinate>, string identifier) GetCoordinatesFor(this IOtherModeGenerator walksgenerator,
-            Stop from, Stop to)
-        {
-            var walkGenerator = walksgenerator?.GetSource(from.Id, to.Id);
-
-            List<Coordinate> coordinates = null;
-            if (walkGenerator is OsmTransferGenerator osm)
-            {
-                var route = osm.CreateRoute(
-                    ((float) from.Latitude, (float) from.Longitude),
-                    ((float) to.Latitude, (float) to.Longitude), out _, out var errorMessage);
-                if (route == null)
-                {
-                    Log.Error(
-                        $"Weird: got a journey with an OSM-route from {from.GlobalId} to {to.GlobalId}, but now we can't calculate a route anymore... Error given is {errorMessage}");
-                }
-                else
-                {
-                    coordinates = route.Shape.Select(
-                        coor => new Coordinate(coor.Latitude, coor.Longitude)).ToList();
-                }
-            }
-
-            if (coordinates == null)
-            {
-                coordinates = new List<Coordinate>
-                {
-                    new Coordinate(from.Latitude, from.Longitude),
-                    new Coordinate(to.Latitude, to.Longitude)
-                };
-            }
-
-
-            return (coordinates, walksgenerator?.OtherModeIdentifier() ?? "?");
-        }
 
         /// <summary>
         /// Translates a single, forward journey into the Models which can be JSONified
         /// </summary>
         /// <returns></returns>
         public static Models.Journey Translate<T>(
-            this State dbs, Journey<T> journey, IOtherModeGenerator walkGenerator) where T : IJourneyMetric<T>
+            this OperatorSet dbs, Journey<T> journey, CoordinatesCache coordinatesCache) where T : IJourneyMetric<T>
         {
             var parts = journey.ToList(); //Creates a list of the journey
 
@@ -245,7 +224,7 @@ namespace Itinero.Transit.Api.Logic
                 }
                 else if (j.Connection.Equals(Journey<T>.OTHERMODE))
                 {
-                    var segment = dbs.TranslateWalkSegment(j, walkGenerator);
+                    var segment = dbs.TranslateWalkSegment(j, coordinatesCache);
                     if (segment != null)
                     {
                         segments.Add(segment);
@@ -261,26 +240,46 @@ namespace Itinero.Transit.Api.Logic
             return new Models.Journey(segments, vehiclesTaken);
         }
 
-        public static List<Models.Journey> Translate<T>(this State dbs, IEnumerable<Journey<T>> journeys,
-            IOtherModeGenerator walkGenerator)
+        public static (List<Models.Journey>, List<List<Coordinate>>) Translate<T>
+        (this OperatorSet dbs, IEnumerable<Journey<T>> journeys,
+            IOtherModeGenerator walkGenerator, bool compress = false)
             where T : IJourneyMetric<T>
         {
             var list = new List<Models.Journey>();
+            var commonCoordinates = new List<List<Coordinate>>();
             if (journeys == null)
             {
-                return list;
+                return (list, commonCoordinates);
             }
 
+
+            var coordinatesCache = new CoordinatesCache(walkGenerator, compress);
+            string firstDeparture = null;
             foreach (var j in journeys)
             {
-                list.Add(dbs.Translate(j, walkGenerator));
+                var translated = dbs.Translate(j, coordinatesCache);
+                list.Add(translated);
+                if (firstDeparture == null)
+                {
+                    firstDeparture = translated.Departure.Location.Id;
+                }
+
+                if (!translated.Departure.Location.Id.Equals(firstDeparture))
+                {
+                    throw new Exception("Weird: not all the departure locations are the same");
+                }
             }
 
-            return list;
+            if (compress)
+            {
+                commonCoordinates = coordinatesCache.CommonCoordinates.Select(c => c.Item1).ToList();
+            }
+
+            return (list, commonCoordinates);
         }
 
 
-        public static Location LocationOf(this State dbs, string globalId)
+        public static Location LocationOf(this OperatorSet dbs, string globalId)
         {
             var stops = dbs.GetStopsReader().AddOsmReader();
             return !stops.MoveTo(globalId) ? null : new Location(stops);
@@ -301,11 +300,27 @@ namespace Itinero.Transit.Api.Logic
         /// Gives all the connections departing at the given location within the timewindow
         /// </summary>
         internal static LocationSegmentsResult SegmentsForLocation
-        (this State dbs,
+        (this OperatorSet dbs,
             string globalId, DateTime time, DateTime windowEnd)
         {
             if (dbs == null) throw new ArgumentNullException(nameof(dbs));
-            var stops = dbs.GetStopsReader().AddOsmReader();
+
+            if (dbs.EarliestLoadedTime() == DateTime.MaxValue || dbs.LatestLoadedTime() == DateTime.MaxValue)
+            {
+                var msg = $"No data is loaded in the database yet. Please come back later ";
+                throw new ArgumentException(msg);
+            }
+
+            if (!(dbs.EarliestLoadedTime() < time && windowEnd < dbs.LatestLoadedTime()))
+            {
+                var msg = $"The given time period is not loaded in the database: " +
+                          $"You can only query between {dbs.EarliestLoadedTime():s} and {dbs.LatestLoadedTime():s}, \n" +
+                          $"but you request connections between {time:s} and {windowEnd:s}";
+                throw new ArgumentException(msg);
+            }
+
+
+            var stops = dbs.GetStopsReader();
             if (!stops.MoveTo(globalId))
             {
                 return null;
@@ -315,6 +330,8 @@ namespace Itinero.Transit.Api.Logic
             var stop = stops.Id;
 
             var departureEnumerator = dbs.GetConnections();
+
+
             departureEnumerator.MoveTo(time.ToUnixTime());
 
 
@@ -366,6 +383,82 @@ namespace Itinero.Transit.Api.Logic
                 Location = location,
                 Segments = segments.ToArray()
             };
+        }
+
+        public static (List<Coordinate> coordinates, string generator, string license) GetCoordinatesFor(
+            this IOtherModeGenerator walksGenerator, IStop fromStop,
+            IStop toStop)
+        {
+            var coorFrom = new Coordinate(fromStop.Latitude, fromStop.Longitude);
+            var coorTo = new Coordinate(toStop.Latitude, toStop.Longitude);
+
+            var coordinates = new List<Coordinate>
+            {
+                coorFrom, coorTo
+            };
+
+            var gen = walksGenerator.GetSource(fromStop.Id, toStop.Id);
+
+            var license = "";
+
+            if (gen is OsmTransferGenerator osm)
+            {
+                license = "openstreetmap.org/copyright";
+                var route = osm.CreateRoute((coorFrom.Lat, coorFrom.Lon), (coorTo.Lat, coorTo.Lon),
+                    out var _, out var errorMessage);
+                if (route == null)
+                {
+                    Log.Error(
+                        $"Weird: got a journey with an OSM-route from {fromStop.GlobalId} to {toStop.GlobalId}, but now we can't calculate a route anymore... Error given is {errorMessage}");
+                }
+                else
+                {
+                    coordinates = route.Shape.Select(
+                        coor => new Coordinate(coor.Latitude, coor.Longitude)).ToList();
+                }
+            }
+
+            return (coordinates, gen.OtherModeIdentifier(), license);
+        }
+    }
+
+    public struct CoordinatesCache
+    {
+        public readonly bool Compress;
+        private readonly IOtherModeGenerator _walksGenerator;
+        public readonly List<(List<Coordinate>, string license, string generator)> CommonCoordinates;
+        private readonly Dictionary<string, int> _index;
+
+        public CoordinatesCache(IOtherModeGenerator walksGenerator, bool compress)
+        {
+            _walksGenerator = walksGenerator;
+            Compress = compress;
+
+            _index = new Dictionary<string, int>();
+            CommonCoordinates = new List<(List<Coordinate>, string license, string generator)>();
+        }
+
+        public int IndexFor<T>(IStop fromStop, IStop toStop)
+            where T : IJourneyMetric<T>
+        {
+            var coorFrom = new Coordinate(fromStop.Latitude, fromStop.Longitude);
+            var coorTo = new Coordinate(toStop.Latitude, toStop.Longitude);
+
+            var key = $"{coorFrom.Lat},{coorFrom.Lon},{coorTo.Lat},{coorTo.Lon}";
+            if (_index.TryGetValue(key, out var index))
+            {
+                // Already done!
+                return index;
+            }
+
+
+            index = CommonCoordinates.Count;
+            var (coordinates, license, generator) = _walksGenerator.GetCoordinatesFor(fromStop, toStop);
+
+            CommonCoordinates.Add((coordinates, generator, license));
+            _index.Add(key, index);
+
+            return index;
         }
     }
 }

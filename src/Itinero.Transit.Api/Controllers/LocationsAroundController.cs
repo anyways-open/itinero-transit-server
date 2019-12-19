@@ -12,7 +12,7 @@ namespace Itinero.Transit.Api.Controllers
 {
     [Route("[controller]")]
     [ApiController]
-    [ProducesResponseType(200)]   
+    [ProducesResponseType(200)]
     public class LocationsAroundController : ControllerBase
     {
         /// <summary>
@@ -24,12 +24,15 @@ namespace Itinero.Transit.Api.Controllers
         /// </remarks>
         /// <param name="lat">The WGS84-latitude point of where to search</param>
         /// <param name="lon">The WGS84-longitude point of where to search</param>
+        /// <param name="operators">The name(s) of the operators(s) OR the tag(s) to perform route planning on. If a tag is specified, all the operators with this tag will be used. Names and tags can be mixed. All are separated by ';'. Use '*' to match all operators</param>
+
         /// <param name="distance">The maximal distance north, east, south or west that the resulting locations could be.</param>
         [HttpGet]
-        public ActionResult<List<Location>> Get(float lat, float lon, uint distance=500)
+        public ActionResult<List<Location>> Get(float lat, float lon, string operators = "*", uint distance = 500)
         {
-
-            var reader = State.GlobalState.GetStopsReader().AddOsmReader();
+            var reader = State.GlobalState.Operators
+                .GetView(operators)
+                .GetStopsReader().AddOsmReader();
             reader.MoveTo($"https://www.openstreetmap.org/#map=19/{lat}/{lon}");
             var around = new Stop(reader);
             var found = reader.StopsAround(around, distance);
@@ -46,7 +49,7 @@ namespace Itinero.Transit.Api.Controllers
                 reader.MoveTo(location.Id);
                 locations.Add(new Location(reader));
             }
-            
+
             return locations;
         }
     }

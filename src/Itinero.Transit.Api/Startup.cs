@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Itinero.Transit.Api.Logging;
 using Itinero.Transit.Api.Logic;
+using Itinero.Transit.Api.Logic.Search;
 using Itinero.Transit.Api.Logic.Transfers;
 using Itinero.Transit.Logging;
 using Microsoft.AspNetCore.Builder;
@@ -13,6 +14,7 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using NSwag;
 using Serilog;
 using Serilog.Formatting.Json;
@@ -52,31 +54,38 @@ namespace Itinero.Transit.Api
             }
 
 
+            var fileLogger = new FileLogger("logs");
+            var operators = Configuration.LoadOperators();
+
             var state = new State(
-                    Configuration.CreateTransitDbs(), 
+                    operators,
                     otherModeBuilder,
                     otherModeBuilder.RouterDb,
-                    new FileLogger("logs"))
+                    fileLogger
+                )
                 {FreeMessage = "Loading transitdbs"};
+            Log.Information("Loaded configuration");
             State.GlobalState = state;
 
             Log.Information("Loaded tdbs are " +
-                            string.Join(", ", state.TransitDbs
-                                .Select(kvp => kvp.Key)));
+                            string.Join(", ", state.Operators.GetFullView().Operators
+                                .Select(kvp => kvp.Name)));
 
             state.NameIndex = new NameIndexBuilder(new List<string> {"name:nl", "name", "name:fr"})
-                .Build(state.GetStopsReader());
+                .Build(state.Operators.GetFullView().GetStopsReader());
 
 
             Log.Information("Performing initial runs");
             state.FreeMessage = "Running initial data syncs";
 
-            foreach (var (name, (_, synchronizer)) in state.TransitDbs)
+            var allOperators = state.Operators.GetFullView();
+
+            foreach (var provider in allOperators.Operators)
             {
                 try
                 {
-                    Log.Information($"Starting initial run of {name}");
-                    synchronizer.InitialRun();
+                    Log.Information($"Starting initial run of {provider.Name}");
+                    provider.Synchronizer.InitialRun();
                 }
                 catch (Exception e)
                 {
@@ -84,12 +93,12 @@ namespace Itinero.Transit.Api
                 }
             }
 
-            foreach (var (name, (_, synchronizer)) in state.TransitDbs)
+            foreach (var provider in allOperators.Operators)
             {
                 try
                 {
-                    Log.Information($"Starting synchronizer for {name}");
-                    synchronizer.Start();
+                    Log.Information($"Starting synchronizer for {provider.Name}");
+                    provider.Synchronizer.Start();
                 }
                 catch (Exception e)
                 {
@@ -105,7 +114,9 @@ namespace Itinero.Transit.Api
         {
             ConfigureLogging();
 
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+            services.AddMvc(options => { options.EnableEndpointRouting = false; })
+                .SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
+
             services.AddCors(options =>
             {
                 options.AddPolicy("AllowAnyOrigin",
@@ -114,11 +125,23 @@ namespace Itinero.Transit.Api
 
             services.AddSwaggerDocument();
 
-            Task.Factory.StartNew(StartLoadingTransitDbs);
+            Task.Factory.StartNew(
+                () =>
+                {
+                    try
+                    {
+                        StartLoadingTransitDbs();
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Error($"PANIC: could not properly boot the server!\n{e.Message}\n{e.StackTrace}");
+                    }
+                }
+            );
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
             {
@@ -160,15 +183,24 @@ namespace Itinero.Transit.Api
 
                 return next();
             });
-            app.UseSwagger(settings =>
+            app.UseOpenApi(settings =>
             {
                 settings.PostProcess = (document, req) =>
                 {
                     document.Info.Version = "v1";
                     document.Info.Title = "Anyways Transit API";
-                    document.Info.Description = Documentation.ApiDocs;
+                    document.Info.Description = "Welcome to documentation of the Anyways BVBA Transit API.<br />\n" +
+                                                "The API offers routing over various public transport networks, such as train, bus, metro or tram networks." +
+                                                "The heavy lifting of the routing is done by the <a href='https://github.com/openplannerteam/itinero-transit'>Itinero-transit</a> library, which is built to use <a href='https://linkedconnections.org/'>Linked Connections</a>.<br />\n" +
+                                                "<br />" + "<h1> Usage of the API</h1>" +
+                                                "<p>To query for a route using public transport, the API can be freely queried via HTTP. To do this, one must first obtain the identifiers of the departure and arrival stations. In the linked data philosophy, an identifier is an URL referring to a station. To obtain a station, one can either use the <code>LocationsAround</code> or <code>LocationsByName</code> endpoints. Please see the swagger documentation for more details.<p>" +
+                                                "<p>Once that the locations are known, a journey over the PT-network can be obtained via the <code>Journey</code>-endpoint. Again, see the swagger file for a detailed explanation." +
+                                                "" + "<h1>Status of the live server</h1>" +
+                                                "<p>The demo endpoint only loads a few operators over a certain timespan. To see which operators are loaded during what time, consult the <code>status</code> endpoint.</p>" +
+                                                "" + "<h1>Deploying the server</h1>" + "" +
+                                                "<p>To deploy your own Transit-server, use <code>appsettings.json</code> to specify the connection URLs of the operator which you want to load. An example can be found <a href='https://github.com/anyways-open/itinero-transit-server/blob/master/src/Itinero.Transit.Api/appsettings.json'>here</a></p>";
                     document.Info.TermsOfService = "None";
-                    document.Info.Contact = new SwaggerContact
+                    document.Info.Contact = new OpenApiContact
                     {
                         Name = "Anyways",
                         Email = "info@anyways.eu",
@@ -176,14 +208,14 @@ namespace Itinero.Transit.Api
                     };
                     document.BasePath = req.PathBase;
                     document.Host = req.Host.Value;
-                    document.Schemes = new List<SwaggerSchema>(new[]
+                    document.Schemes = new List<OpenApiSchema>(new[]
                     {
-                        SwaggerSchema.Https
+                        OpenApiSchema.Https
                     });
 #if DEBUG
-                    document.Schemes = new List<SwaggerSchema>(new[]
+                    document.Schemes = new List<OpenApiSchema>(new[]
                     {
-                        SwaggerSchema.Http
+                        OpenApiSchema.Http
                     });
 #endif
                 };
@@ -214,7 +246,7 @@ namespace Itinero.Transit.Api
             var logFile = Path.Combine("logs", $"log-itinero-{date}.txt");
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Debug()
-//.MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Information)
+                .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Verbose)
                 .Enrich.FromLogContext()
                 .WriteTo.File(new JsonFormatter(), logFile)
                 .WriteTo.Console()
