@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Net.Mime;
 using Itinero.Transit.Api.Logic;
 using Itinero.Transit.Api.Logic.Transfers;
 using Itinero.Transit.Api.Models;

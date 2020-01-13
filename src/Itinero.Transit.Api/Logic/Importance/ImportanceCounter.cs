@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Itinero.Transit.Data;
 using Itinero.Transit.Data.Core;
 using Itinero.Transit.Data.Synchronization;
 using Itinero.Transit.Utils;
@@ -25,36 +26,30 @@ namespace Itinero.Transit.Api.Logic.Importance
             // Count how many connections depart at the given station
 
             _state = "Scanning connections, currently at: ";
-            var enumerator = db.TransitDb.Latest.ConnectionsDb.GetDepartureEnumerator();
-            foreach (var (start, end) in db.LoadedTimeWindows)
+            var enumerator = db.TransitDb.Latest.ConnectionsDb;
+            foreach (var connection in enumerator)
             {
-                enumerator.MoveTo(start.ToUnixTime());
-                var connection = new Connection();
-                while (enumerator.MoveNext() && enumerator.CurrentDateTime < end.ToUnixTime())
+                _nowScanning = connection.DepartureTime;
+                if (connection.CanGetOn())
                 {
-                    enumerator.Current(connection);
-                    _nowScanning = connection.DepartureTime;
-                    if (connection.CanGetOn())
-                    {
-                        IncreaseCount(frequencies, connection.DepartureStop);
-                    }
+                    IncreaseCount(frequencies, connection.DepartureStop);
+                }
 
-                    if (connection.CanGetOff())
-                    {
-                        IncreaseCount(frequencies, connection.ArrivalStop);
-                    }
+                if (connection.CanGetOff())
+                {
+                    IncreaseCount(frequencies, connection.ArrivalStop);
                 }
             }
 
             _state = "Converting internal IDs into URIs";
             _nowScanning = 0;
-            var stopsReader = db.TransitDb.Latest.StopsDb.GetReader();
+            var stopsReader = db.TransitDb.Latest.StopsDb;
             var importances = new Dictionary<string, uint>();
             // Translate internal ids to URI's
             foreach (var (id, importance) in frequencies)
             {
-                stopsReader.MoveTo(id);
-                importances[stopsReader.GlobalId] = importance;
+                var stop = stopsReader.Get(id);
+                importances[stop.GlobalId] = importance;
             }
 
             State.GlobalState.ImportancesInternal = frequencies;

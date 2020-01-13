@@ -4,7 +4,6 @@ using System.Linq;
 using Itinero.Transit.Api.Logic.Transfers;
 using Itinero.Transit.Api.Models;
 using Itinero.Transit.Data;
-using Itinero.Transit.Data.Aggregators;
 using Itinero.Transit.Data.Core;
 using Itinero.Transit.IO.OSM.Data;
 using Itinero.Transit.Journey;
@@ -55,10 +54,10 @@ namespace Itinero.Transit.Api.Logic
         internal static (Segment, int newIndex) TranslateSegment<T>(this OperatorSet dbs, List<Journey<T>> parts, int i)
             where T : IJourneyMetric<T>
         {
-            var stops = dbs.GetStopsReader().AddOsmReader();
+            var stops = dbs.GetStops().AddOsmReader();
 
             var j = parts[i];
-            var connectionReader = dbs.GetConnectionsReader();
+            var connectionReader = dbs.GetConnections();
             var connection = connectionReader.Get(j.Connection);
             if (connection == null)
             {
@@ -66,23 +65,18 @@ namespace Itinero.Transit.Api.Logic
             }
 
             // Get all the trip info for this segment
-            var tripReader = dbs.GetTripsReader();
-            var trip = new Trip();
-            tripReader.Get(j.TripId, trip);
+            var tripReader = dbs.GetTrips();
+            var trip = tripReader.Get(j.TripId);
             var vehicleId = trip.GlobalId ?? "";
-            string headsign = "";
-            if (trip.Attributes != null && !trip.Attributes.TryGetValue("headsign", out headsign))
-            {
-                headsign = "";
-            }
-
+            trip.TryGetAttribute("headsign", out var headsign);
+            trip.TryGetAttribute("departureDelay", out var depDelay, "0");
 
             // Get the departure information
             var departure = stops.LocationOf(connection.DepartureStop);
             var departureTimed = new TimedLocation(
                 departure,
                 connection.DepartureTime.FromUnixTime(),
-                connection.DepartureDelay);
+                ushort.Parse(depDelay));
 
 
             // Now, we walk along the journey to find the end of this segment
@@ -123,17 +117,19 @@ namespace Itinero.Transit.Api.Logic
                 // We should add this to the intermediate stops
                 var loc = stops.LocationOf(parts[i].Location);
 
-                var tloc = new TimedLocation(loc, parts[i].Time, connection.ArrivalDelay);
+                connection.TryGetAttribute("arrivalDelay", out var arrDelay, "0");
+                var tloc = new TimedLocation(loc, parts[i].Time, ushort.Parse(arrDelay));
                 allStations.Add(tloc);
             }
             // At this point, parts[i] is the last part of our journey
 
             j = parts[i];
 
-            connectionReader.Get(j.Connection, connection);
-            var arrival = stops.LocationOf(connection.ArrivalStop);
+            connection = connectionReader.Get(j.Connection);
+            var arrival = stops.LocationOf(connection.ArrivalStop); 
+            connection.TryGetAttribute("arrivalDelay", out var arrDelay0, "0");
             var arrivalTimed = new TimedLocation(arrival,
-                connection.ArrivalTime, connection.ArrivalDelay);
+                connection.ArrivalTime, ushort.Parse(arrDelay0));
 
             if (!allStations.Last().Location.Id.Equals(arrival.Id))
             {
@@ -151,7 +147,7 @@ namespace Itinero.Transit.Api.Logic
         internal static Segment TranslateWalkSegment<T>(this OperatorSet dbs,
             Journey<T> j, CoordinatesCache coordinatesCache) where T : IJourneyMetric<T>
         {
-            var stops = StopsReaderAggregator.CreateFrom(dbs.All()).AddOsmReader();
+            var stops = dbs.GetStops().AddOsmReader();
             if (j.Location.Equals(j.PreviousLink.Location))
             {
                 // Object represent a transfer without moving...
@@ -169,10 +165,8 @@ namespace Itinero.Transit.Api.Logic
             var arrivalTimed = new TimedLocation(
                 arrival, j.Time, 0);
 
-            stops.MoveTo(j.PreviousLink.Location);
-            var fromStop = new Stop(stops);
-            stops.MoveTo(j.Location);
-            var toStop = new Stop(stops);
+            var fromStop = stops.Get(j.PreviousLink.Location);
+            var toStop = stops.Get(j.Location);
 
             var index = coordinatesCache.IndexFor<T>(fromStop, toStop);
             var (coordinates, license, description) = coordinatesCache.CommonCoordinates[index];
@@ -281,18 +275,13 @@ namespace Itinero.Transit.Api.Logic
 
         public static Location LocationOf(this OperatorSet dbs, string globalId)
         {
-            var stops = dbs.GetStopsReader().AddOsmReader();
-            return !stops.MoveTo(globalId) ? null : new Location(stops);
+            var stops = dbs.GetStops().AddOsmReader();
+            return new Location(stops.Get(globalId));
         }
 
-        private static Location LocationOf(this IStopsReader stops, StopId localId)
+        private static Location LocationOf(this IStopsDb stops, StopId localId)
         {
-            if (!stops.MoveTo(localId))
-            {
-                throw new NullReferenceException("Location " + localId + " not found");
-            }
-
-            return new Location(stops);
+            return new Location(stops.Get(localId));
         }
 
 
@@ -320,21 +309,20 @@ namespace Itinero.Transit.Api.Logic
             }
 
 
-            var stops = dbs.GetStopsReader();
-            if (!stops.MoveTo(globalId))
+            var stopsDb = dbs.GetStops();
+            if (!stopsDb.TryGet(globalId, out var stop))
             {
                 return null;
             }
 
-            var location = new Location(stops);
-            var stop = stops.Id;
 
-            var departureEnumerator = dbs.GetConnections();
+            var trips = dbs.GetTrips();
+            var timeMax = windowEnd.ToUnixTime();
+            var segments = new List<Segment>();
+            var location = new Location(stop);
 
-
-            departureEnumerator.MoveTo(time.ToUnixTime());
-
-
+            var connections = dbs.GetConnections();
+            var departureEnumerator = connections.GetEnumeratorAt(time.ToUnixTime());
             if (!departureEnumerator.MoveNext())
             {
                 return new LocationSegmentsResult
@@ -344,34 +332,27 @@ namespace Itinero.Transit.Api.Logic
                 };
             }
 
-            var trips = dbs.GetTripsReader();
-            var timeMax = windowEnd.ToUnixTime();
-            var segments = new List<Segment>();
             do
             {
-                var connection = new Connection();
-                departureEnumerator.Current(connection);
+                var connection = connections.Get(departureEnumerator.Current);
+                var depStop = stopsDb.Get(connection.DepartureStop);
+                var arrStop = stopsDb.Get(connection.ArrivalStop);
 
-                if (!connection.DepartureStop.Equals(stop)) continue;
+                if (!depStop.Equals(stop)) continue;
                 if (connection.DepartureTime >= timeMax) break;
 
-                var trip = new Trip();
-                var headSign = "";
-                var route = "";
-                if (trips.Get(connection.TripId, trip))
-                {
-                    trip.Attributes.TryGetValue("headsign", out headSign);
-                    trip.Attributes.TryGetValue("route", out route);
-                }
+                var trip = trips.Get(connection.TripId);
+                trip.TryGetAttribute("headsign", out var headSign);
+                trip.TryGetAttribute("route", out var route);
 
+                connection.TryGetAttribute("departureDelay", out var depDelay, "0");
+                connection.TryGetAttribute("arrivalDelay", out var arrDelay, "0");
 
-                if (!stops.MoveTo(connection.DepartureStop)) continue;
-                var departure = new TimedLocation(new Location(stops),
-                    connection.DepartureTime, connection.DepartureDelay);
+                var departure = new TimedLocation(new Location(depStop),
+                    connection.DepartureTime, ushort.Parse(depDelay));
 
-                if (!stops.MoveTo(connection.ArrivalStop)) continue;
-                var arrival = new TimedLocation(new Location(stops),
-                    connection.ArrivalTime, connection.ArrivalDelay);
+                var arrival = new TimedLocation(new Location(arrStop),
+                    connection.ArrivalTime, ushort.Parse(arrDelay));
 
 
                 segments.Add(new Segment(departure, arrival, route, headSign, null));
@@ -386,8 +367,8 @@ namespace Itinero.Transit.Api.Logic
         }
 
         public static (List<Coordinate> coordinates, string generator, string license) GetCoordinatesFor(
-            this IOtherModeGenerator walksGenerator, IStop fromStop,
-            IStop toStop)
+            this IOtherModeGenerator walksGenerator, Stop fromStop,
+            Stop toStop)
         {
             var coorFrom = new Coordinate(fromStop.Latitude, fromStop.Longitude);
             var coorTo = new Coordinate(toStop.Latitude, toStop.Longitude);
@@ -397,7 +378,7 @@ namespace Itinero.Transit.Api.Logic
                 coorFrom, coorTo
             };
 
-            var gen = walksGenerator.GetSource(fromStop.Id, toStop.Id);
+            var gen = walksGenerator.GetSource(fromStop, toStop);
 
             var license = "";
 
@@ -438,7 +419,7 @@ namespace Itinero.Transit.Api.Logic
             CommonCoordinates = new List<(List<Coordinate>, string license, string generator)>();
         }
 
-        public int IndexFor<T>(IStop fromStop, IStop toStop)
+        public int IndexFor<T>(Stop fromStop, Stop toStop)
             where T : IJourneyMetric<T>
         {
             var coorFrom = new Coordinate(fromStop.Latitude, fromStop.Longitude);

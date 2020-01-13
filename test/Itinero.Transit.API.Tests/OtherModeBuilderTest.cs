@@ -14,7 +14,7 @@ namespace Itinero.Transit.API.Tests
         {
             var omb = new OtherModeBuilder();
 
-            var empty = new List<StopId>();
+            var empty = new List<Stop>();
 
             var crow = omb.Create("crowsflight&speed=1.4&maxDistance=500", empty, empty);
             
@@ -32,7 +32,7 @@ namespace Itinero.Transit.API.Tests
         {
             var omb = new OtherModeBuilder();
 
-            var empty = new List<StopId>();
+            var empty = new List<Stop>();
 
 
             var desc = "firstLastMile" +

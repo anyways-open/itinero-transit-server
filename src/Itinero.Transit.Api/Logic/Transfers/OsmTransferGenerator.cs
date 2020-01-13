@@ -6,7 +6,6 @@ using Itinero.IO.Osm.Tiles.Parsers;
 using Itinero.LocalGeo;
 using Itinero.Profiles;
 using Itinero.Profiles.Lua.Osm;
-using Itinero.Transit.Data;
 using Itinero.Transit.Data.Core;
 using Itinero.Transit.Logging;
 using Itinero.Transit.OtherMode;
@@ -64,9 +63,9 @@ namespace Itinero.Transit.Api.Logic.Transfers
             _profile = profile ?? OsmProfiles.Pedestrian;
         }
 
-        public uint TimeBetween(IStop from, IStop to)
+        public uint TimeBetween(Stop from, Stop to)
         {
-            if (from.Id.Equals(to.Id))
+            if (from.Equals(to))
             {
                 // This thing is not allowed to generate transfers between the same stops
                 return uint.MaxValue;
@@ -168,16 +167,16 @@ namespace Itinero.Transit.Api.Logic.Transfers
             }
         }
 
-        public Dictionary<StopId, uint> TimesBetween(IStop from,
-            IEnumerable<IStop> to)
+        public Dictionary<Stop, uint> TimesBetween(Stop from,
+            IEnumerable<Stop> to)
         {
             to = to.ToList();
             try
             {
-                var times = new Dictionary<StopId, uint>();
+                var times = new Dictionary<Stop, uint>();
 
                 // collect targets that are in range.
-                var targets = new List<(SnapPoint target, IStop stop)>();
+                var targets = new List<(SnapPoint target, Stop stop)>();
                 foreach (var t in to)
                 {
                     var distance =
@@ -185,13 +184,13 @@ namespace Itinero.Transit.Api.Logic.Transfers
                     // Small patch for small distances...
                     if (distance < 20)
                     {
-                        times[t.Id] = 0;
+                        times[t] = 0;
                         continue;
                     }
 
                     if (distance > _searchDistance)
                     {
-                        times[t.Id] = uint.MaxValue;
+                        times[t] = uint.MaxValue;
                         continue;
                     }
 
@@ -221,11 +220,11 @@ namespace Itinero.Transit.Api.Logic.Transfers
                     var result = routes[i];
                     if (result.IsError || result.Value.TotalDistance > Range())
                     {
-                        times[stop.Id] = uint.MaxValue;
+                        times[stop] = uint.MaxValue;
                     }
                     else
                     {
-                        times[stop.Id] = (uint) result.Value.TotalTime;
+                        times[stop] = (uint) result.Value.TotalTime;
                     }
                 }
 
@@ -254,15 +253,15 @@ namespace Itinero.Transit.Api.Logic.Transfers
             }
         }
 
-        public Dictionary<StopId, uint> TimesBetween(IEnumerable<IStop> from, IStop to)
+        public Dictionary<Stop, uint> TimesBetween(IEnumerable<Stop> from, Stop to)
         {
             try
             {
-                var times = new Dictionary<StopId, uint>();
+                var times = new Dictionary<Stop, uint>();
                 from = from.ToList();
 
                 // collect targets that are in range.
-                var sources = new List<(SnapPoint target, IStop stop)>();
+                var sources = new List<(SnapPoint target, Stop stop)>();
                 foreach (var f in from)
                 {
                     var distance =
@@ -270,13 +269,13 @@ namespace Itinero.Transit.Api.Logic.Transfers
                     // Small patch for small distances...
                     if (distance < 20)
                     {
-                        times[f.Id] = 0;
+                        times[f] = 0;
                         continue;
                     }
 
                     if (distance > _searchDistance)
                     {
-                        times[f.Id] = uint.MaxValue;
+                        times[f] = uint.MaxValue;
                         continue;
                     }
 
@@ -305,11 +304,11 @@ namespace Itinero.Transit.Api.Logic.Transfers
                     var result = routes[i];
                     if (result.IsError || result.Value.TotalDistance > Range())
                     {
-                        times[stop.Id] = uint.MaxValue;
+                        times[stop] = uint.MaxValue;
                     }
                     else
                     {
-                        times[stop.Id] = (uint) result.Value.TotalTime;
+                        times[stop] = (uint) result.Value.TotalTime;
                     }
                 }
 
@@ -349,7 +348,7 @@ namespace Itinero.Transit.Api.Logic.Transfers
                 $"osm&maxDistance={_searchDistance}&profile={_profile.Name}";
         }
 
-        public IOtherModeGenerator GetSource(StopId from, StopId to)
+        public IOtherModeGenerator GetSource(Stop from, Stop to)
         {
             return this;
         }

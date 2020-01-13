@@ -72,7 +72,7 @@ namespace Itinero.Transit.Api
                                 .Select(kvp => kvp.Name)));
 
             state.NameIndex = new NameIndexBuilder(new List<string> {"name:nl", "name", "name:fr"})
-                .Build(state.Operators.GetFullView().GetStopsReader());
+                .Build(state.Operators.GetFullView().GetStops());
 
 
             Log.Information("Performing initial runs");

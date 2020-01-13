@@ -8,13 +8,11 @@ using Itinero.IO.Osm.Tiles;
 using Itinero.Profiles;
 using Itinero.Profiles.Lua;
 using Itinero.Profiles.Lua.Osm;
-using Itinero.Transit.Data;
 using Itinero.Transit.Data.Core;
 using Itinero.Transit.OtherMode;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json.Linq;
 using Serilog;
-
 
 namespace Itinero.Transit.Api.Logic.Transfers
 {
@@ -24,9 +22,9 @@ namespace Itinero.Transit.Api.Logic.Transfers
 
         public readonly
             Dictionary<string,
-                Func<Dictionary<string, string>, List<StopId>, List<StopId>, (IOtherModeGenerator, bool useCache)>>
+                Func<Dictionary<string, string>, List<Stop>, List<Stop>, (IOtherModeGenerator, bool useCache)>>
             Factories =
-                new Dictionary<string, Func<Dictionary<string, string>, List<StopId>, List<StopId>, (IOtherModeGenerator
+                new Dictionary<string, Func<Dictionary<string, string>, List<Stop>, List<Stop>, (IOtherModeGenerator
                     , bool useCache)>>();
 
 
@@ -138,8 +136,8 @@ namespace Itinero.Transit.Api.Logic.Transfers
 
             Factories.Add(
                 new FirstLastMilePolicy(
-                    new DummyOtherMode(), new DummyOtherMode(), new List<StopId>(),
-                    new DummyOtherMode(), new List<StopId>()).FixedId(),
+                    new DummyOtherMode(), new DummyOtherMode(), new List<Stop>(),
+                    new DummyOtherMode(), new List<Stop>()).FixedId(),
                 (dict, departures, arrivals) =>
                 {
                     var defaultModeString =
@@ -166,7 +164,7 @@ namespace Itinero.Transit.Api.Logic.Transfers
 
             foreach (var f in Factories)
             {
-                var mode = f.Value.Invoke(new Dictionary<string, string>(), new List<StopId>(), new List<StopId>());
+                var mode = f.Value.Invoke(new Dictionary<string, string>(), new List<Stop>(), new List<Stop>());
                 urls.Add(mode.Item1.OtherModeIdentifier());
             }
 
@@ -177,7 +175,7 @@ namespace Itinero.Transit.Api.Logic.Transfers
             new Dictionary<string, IOtherModeGenerator>();
 
 
-        public IOtherModeGenerator Create(string description, List<StopId> starts, List<StopId> ends)
+        public IOtherModeGenerator Create(string description, List<Stop> starts, List<Stop> ends)
         {
             if (_cachedOtherModeGenerators.ContainsKey(description))
             {
@@ -287,17 +285,17 @@ namespace Itinero.Transit.Api.Logic.Transfers
 
     class DummyOtherMode : IOtherModeGenerator
     {
-        public uint TimeBetween(IStop from, IStop to)
+        public uint TimeBetween(Stop from, Stop to)
         {
             throw new NotImplementedException();
         }
 
-        public Dictionary<StopId, uint> TimesBetween(IStop from, IEnumerable<IStop> to)
+        public Dictionary<Stop, uint> TimesBetween(Stop from, IEnumerable<Stop> to)
         {
             throw new NotImplementedException();
         }
 
-        public Dictionary<StopId, uint> TimesBetween(IEnumerable<IStop> from, IStop to)
+        public Dictionary<Stop, uint> TimesBetween(IEnumerable<Stop> from, Stop to)
         {
             throw new NotImplementedException();
         }
@@ -312,7 +310,7 @@ namespace Itinero.Transit.Api.Logic.Transfers
             return "<some other mode identifier>";
         }
 
-        public IOtherModeGenerator GetSource(StopId from, StopId to)
+        public IOtherModeGenerator GetSource(Stop from, Stop to)
         {
             return this;
         }

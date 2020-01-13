@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using Itinero.Transit.Data.Core;
 using Itinero.Transit.Journey;
+// ReSharper disable ImpureMethodCallOnReadonlyValueField
 
 namespace Itinero.Transit.Api.Logic.Importance
 {

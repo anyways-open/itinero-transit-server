@@ -16,7 +16,7 @@ namespace Itinero.Transit.Api.Logic
         /// </summary>
         public Func<DateTime, DateTime, TimeSpan> SearchLengthCalculator { get; }
 
-        public OperatorSet OperatorSet;
+        public readonly OperatorSet OperatorSet;
 
 
         public RealLifeProfile(

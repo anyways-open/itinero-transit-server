@@ -4,6 +4,7 @@ using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Itinero.Transit.Data;
+using Itinero.Transit.Data.Core;
 using Serilog;
 
 namespace Itinero.Transit.Api.Logic.Search
@@ -22,18 +23,18 @@ namespace Itinero.Transit.Api.Logic.Search
         }
 
 
-        public NameIndex Build(IStopsReader reader)
+        public NameIndex Build(IStopsDb reader)
         {
             return new NameIndex(BuildTrie(reader), reader);
         }
 
-        public SmallTrie<(string, int)> BuildTrie(IStopsReader allStops)
+        public SmallTrie<(string, int)> BuildTrie(IStopsDb allStops)
         {
             var trie = new SmallTrie<(string, int)>();
-            allStops.Reset();
-            while (allStops.MoveNext())
+
+            foreach (var stop in allStops)
             {
-                var names = ExtractNames(allStops);
+                var names = ExtractNames(stop);
                 if (names == null)
                 {
                     continue;
@@ -46,7 +47,7 @@ namespace Itinero.Transit.Api.Logic.Search
                         continue;
                     }
 
-                    trie.Add(name.ToCharArray().ToList(), (allStops.GlobalId, dist));
+                    trie.Add(name.ToCharArray().ToList(), (stop.GlobalId, dist));
                 }
             }
 
@@ -54,7 +55,7 @@ namespace Itinero.Transit.Api.Logic.Search
         }
 
 
-        private IEnumerable<(string, int)> ExtractNames(IStop stop)
+        private IEnumerable<(string, int)> ExtractNames(Stop stop)
         {
             var n = NameByAttribute(stop);
             if (n == null)
@@ -119,14 +120,13 @@ namespace Itinero.Transit.Api.Logic.Search
         }
 
 
-        private string NameByAttribute(IStop stop)
+        private string NameByAttribute(Stop stop)
         {
             try
             {
                 var attr = stop.Attributes;
                 foreach (var key in _attributeKeysToUse)
                 {
-                    
                     if (attr.TryGetValue(key, out var v))
                     {
                         return v;

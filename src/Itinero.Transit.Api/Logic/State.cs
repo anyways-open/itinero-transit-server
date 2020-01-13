@@ -105,6 +105,10 @@ namespace Itinero.Transit.Api.Logic
             IEnumerable<string> altNames,
             IEnumerable<string> tags)
         {
+            if (string.IsNullOrEmpty(name))
+            {
+                throw new ArgumentException("Empty or null names are not allowed");
+            }
             MaxSearch = maxSearch;
             Name = name;
             Tdb = tdb;

@@ -1000,6 +1000,44 @@ namespace Itinero.Transit.API.Tests.Functional
                     }
                 }
             );
+            
+            
+            SncbChallenge("Journey", "EAS with FirstLastMile ebike, BxlN (OSM) -> Aalst (OSM)",
+                new Dictionary<string, string>
+                {
+                    {"from", "https://www.openstreetmap.org/#map=19/50.86051035579558/4.358399302117419"},
+                    {"to", "https://www.openstreetmap.org/#map=19/50.942586962931955/4.038028645195254"},
+                    {"departure", TestDepartureTime()},
+                    {
+                        "walksGeneratorDescription",
+                        "firstLastMile&" +
+                        "default=" +
+                        Uri.EscapeDataString(
+                            "crowsflight&maxDistance=500&speed=1.4") +
+                        "&firstMile=" +
+                        Uri.EscapeDataString(
+                            "osm&maxDistance=5000&profile=ebike") +
+                        "&lastMile=" +
+                        Uri.EscapeDataString(
+                            "osm&maxDistance=5000&profile=ebike")
+                    }
+                },
+                jobj =>
+                {
+                    AssertNotNull(jobj["journeys"], "Journeys are null");
+                    AssertTrue(jobj["journeys"].Any(), "No journeys found");
+                    foreach (var j in jobj["journeys"])
+                    {
+                        AssertEqual("https://www.openstreetmap.org/#map=19/50.860510000000005/4.3583989999999915",
+                            j["departure"]["location"]["id"],
+                            "Wrong departure stations");
+
+                        AssertEqual("https://www.openstreetmap.org/#map=19/50.942586000000006/4.038027999999997",
+                            j["arrival"]["location"]["id"],
+                            "Wrong arrival stations");
+                    }
+                }
+            );
 
 
             SncbChallenge("Journey", "PCS with FirstLastMile ebike, BxlN (OSM) -> Aalst (OSM)",
@@ -1040,42 +1078,6 @@ namespace Itinero.Transit.API.Tests.Functional
                 }
             );
 
-            SncbChallenge("Journey", "EAS with FirstLastMile ebike, BxlN (OSM) -> Aalst (OSM)",
-                new Dictionary<string, string>
-                {
-                    {"from", "https://www.openstreetmap.org/#map=19/50.86051035579558/4.358399302117419"},
-                    {"to", "https://www.openstreetmap.org/#map=19/50.942586962931955/4.038028645195254"},
-                    {"departure", TestDepartureTime()},
-                    {
-                        "walksGeneratorDescription",
-                        "firstLastMile&" +
-                        "default=" +
-                        Uri.EscapeDataString(
-                            "crowsflight&maxDistance=500&speed=1.4") +
-                        "&firstMile=" +
-                        Uri.EscapeDataString(
-                            "osm&maxDistance=5000&profile=ebike") +
-                        "&lastMile=" +
-                        Uri.EscapeDataString(
-                            "osm&maxDistance=5000&profile=ebike")
-                    }
-                },
-                jobj =>
-                {
-                    AssertNotNull(jobj["journeys"], "Journeys are null");
-                    AssertTrue(jobj["journeys"].Any(), "No journeys found");
-                    foreach (var j in jobj["journeys"])
-                    {
-                        AssertEqual("https://www.openstreetmap.org/#map=19/50.860510000000005/4.3583989999999915",
-                            j["departure"]["location"]["id"],
-                            "Wrong departure stations");
-
-                        AssertEqual("https://www.openstreetmap.org/#map=19/50.942586000000006/4.038027999999997",
-                            j["arrival"]["location"]["id"],
-                            "Wrong arrival stations");
-                    }
-                }
-            );
 
             SncbChallenge("Journey", "PCS with FirstLastMile ebike, WTC3 BxlN (OSM) -> Gent (OSM)",
                 new Dictionary<string, string>

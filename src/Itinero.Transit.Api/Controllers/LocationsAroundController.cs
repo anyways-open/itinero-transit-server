@@ -2,8 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Itinero.Transit.Api.Logic;
 using Itinero.Transit.Api.Models;
-using Itinero.Transit.Data.Core;
-using Itinero.Transit.IO.OSM.Data;
+using Itinero.Transit.Data;
 using Microsoft.AspNetCore.Mvc;
 
 // ReSharper disable PossibleMultipleEnumeration
@@ -16,7 +15,7 @@ namespace Itinero.Transit.Api.Controllers
     public class LocationsAroundController : ControllerBase
     {
         /// <summary>
-        /// Searches for stops which are at most 500 meters north, east, south or west from the specified point.
+        /// Searches for stops which are at most 500 meters away from the specified point.
         /// </summary>
         /// <remarks>
         /// Note that we construct a bounding square around `(lat, lon)`, namely `(lat - distance, lon - distance, lat + distance, lon + distance)`.
@@ -25,32 +24,16 @@ namespace Itinero.Transit.Api.Controllers
         /// <param name="lat">The WGS84-latitude point of where to search</param>
         /// <param name="lon">The WGS84-longitude point of where to search</param>
         /// <param name="operators">The name(s) of the operators(s) OR the tag(s) to perform route planning on. If a tag is specified, all the operators with this tag will be used. Names and tags can be mixed. All are separated by ';'. Use '*' to match all operators</param>
-
         /// <param name="distance">The maximal distance north, east, south or west that the resulting locations could be.</param>
         [HttpGet]
         public ActionResult<List<Location>> Get(float lat, float lon, string operators = "*", uint distance = 500)
         {
-            var reader = State.GlobalState.Operators
+            var stopsDb = State.GlobalState.Operators
                 .GetView(operators)
-                .GetStopsReader().AddOsmReader();
-            reader.MoveTo($"https://www.openstreetmap.org/#map=19/{lat}/{lon}");
-            var around = new Stop(reader);
-            var found = reader.StopsAround(around, distance);
-            if (found == null || !found.Any())
-            {
-                return NotFound($"Could not find any stop close by ({lat} lat,{lon} lon) within {distance}m");
-            }
+                .GetStops();
 
-            var locations = new List<Location>();
-            foreach (var location in found)
-            {
-                // The 'found' list does _not_ contain the attributes such as 'Name'
-                // So we query each station individually again
-                reader.MoveTo(location.Id);
-                locations.Add(new Location(reader));
-            }
-
-            return locations;
+            return stopsDb.GetInRange((lon, lat), distance)
+                .Select(stop => new Location(stop)).ToList();
         }
     }
 }

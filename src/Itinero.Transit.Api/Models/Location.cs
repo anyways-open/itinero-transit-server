@@ -1,7 +1,8 @@
 using System;
 using System.Collections.Generic;
-using Itinero.Transit.Data;
+using Itinero.Transit.Data.Core;
 using Serilog;
+
 // ReSharper disable CollectionNeverQueried.Global
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 
@@ -14,7 +15,7 @@ namespace Itinero.Transit.Api.Models
     /// </summary>
     public class Location
     {
-        internal Location(IStop source)
+        internal Location(Stop source)
             : this(source.GlobalId, null,
                 source.Latitude, source.Longitude)
         {
@@ -24,17 +25,17 @@ namespace Itinero.Transit.Api.Models
                 if (source.Attributes == null ||
                     !source.Attributes.TryGetValue("name", out name))
                 {
-                    Log.Verbose($"Name not found on stop {source.Id}");
+                    Log.Verbose($"Name not found on stop");
                 }
 
                 Name = name;
 
                 if (source.Attributes == null) return;
-                foreach (var attr in source.Attributes)
+                foreach (var (key, value) in source.Attributes)
                 {
-                    if (attr.Key.StartsWith("name:"))
+                    if (key.StartsWith("name:"))
                     {
-                        TranslatedNames[attr.Key.Substring(5)] = attr.Value;
+                        TranslatedNames[key.Substring(5)] = value;
                     }
                 }
             }

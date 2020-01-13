@@ -4,12 +4,12 @@ using Itinero.Transit.Api.Logic;
 using Itinero.Transit.Api.Logic.Transfers;
 using Itinero.Transit.Data;
 using Itinero.Transit.Data.Core;
+using Itinero.Transit.IO.OSM.Data;
 using Itinero.Transit.Journey;
 using Itinero.Transit.Journey.Metric;
 using Itinero.Transit.OtherMode;
 using Itinero.Transit.Utils;
 using Xunit;
-using Attribute = Itinero.Transit.Data.Attributes.Attribute;
 
 namespace Itinero.Transit.API.Tests
 {
@@ -22,16 +22,18 @@ namespace Itinero.Transit.API.Tests
             var tdb = new TransitDb(0);
 
             var writer = tdb.GetWriter();
-            var stop0 = writer.AddOrUpdateStop("https://example.org/stop0", 0, 0);
-            var stop1 = writer.AddOrUpdateStop("https://example.org/stop1", 1, 1);
-            var stop2 = writer.AddOrUpdateStop("https://example.org/stop2", 2, 2);
+            var stop0 = writer.AddOrUpdateStop(new Stop("https://example.org/stop0", (0, 0)));
+            var stop1 = writer.AddOrUpdateStop(new Stop("https://example.org/stop1", (1, 1)));
+            var stop2 = writer.AddOrUpdateStop(new Stop("https://example.org/stop2", (2, 2)));
 
-            var trip0 = writer.AddOrUpdateTrip("https://example.org/trip0",
-                new[] {new Attribute("headsign", "Oostende")});
+            var trip0 = writer.AddOrUpdateTrip(new Trip("https://example.org/trip0",
+                new Dictionary<string, string>() {{"headsign", "Oostende"}}));
 
-            var conn0 = writer.AddOrUpdateConnection(stop0, stop1, "https://example.org/conn1", depDate.AddMinutes(-10),
+            var conn0 = writer.AddOrUpdateConnection(
+                new Connection("https://example.org/conn1",
+                stop0, stop1,  depDate.AddMinutes(-10).ToUnixTime(),
                 10 * 60,
-                0, 0, trip0, 0);
+                0, trip0));
             writer.Close();
 
             var con = tdb.Latest.ConnectionsDb;
@@ -41,7 +43,7 @@ namespace Itinero.Transit.API.Tests
                 depDate.ToUnixTime(), TransferMetric.Factory,
                 Journey<TransferMetric>.EarliestArrivalScanJourney);
 
-            var journey0 = genesis.ChainForward(connection);
+            var journey0 = genesis.ChainForward(conn0, connection);
 
             var journey1 = journey0.ChainSpecial(
                 Journey<TransferMetric>.OTHERMODE, depDate.AddMinutes(15).ToUnixTime(),
@@ -76,11 +78,11 @@ namespace Itinero.Transit.API.Tests
             
             var tdb = new TransitDb(0);
             var wr = tdb.GetWriter();
-            var l = wr.AddOrUpdateStop("Some Station", 4.123, 51.789, null);
+            var l = wr.AddOrUpdateStop(new Stop("Some Station", (51.789, 4.123 )));
 
-            var rootL = new StopId(1, 140860940, 184354050); // Supposed to be an OSM-location
-            var connection = new Connection(new ConnectionId(0, 1),
-                "testConnection", rootL, l, previousTime, (ushort) (time - previousTime), new TripId(0, 0));
+            var rootL = new OsmStopsDb(1).GetId("https://www.openstreetmap.org/#map=17/51.20445/3.22701");
+            var connection = new Connection(
+                "testConnection", rootL, l, previousTime, (ushort) (time - previousTime), 0,new TripId(0, 0));
 
             var connId = wr.AddOrUpdateConnection(connection);
             wr.Close();

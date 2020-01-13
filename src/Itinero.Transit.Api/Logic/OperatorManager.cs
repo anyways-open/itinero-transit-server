@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Itinero.Transit.Data;
 using Itinero.Transit.Data.Aggregators;
-using Itinero.Transit.Data.Core;
 using Itinero.Transit.Utils;
 
 namespace Itinero.Transit.Api.Logic
@@ -134,52 +133,37 @@ namespace Itinero.Transit.Api.Logic
             return Operators.Select(v => v.Tdb.Latest);
         }
 
-        private StopSearchCache _cachedStopsReader;
-
         public OperatorSet(List<Operator> transitDbs)
         {
             Operators = transitDbs;
         }
 
-        /// <summary>
-        /// Get a stops reader for all the loaded databases.
-        /// </summary>
-        /// <returns></returns>
-        public IStopsReader GetStopsReader()
+
+        private IStopsDb _cachedStopsDb;
+
+        public IStopsDb GetStops()
         {
-            var newReader = StopsReaderAggregator.CreateFrom(
-                All().Select(tdb => (IStopsReader) tdb.StopsDb.GetReader()).ToList());
-            if (_cachedStopsReader == null)
+            if (_cachedStopsDb == null)
             {
-                _cachedStopsReader = newReader.UseCache();
-                return _cachedStopsReader;
+                _cachedStopsDb = StopsDbAggregator.CreateFrom(
+                    All().Select(tdb => tdb.StopsDb).ToList()).UseCache();
             }
 
-            // Return a new stospReader which shares the cache with the already existing cache
-            return new StopSearchCache(newReader, _cachedStopsReader);
+            return _cachedStopsDb;
         }
 
-        public IDatabaseReader<ConnectionId, Connection> GetConnectionsReader()
+        public IConnectionsDb GetConnections()
         {
-            var readers = All().Select(tdb => tdb.ConnectionsDb);
-
-            return DatabaseEnumeratorAggregator<ConnectionId, Connection>.CreateFrom(readers);
-        }
-
-        public IConnectionEnumerator GetConnections()
-        {
-            var readers = All().Select(tdb =>
-                (IConnectionEnumerator) tdb.ConnectionsDb.GetDepartureEnumerator()).ToList();
-
-            return ConnectionEnumeratorAggregator.CreateFrom(readers);
+            var dbs = All().Select(tdb => tdb.ConnectionsDb);
+            return ConnectionsDbAggregator.CreateFrom(dbs.ToList());
         }
 
 
-        public IDatabaseReader<TripId, Trip> GetTripsReader()
+        public ITripsDb GetTrips()
         {
-            var readers =
+            var dbs =
                 All().Select(tdb => tdb.TripsDb);
-            return DatabaseEnumeratorAggregator<TripId, Trip>.CreateFrom(readers);
+            return TripsDbAggregator.CreateFrom(dbs.ToList());
         }
 
         public DateTime EarliestLoadedTime()

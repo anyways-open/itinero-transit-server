@@ -8,10 +8,10 @@ namespace Itinero.Transit.Api.Logic.Search
     public class NameIndex
     {
         private readonly SmallTrie<(string, int)> _index;
-        private readonly IStopsReader _stopsReader;
+        private readonly IStopsDb _stopsReader;
 
         public NameIndex(SmallTrie<(string, int)> index,
-            IStopsReader stopsReader)
+            IStopsDb stopsReader)
         {
             _index = index;
             _stopsReader = stopsReader;
@@ -39,9 +39,7 @@ namespace Itinero.Transit.Api.Logic.Search
                         ? State.GlobalState.Importances[locationUrl]
                         : 0;
 
-                _stopsReader.MoveTo(locationUrl);
-
-                var location = new Location(_stopsReader);
+                var location = new Location(_stopsReader.Get(locationUrl));
                 var locationResult = new LocationResult(
                     location, difference, importance
                 );

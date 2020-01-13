@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using Itinero.Transit.Api.Logic.Importance;
 using Itinero.Transit.Data;
+using Itinero.Transit.Data.Serialization;
 using Itinero.Transit.Data.Synchronization;
 using Itinero.Transit.IO.LC;
 using Itinero.Transit.IO.OSM.Data;
@@ -261,7 +262,10 @@ namespace Itinero.Transit.Api.Logic
             try
             {
                 Log.Information($"Attempting to read a transitDB from {path}");
-                var db = TransitDb.ReadFrom(path, id);
+                var db = new TransitDb(id);
+                var wr = db.GetWriter();
+                wr.ReadFrom(path);
+                wr.Close();
                 Log.Information(
                     $"TransitDB loaded. Loaded times are {db.Latest.ConnectionsDb.EarliestDate.FromUnixTime():s} --> {db.Latest.ConnectionsDb.LatestDate.FromUnixTime():s}");
                 return db;

@@ -10,7 +10,7 @@ namespace Itinero.Transit.API.Test.Stress
 {
     class Program
     {
-        private static void Main(string[] _)
+        private static void Main()
         {
             Console.WriteLine("Stresstesting the staging server");
 
