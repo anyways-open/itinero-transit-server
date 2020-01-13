@@ -55,7 +55,6 @@ namespace Itinero.Transit.API.Test.Stress
                     .OrderBy(v => v.Item2)
                     .ToList()
                 ;
-            var end = DateTime.Now;
 
             var data = "";
             foreach (var (success, relStart, timeNeeded) in results)

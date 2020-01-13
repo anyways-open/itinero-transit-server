@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using Itinero.Transit.Data;
 using Itinero.Transit.Data.Core;
 using Itinero.Transit.Journey;
 // ReSharper disable ImpureMethodCallOnReadonlyValueField
@@ -10,10 +11,14 @@ namespace Itinero.Transit.Api.Logic.Importance
     public class ImportanceMaximizer<T> : IComparer<Journey<T>> where T : IJourneyMetric<T>
     {
         private readonly Dictionary<StopId, uint> _importances;
+        
+        // Only used to generate error messages
+        private readonly IStopsDb _stops;
 
-        public ImportanceMaximizer(Dictionary<StopId, uint> importances)
+        public ImportanceMaximizer(Dictionary<StopId, uint> importances, IStopsDb stops)
         {
             _importances = importances;
+            _stops = stops;
         }
 
         private const int _xWins = -1;
@@ -25,6 +30,9 @@ namespace Itinero.Transit.Api.Logic.Importance
             // We compare, the one with the most important station wins
             // If they are equal, we continue to the next transfer
 
+            if(x == null){throw new NullReferenceException(nameof(x));}
+            if(y == null){throw new NullReferenceException(nameof(y));}
+            
             do
             {
                 while (x.PreviousLink != null && !x.Location.Equals(x.PreviousLink.Location))
@@ -46,9 +54,12 @@ namespace Itinero.Transit.Api.Logic.Importance
                 if (x.PreviousLink == null || y.PreviousLink == null)
                 {
                     // One of them reached the end while the other didn't...
-                    // This is not a family
+                    // This is not a family, we can not compare them
+                    
                     throw new ArgumentException(
-                        $"Can not compare two journeys with a different number of transfers:\n{x.ToString(50)}\n{y.ToString(50)}");
+                        $"Can not compare two journeys with a different number of transfers:\n" +
+                        $"Journey X:\n{x.ToString(50, _stops)}\n\n" +
+                        $"Journey Y:\n{y.ToString(50, _stops)}");
                 }
                 
                 

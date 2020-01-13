@@ -65,7 +65,7 @@ namespace Itinero.Transit.Api.Logic.Transfers
 
         public uint TimeBetween(Stop from, Stop to)
         {
-            if (from.Equals(to))
+            if (from.GlobalId.Equals(to.GlobalId))
             {
                 // This thing is not allowed to generate transfers between the same stops
                 return uint.MaxValue;
@@ -89,7 +89,8 @@ namespace Itinero.Transit.Api.Logic.Transfers
                 ((float) to.Latitude, (float) to.Longitude), out var isEmpty, out var errMessage);
             if (route == null)
             {
-                Log.Error($"Could not calculate a route between  {from.Longitude},{from.Latitude} and {to.Longitude},{to.Longitude} because {errMessage}");
+                Log.Error(
+                    $"Could not calculate a route between  {from.Longitude},{from.Latitude} and {to.Longitude},{to.Longitude} because {errMessage}");
             }
 
             if (isEmpty)
@@ -179,6 +180,11 @@ namespace Itinero.Transit.Api.Logic.Transfers
                 var targets = new List<(SnapPoint target, Stop stop)>();
                 foreach (var t in to)
                 {
+                    if (t.GlobalId.Equals(from.GlobalId))
+                    {
+                        continue;
+                    }
+
                     var distance =
                         Coordinate.DistanceEstimateInMeter(from.Latitude, from.Longitude, t.Latitude, t.Longitude);
                     // Small patch for small distances...
@@ -243,9 +249,9 @@ namespace Itinero.Transit.Api.Logic.Transfers
                         {
                             e.Message,
                             e.StackTrace,
-                           $"" +
-                           $"Departure lon lat: {(from.Longitude, from.Latitude)}",
-                           "Arrival lon lats:",
+                            $"" +
+                            $"Departure lon lat: {(from.Longitude, from.Latitude)}",
+                            "Arrival lon lats:",
                         }.Concat(to.Select(t => $"{(t.Longitude, t.Latitude)}"))
                     ));
                 Log.Error(msg);
@@ -255,15 +261,20 @@ namespace Itinero.Transit.Api.Logic.Transfers
 
         public Dictionary<Stop, uint> TimesBetween(IEnumerable<Stop> from, Stop to)
         {
+            from = from.ToList();
             try
             {
                 var times = new Dictionary<Stop, uint>();
-                from = from.ToList();
 
                 // collect targets that are in range.
                 var sources = new List<(SnapPoint target, Stop stop)>();
                 foreach (var f in from)
                 {
+                    if (f.GlobalId.Equals(to.GlobalId))
+                    {
+                        continue;
+                    }
+
                     var distance =
                         Coordinate.DistanceEstimateInMeter(f.Latitude, f.Longitude, to.Latitude, to.Longitude);
                     // Small patch for small distances...

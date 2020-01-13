@@ -62,7 +62,7 @@ namespace Itinero.Transit.API.Tests
 
             try
             {
-                gen = omb.Create(desc, empty, empty);
+                omb.Create(desc, empty, empty);
                 Assert.True(false);
             }
             catch (ArgumentException)

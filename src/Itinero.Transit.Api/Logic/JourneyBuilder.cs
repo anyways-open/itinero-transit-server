@@ -114,7 +114,7 @@ namespace Itinero.Transit.Api.Logic
             }
             else if (arrival == null || !multipleOptions)
             {
-                calculator = precalculator.SelectTimeFrame(departure.Value, departure.Value.AddDays(1));
+                calculator = precalculator.SelectTimeFrame(departure.Value, arrival ?? departure.Value.AddDays(1));
 
 
                 // We do an earliest arrival search in a timewindow of departure time -> latest arrival time (eventually with arrival + 1 day)

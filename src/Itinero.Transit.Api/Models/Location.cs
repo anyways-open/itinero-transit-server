@@ -17,7 +17,7 @@ namespace Itinero.Transit.Api.Models
     {
         internal Location(Stop source)
             : this(source.GlobalId, null,
-                source.Latitude, source.Longitude)
+                (source.Longitude, source.Latitude))
         {
             try
             {
@@ -45,12 +45,12 @@ namespace Itinero.Transit.Api.Models
             }
         }
 
-        internal Location(string id, string name, double lat, double lon)
+        internal Location(string id, string name, (double lon, double lat) c)
         {
             Id = id;
             Name = name;
-            Lat = lat;
-            Lon = lon;
+            Lat = c.lat;
+            Lon = c.lon;
         }
 
         /// <summary>

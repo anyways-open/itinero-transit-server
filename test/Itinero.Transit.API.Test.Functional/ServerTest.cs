@@ -381,6 +381,14 @@ namespace Itinero.Transit.API.Tests.Functional
                 _errorMessages.Add(errMessage);
             }
         }
+        
+        public void AssertNull(object val, string errMessage = "Value is not null")
+        {
+            if (val != null)
+            {
+                _errorMessages.Add(errMessage);
+            }
+        }
 
         internal void AssertNotNullOrEmpty(JToken val, string errMessage = "Value is null or empty")
         {
