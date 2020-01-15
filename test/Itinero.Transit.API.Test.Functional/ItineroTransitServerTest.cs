@@ -27,7 +27,7 @@ namespace Itinero.Transit.API.Tests.Functional
 
         public static string TestDepartureTime(TimeSpan addTime = default(TimeSpan))
         {
-            var testMoment = DateTime.Now.Date.AddHours(10).Add(addTime);
+            var testMoment = DateTime.Now.Date.AddHours(10-24).Add(addTime);
             return testMoment.ToString("s");
         }
 

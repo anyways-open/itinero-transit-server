@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using Newtonsoft.Json;
 
 // ReSharper disable NotAccessedField.Global
@@ -28,7 +29,7 @@ namespace Itinero.Transit.Api.Models
         /// <summary>
         /// The time (in seconds) that the server has been running
         /// </summary>
-        public long Uptime { get;  }
+        public long Uptime { get; }
 
         /// <summary>
         /// Indicates what time fragments are loaded into the database.
@@ -83,9 +84,11 @@ namespace Itinero.Transit.Api.Models
         }
     }
 
+    [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global")]
     public class TimeWindow
     {
-        public readonly DateTime Start, End;
+        public DateTime Start { get; }
+        public DateTime End { get; }
 
         public TimeWindow(DateTime start, DateTime end)
         {
@@ -96,8 +99,9 @@ namespace Itinero.Transit.Api.Models
 
     public class OperatorStatus
     {
-        public readonly List<string> AltNames, Tags;
-        public readonly TimeWindow LoadedTimeWindows;
+        public List<string> AltNames { get; }
+        public List<string> Tags { get; }
+        public TimeWindow LoadedTimeWindows { get; }
 
         public OperatorStatus(List<string> altNames, List<string> tags, TimeWindow loadedTimeWindow)
         {

@@ -16,7 +16,7 @@ namespace Itinero.Transit.Api.Controllers
     public class StatusController : ControllerBase
     {
         private uint _loadedTilesCount;
-        private DateTime _lastTileIndexation = DateTime.MinValue;
+        private static DateTime _lastTileIndexation = DateTime.MinValue;
 
         /// <summary>
         /// Gives some insight in the database
