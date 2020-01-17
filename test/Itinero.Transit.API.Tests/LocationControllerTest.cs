@@ -50,6 +50,8 @@ namespace Itinero.Transit.API.Tests
             };
             State.GlobalState = new State(transitDbs, null, null, null);
             var lc = new LocationController();
+      
+            // Gets the connections for the given lcoation
             var result = lc.GetConnections("abc", dt);
             
             

@@ -246,6 +246,7 @@ namespace Itinero.Transit.Api.Logic
             {
                 return;
             }
+
             Console.WriteLine("Sanity checking...");
             var stops = dbs.GetStops().AddOsmReader();
             journeys = journeys.ToList();
@@ -365,12 +366,12 @@ namespace Itinero.Transit.Api.Logic
                 var depStop = stopsDb.Get(connection.DepartureStop);
                 var arrStop = stopsDb.Get(connection.ArrivalStop);
 
-                if (!depStop.Equals(stop)) continue;
+                if (!depStop.GlobalId.Equals(globalId)) continue;
                 if (connection.DepartureTime >= timeMax) break;
 
                 var trip = trips.Get(connection.TripId);
-                trip.TryGetAttribute("headsign", out var headSign);
-                trip.TryGetAttribute("route", out var route);
+                var headSign = trip.GetAttribute("headsign", "");
+                var route = trip.GetAttribute("route", "");
 
                 var depDelay = ushort.Parse(connection.GetAttribute("departureDelay", "0"));
                 var arrDelay = ushort.Parse(connection.GetAttribute("arrivalDelay", "0"));
