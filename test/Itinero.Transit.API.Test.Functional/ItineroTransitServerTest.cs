@@ -27,7 +27,7 @@ namespace Itinero.Transit.API.Tests.Functional
 
         public static string TestDepartureTime(TimeSpan addTime = default(TimeSpan))
         {
-            var testMoment = DateTime.Now.Date.AddHours(10-24).Add(addTime);
+            var testMoment = DateTime.Now.Date.AddHours(10).Add(addTime);
             return testMoment.ToString("s");
         }
 
@@ -551,10 +551,10 @@ namespace Itinero.Transit.API.Tests.Functional
                             "crowsflight&maxDistance=500&speed=1.4") +
                         "&firstMile=" +
                         Uri.EscapeDataString(
-                            "osm&maxDistance=5000&profile=pedestrian") +
+                            "osm&maxDistance=3000&profile=pedestrian") +
                         "&lastMile=" +
                         Uri.EscapeDataString(
-                            "osm&maxDistance=5000&profile=pedestrian")
+                            "osm&maxDistance=3000&profile=pedestrian")
                     }
                 },
                 jobj =>
