@@ -575,6 +575,7 @@ namespace Itinero.Transit.API.Tests.Functional
                     }
                 }
             );
+            /*
             SncbChallenge("Journey",
                 "PCS with FirstLastMile walk, crow inbetween, Pietervdvn Brugge -> De Sterre, Gent",
                 new Dictionary<string, string>
@@ -614,7 +615,7 @@ namespace Itinero.Transit.API.Tests.Functional
                             "Wrong arrival stations");
                     }
                 }
-            );
+            );//*/
 
             SncbChallenge("Journey",
                 "EAS with FirstLastMile walk, crow inbetween, Pietervdvn Brugge -> Close to Ghent",
