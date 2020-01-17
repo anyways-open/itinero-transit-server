@@ -69,14 +69,14 @@ namespace Itinero.Transit.Api.Logic
             var trip = tripReader.Get(j.TripId);
             var vehicleId = trip.GlobalId ?? "";
             trip.TryGetAttribute("headsign", out var headsign);
-            trip.TryGetAttribute("departureDelay", out var depDelay, "0");
+            var depDelay = ushort.Parse(trip.GetAttribute("departureDelay", "0"));
 
             // Get the departure information
             var departure = stops.LocationOf(connection.DepartureStop);
             var departureTimed = new TimedLocation(
                 departure,
                 connection.DepartureTime.FromUnixTime(),
-                ushort.Parse(depDelay));
+                depDelay);
 
 
             // Now, we walk along the journey to find the end of this segment
@@ -117,8 +117,8 @@ namespace Itinero.Transit.Api.Logic
                 // We should add this to the intermediate stops
                 var loc = stops.LocationOf(parts[i].Location);
 
-                connection.TryGetAttribute("arrivalDelay", out var arrDelay, "0");
-                var tloc = new TimedLocation(loc, parts[i].Time, ushort.Parse(arrDelay));
+                var arrDelay = ushort.Parse(connection.GetAttribute("arrivalDelay", "0"));
+                var tloc = new TimedLocation(loc, parts[i].Time, arrDelay);
                 allStations.Add(tloc);
             }
             // At this point, parts[i] is the last part of our journey
@@ -126,10 +126,10 @@ namespace Itinero.Transit.Api.Logic
             j = parts[i];
 
             connection = connectionReader.Get(j.Connection);
-            var arrival = stops.LocationOf(connection.ArrivalStop); 
-            connection.TryGetAttribute("arrivalDelay", out var arrDelay0, "0");
+            var arrival = stops.LocationOf(connection.ArrivalStop);
+            var arrDelay0 = ushort.Parse(connection.GetAttribute("arrivalDelay", "0"));
             var arrivalTimed = new TimedLocation(arrival,
-                connection.ArrivalTime, ushort.Parse(arrDelay0));
+                connection.ArrivalTime, arrDelay0);
 
             if (!allStations.Last().Location.Id.Equals(arrival.Id))
             {
@@ -234,11 +234,48 @@ namespace Itinero.Transit.Api.Logic
             return new Models.Journey(segments, vehiclesTaken);
         }
 
+        private static bool AllSame(this List<Stop> stops)
+        {
+            return stops.TrueForAll(stp => stp.GlobalId.Equals(stops[0].GlobalId));
+        }
+
+        private static void SanityCheck<T>(this OperatorSet dbs, IEnumerable<Journey<T>> journeys)
+            where T : IJourneyMetric<T>
+        {
+            if (journeys == null)
+            {
+                return;
+            }
+            Console.WriteLine("Sanity checking...");
+            var stops = dbs.GetStops().AddOsmReader();
+            journeys = journeys.ToList();
+            var allDepartures = stops.GetAll(journeys.Select(j => j.Root.Location).ToList());
+            var allArrivals = stops.GetAll(journeys.Select(j => j.Location).ToList());
+
+            if (!allDepartures.AllSame())
+            {
+                throw new ArgumentException("Itinero transit gave different departure stops for the journeys...");
+            }
+
+            if (!allArrivals.AllSame())
+            {
+                throw new ArgumentException("Itinero transit gave different arrival stops for the journeys...");
+            }
+        }
+
         public static (List<Models.Journey>, List<List<Coordinate>>) Translate<T>
         (this OperatorSet dbs, IEnumerable<Journey<T>> journeys,
             IOtherModeGenerator walkGenerator, bool compress = false)
             where T : IJourneyMetric<T>
         {
+            // TODO figure out if all the departures and arrivals are the same   
+
+
+#if DEBUG
+            SanityCheck(dbs, journeys);
+#endif
+
+
             var list = new List<Models.Journey>();
             var commonCoordinates = new List<List<Coordinate>>();
             if (journeys == null)
@@ -248,20 +285,10 @@ namespace Itinero.Transit.Api.Logic
 
 
             var coordinatesCache = new CoordinatesCache(walkGenerator, compress);
-            string firstDeparture = null;
             foreach (var j in journeys)
             {
                 var translated = dbs.Translate(j, coordinatesCache);
                 list.Add(translated);
-                if (firstDeparture == null)
-                {
-                    firstDeparture = translated.Departure.Location.Id;
-                }
-
-                if (!translated.Departure.Location.Id.Equals(firstDeparture))
-                {
-                    throw new Exception("Weird: not all the departure locations are the same");
-                }
             }
 
             if (compress)
@@ -345,14 +372,14 @@ namespace Itinero.Transit.Api.Logic
                 trip.TryGetAttribute("headsign", out var headSign);
                 trip.TryGetAttribute("route", out var route);
 
-                connection.TryGetAttribute("departureDelay", out var depDelay, "0");
-                connection.TryGetAttribute("arrivalDelay", out var arrDelay, "0");
+                var depDelay = ushort.Parse(connection.GetAttribute("departureDelay", "0"));
+                var arrDelay = ushort.Parse(connection.GetAttribute("arrivalDelay", "0"));
 
                 var departure = new TimedLocation(new Location(depStop),
-                    connection.DepartureTime, ushort.Parse(depDelay));
+                    connection.DepartureTime, depDelay);
 
                 var arrival = new TimedLocation(new Location(arrStop),
-                    connection.ArrivalTime, ushort.Parse(arrDelay));
+                    connection.ArrivalTime, arrDelay);
 
 
                 segments.Add(new Segment(departure, arrival, route, headSign, null));
