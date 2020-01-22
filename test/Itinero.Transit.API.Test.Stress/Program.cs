@@ -8,7 +8,7 @@ using Itinero.Transit.API.Tests.Functional;
 
 namespace Itinero.Transit.API.Test.Stress
 {
-    class Program
+    static class Program
     {
         private static void Main()
         {

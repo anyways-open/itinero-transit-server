@@ -234,49 +234,18 @@ namespace Itinero.Transit.Api.Logic
             return new Models.Journey(segments, vehiclesTaken);
         }
 
-        private static bool AllSame(this List<Stop> stops)
+        private static bool AllSame(this IEnumerable<string> stops)
         {
-            return stops.TrueForAll(stp => stp.GlobalId.Equals(stops[0].GlobalId));
-        }
-
-        private static void SanityCheck<T>(this OperatorSet dbs, IEnumerable<Journey<T>> journeys)
-            where T : IJourneyMetric<T>
-        {
-            if (journeys == null)
-            {
-                return;
-            }
-
-            Console.WriteLine("Sanity checking...");
-            var stops = dbs.GetStops().AddOsmReader();
-            journeys = journeys.ToList();
-            var allDepartures = stops.GetAll(journeys.Select(j => j.Root.Location).ToList());
-            var allArrivals = stops.GetAll(journeys.Select(j => j.Location).ToList());
-
-            if (!allDepartures.AllSame())
-            {
-                throw new ArgumentException("Itinero transit gave different departure stops for the journeys...");
-            }
-
-            if (!allArrivals.AllSame())
-            {
-                throw new ArgumentException("Itinero transit gave different arrival stops for the journeys...");
-            }
+            return stops.ToList().TrueForAll(stp => stp.Equals(stops.First()));
         }
 
         public static (List<Models.Journey>, List<List<Coordinate>>) Translate<T>
-        (this OperatorSet dbs, IEnumerable<Journey<T>> journeys,
+        (this OperatorSet dbs, List<Journey<T>> journeys,
             IOtherModeGenerator walkGenerator, bool compress = false)
             where T : IJourneyMetric<T>
         {
-            // TODO figure out if all the departures and arrivals are the same   
 
-
-#if DEBUG
-            SanityCheck(dbs, journeys);
-#endif
-
-
+            
             var list = new List<Models.Journey>();
             var commonCoordinates = new List<List<Coordinate>>();
             if (journeys == null)
@@ -285,10 +254,26 @@ namespace Itinero.Transit.Api.Logic
             }
 
 
+            var stops = dbs.GetStops().AddOsmReader();
             var coordinatesCache = new CoordinatesCache(walkGenerator, compress);
             foreach (var j in journeys)
             {
                 var translated = dbs.Translate(j, coordinatesCache);
+
+                if (!translated.Departure.Location.Id.Equals(
+                    stops.Get(j.Root.Location).GlobalId))
+                {
+                    Serilog.Log.Warning("WUT ON DEPARTURE?");
+                }
+                
+                if (!translated.Arrival.Location.Id.Equals(
+                    stops.Get(j
+                        .Location).GlobalId))
+                {
+                    Serilog.Log.Warning("WUT ON DEPARTURE?");
+                }
+                
+                
                 list.Add(translated);
             }
 
@@ -297,6 +282,7 @@ namespace Itinero.Transit.Api.Logic
                 commonCoordinates = coordinatesCache.CommonCoordinates.Select(c => c.Item1).ToList();
             }
 
+          
             return (list, commonCoordinates);
         }
 

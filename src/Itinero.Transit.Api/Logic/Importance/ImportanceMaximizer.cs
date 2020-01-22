@@ -58,8 +58,8 @@ namespace Itinero.Transit.Api.Logic.Importance
                     
                     throw new ArgumentException(
                         $"Can not compare two journeys with a different number of transfers:\n" +
-                        $"Journey X:\n{x.ToString(50, _stops)}\n\n" +
-                        $"Journey Y:\n{y.ToString(50, _stops)}");
+                        $"Journey X:\n{x.ToString(_stops)}\n\n" +
+                        $"Journey Y:\n{y.ToString(_stops)}");
                 }
                 
                 
