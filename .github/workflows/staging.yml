@@ -37,6 +37,17 @@ jobs:
     - name: Login to Docker Hub
       run: echo ${{ secrets.DOCKER_HUB_TOKEN }} | docker login -u anywaysbot --password-stdin
 
+       
+    - name: Publish generator project
+      run: dotnet publish -c release
+      working-directory: ./src/Itinero.Transit.Api/
+    - name: Build the Generator Docker image
+      run: docker build . --file Dockerfile --tag anywaysopen/transit-routing-api:staging --tag anywaysopen/transit-routing-api:staging-0.$GITHUB_RUN_NUMBER
+      working-directory: ./src/Itinero.Transit.Api/
+    - name: Publish on dockerhub with staging tag.
+      run: docker push anywaysopen/transit-routing-api:staging
+    - name: Publish on dockerhub with the version number.
+      run: docker push anywaysopen/transit-routing-api:staging-0.$GITHUB_RUN_NUMBER 
  
 
       
