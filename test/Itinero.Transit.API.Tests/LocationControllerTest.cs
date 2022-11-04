@@ -5,6 +5,7 @@ using Itinero.Transit.Api.Logic;
 using Itinero.Transit.Data;
 using Itinero.Transit.Data.Core;
 using Xunit;
+using Operator = Itinero.Transit.Api.Logic.Operator;
 
 namespace Itinero.Transit.API.Tests
 {

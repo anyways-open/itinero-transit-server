@@ -10,6 +10,7 @@ using Itinero.Transit.Journey.Metric;
 using Itinero.Transit.OtherMode;
 using Itinero.Transit.Utils;
 using Xunit;
+using Operator = Itinero.Transit.Api.Logic.Operator;
 
 namespace Itinero.Transit.API.Tests
 {
@@ -26,7 +27,7 @@ namespace Itinero.Transit.API.Tests
             var stop1 = writer.AddOrUpdateStop(new Stop("https://example.org/stop1", (1, 1)));
             var stop2 = writer.AddOrUpdateStop(new Stop("https://example.org/stop2", (2, 2)));
 
-            var trip0 = writer.AddOrUpdateTrip(new Trip("https://example.org/trip0",
+            var trip0 = writer.AddOrUpdateTrip(new Trip("https://example.org/trip0", new OperatorId(),
                 new Dictionary<string, string>() {{"headsign", "Oostende"}}));
 
             var conn0 = writer.AddOrUpdateConnection(
